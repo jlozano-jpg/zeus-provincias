@@ -116,124 +116,134 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>Provincia *</label>
+            <label className={styles.label}>Nombre</label>
             <input
               type="text"
-              ref={firstInputRef}
               value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              disabled={mode === 'view'}
-              onKeyDown={handleKeyDown}
+              disabled
               className={styles.input}
               aria-label="Nombre de provincia"
             />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label}>IIBB *</label>
-            <select
-              value={formData.iibb}
-              onChange={(e) => handleChange('iibb', e.target.value)}
-              disabled={mode === 'view'}
-              onKeyDown={handleKeyDown}
-              className={styles.select}
-              aria-label="Jurisdicción de IIBB"
-            >
-              <option value="">Seleccionar IIBB...</option>
-              {AVAILABLE_IIBB.map(iibb => (
-                <option key={iibb} value={iibb}>{iibb}</option>
-              ))}
-            </select>
-            <p className={styles.helperText}>Jurisdicción de Ingresos Brutos asociada a la provincia</p>
+            <p className={styles.helperText}>No editable</p>
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Impuestos</h3>
-            
-            <div className={styles.checkboxGroup}>
+            <h3 className={styles.sectionTitle}>Configuración Impositiva</h3>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Jurisdicción IIBB *</label>
+              <select
+                ref={firstInputRef}
+                value={formData.iibb}
+                onChange={(e) => handleChange('iibb', e.target.value)}
+                disabled={mode === 'view'}
+                onKeyDown={handleKeyDown}
+                className={styles.select}
+                aria-label="Jurisdicción de IIBB"
+              >
+                <option value="">Seleccionar IIBB...</option>
+                {AVAILABLE_IIBB.map(iibb => (
+                  <option key={iibb} value={iibb}>{iibb}</option>
+                ))}
+              </select>
+              <p className={styles.helperText}>Jurisdicción de Ingresos Brutos asociada a la provincia</p>
+            </div>
+
+            <label className={styles.toggleGroup}>
               <input
                 type="checkbox"
-                id="percibeAlways"
                 checked={formData.percibeAlways}
                 onChange={() => handleCheckChange('percibeAlways')}
                 disabled={mode === 'view'}
-                className={styles.checkbox}
-                aria-label="Percibe siempre"
+                className={styles.toggleInput}
+                aria-label="Percibe Siempre"
               />
-              <label htmlFor="percibeAlways" className={styles.checkboxLabel}>
-                Percibe siempre
-              </label>
-            </div>
+              <span className={styles.toggleSwitch} aria-hidden="true" />
+              <span className={styles.toggleLabel}>Percibe Siempre</span>
+            </label>
 
-            <div className={styles.checkboxGroup}>
+            <label className={styles.toggleGroup}>
               <input
                 type="checkbox"
-                id="permiteDevolución"
                 checked={formData.permiteDevolución}
                 onChange={() => handleCheckChange('permiteDevolución')}
                 disabled={mode === 'view'}
-                className={styles.checkbox}
-                aria-label="Permite devolución de percepción fuera de mes"
+                className={styles.toggleInput}
+                aria-label="Permite Devolución de Percepción Fuera de Mes"
               />
-              <label htmlFor="permiteDevolución" className={styles.checkboxLabel}>
-                Permite devolución de percepción fuera de mes
-              </label>
-            </div>
+              <span className={styles.toggleSwitch} aria-hidden="true" />
+              <span className={styles.toggleLabel}>Permite Devolución de Percepción Fuera de Mes</span>
+            </label>
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Devolución de Percepciones de Ingresos Brutos en Notas de Crédito Automáticas</h3>
-            
+            <h3 className={styles.sectionTitle}>Criterio de Devolución en Notas de Crédito Automáticas</h3>
+
             <div className={styles.radioGroup}>
               <div className={styles.radioItem}>
                 <input
                   type="radio"
-                  id="igual"
+                  id="anulacion"
                   name="devolucionPercepciones"
-                  value="igual"
-                  checked={formData.devolucionPercepciones === 'igual'}
+                  value="anulacion"
+                  checked={formData.devolucionPercepciones === 'anulacion'}
                   onChange={(e) => handleChange('devolucionPercepciones', e.target.value)}
                   disabled={mode === 'view'}
                   className={styles.radio}
-                  aria-label="Solo si la factura y la nota de crédito poseen la misma base imponible"
+                  aria-label="Anulación"
                 />
-                <label htmlFor="igual" className={styles.radioLabel}>
-                  Solo si la factura y la nota de crédito poseen la misma base imponible.
-                </label>
+                <div className={styles.radioContent}>
+                  <label htmlFor="anulacion" className={styles.radioLabel}>
+                    Anulación
+                  </label>
+                  <p className={styles.radioDescription}>
+                    Se efectuará la devolución de percepciones solo cuando se anule la factura original de manera total.
+                  </p>
+                </div>
               </div>
 
               <div className={styles.radioItem}>
                 <input
                   type="radio"
-                  id="siempre"
+                  id="parcial"
                   name="devolucionPercepciones"
-                  value="siempre"
-                  checked={formData.devolucionPercepciones === 'siempre'}
+                  value="parcial"
+                  checked={formData.devolucionPercepciones === 'parcial'}
                   onChange={(e) => handleChange('devolucionPercepciones', e.target.value)}
                   disabled={mode === 'view'}
                   className={styles.radio}
-                  aria-label="Devolver siempre el total de las percepciones en la nota de crédito"
+                  aria-label="Devolución parcial"
                 />
-                <label htmlFor="siempre" className={styles.radioLabel}>
-                  Devolver siempre el total de las percepciones en la nota de crédito.
-                </label>
+                <div className={styles.radioContent}>
+                  <label htmlFor="parcial" className={styles.radioLabel}>
+                    Devolución parcial
+                  </label>
+                  <p className={styles.radioDescription}>
+                    Se efectuará la devolución de percepciones de manera proporcional a la base imponible de la Nota de Crédito.
+                  </p>
+                </div>
               </div>
 
               <div className={styles.radioItem}>
                 <input
                   type="radio"
-                  id="proporcional"
+                  id="total"
                   name="devolucionPercepciones"
-                  value="proporcional"
-                  checked={formData.devolucionPercepciones === 'proporcional'}
+                  value="total"
+                  checked={formData.devolucionPercepciones === 'total'}
                   onChange={(e) => handleChange('devolucionPercepciones', e.target.value)}
                   disabled={mode === 'view'}
                   className={styles.radio}
-                  aria-label="Devolver las percepciones de manera proporcional a la base imponible de la nota de crédito"
+                  aria-label="Devolución total"
                 />
-                <label htmlFor="proporcional" className={styles.radioLabel}>
-                  Devolver las percepciones de manera proporcional a la base imponible de la nota de crédito.
-                </label>
+                <div className={styles.radioContent}>
+                  <label htmlFor="total" className={styles.radioLabel}>
+                    Devolución total
+                  </label>
+                  <p className={styles.radioDescription}>
+                    Se efectuará la devolución de percepciones de manera total aunque la Nota de Crédito sea parcial.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -246,7 +256,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
             </p>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Porcentaje de IIBB</label>
+              <label className={styles.label}>Alícuota de Ingresos Brutos</label>
               <input
                 type="number"
                 value={formData.porcentajeIIBB ?? 0.0}
@@ -254,7 +264,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
                 disabled={mode === 'view'}
                 onKeyDown={handleKeyDown}
                 className={styles.input}
-                aria-label="Porcentaje de IIBB"
+                aria-label="Alícuota de Ingresos Brutos"
                 min="0"
                 max="100"
                 step="0.01"
@@ -264,36 +274,34 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Leyenda a mostrar en comprobantes</label>
+              <label className={styles.label}>Leyenda para Comprobantes</label>
               <textarea
                 value={formData.leyendaComprobante}
                 onChange={(e) => handleChange('leyendaComprobante', e.target.value)}
                 disabled={mode === 'view'}
                 onKeyDown={handleKeyDown}
                 className={styles.textarea}
-                aria-label="Leyenda a mostrar en comprobantes"
+                aria-label="Leyenda para Comprobantes"
                 placeholder="Texto a imprimir en el comprobante"
                 rows="3"
               />
             </div>
 
-            <div className={styles.checkboxGroup}>
+            <label className={styles.toggleGroup}>
               <input
                 type="checkbox"
-                id="convenioMultilateral"
                 checked={formData.convenioMultilateral}
                 onChange={() => handleCheckChange('convenioMultilateral')}
                 disabled={mode === 'view'}
-                className={styles.checkbox}
+                className={styles.toggleInput}
                 aria-label="Convenio Multilateral"
               />
-              <label htmlFor="convenioMultilateral" className={styles.checkboxLabel}>
-                Convenio Multilateral
-              </label>
-            </div>
+              <span className={styles.toggleSwitch} aria-hidden="true" />
+              <span className={styles.toggleLabel}>Convenio Multilateral</span>
+            </label>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Leyenda a mostrar</label>
+              <label className={styles.label}>Leyenda Adicional Convenio Multilateral</label>
               <textarea
                 value={formData.leyendaConvenio}
                 onChange={(e) => handleChange('leyendaConvenio', e.target.value)}
@@ -301,7 +309,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
                 onKeyDown={handleKeyDown}
                 className={styles.textarea}
                 placeholder="Texto a imprimir en el comprobante"
-                aria-label="Leyenda para Convenio Multilateral"
+                aria-label="Leyenda Adicional Convenio Multilateral"
                 rows="3"
               />
             </div>
@@ -320,7 +328,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
               className={`${styles.btn} ${styles.saveBtn}`}
               onClick={handleSave}
             >
-              Guardar Provincia
+              Actualizar
             </button>
           </div>
         )}

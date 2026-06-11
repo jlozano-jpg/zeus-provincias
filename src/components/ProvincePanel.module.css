@@ -54,6 +54,7 @@
 }
 
 .closeBtn {
+  position: relative;
   width: 32px;
   height: 32px;
   border: none;
@@ -68,6 +69,13 @@
   justify-content: center;
 }
 
+/* Extiende el área táctil a 40px sin alterar el tamaño visual del botón */
+.closeBtn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
 .closeBtn:hover {
   background: #F3F7F7;
   color: #002955;
@@ -76,6 +84,11 @@
 .closeBtn:focus {
   outline: none;
   box-shadow: 0 0 0 2px #8833B8;
+}
+
+.closeBtn:active {
+  background: #C2D6D8;
+  color: #002955;
 }
 
 .content {
@@ -94,7 +107,8 @@
   margin-bottom: 8px;
 }
 
-.formGroup:has(+ .checkboxGroup) {
+.formGroup:has(+ .checkboxGroup),
+.formGroup:has(+ .toggleGroup) {
   margin-bottom: 16px;
 }
 
@@ -278,6 +292,87 @@
   user-select: none;
 }
 
+.toggleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  margin-top: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggleGroup:has(.toggleInput:disabled) {
+  cursor: not-allowed;
+}
+
+.toggleInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.toggleSwitch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  background: #C2D6D8;
+  border-radius: 10px;
+  transition: background 150ms ease;
+}
+
+.toggleSwitch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #FCFDFD;
+  border-radius: 50%;
+  transition: transform 150ms ease;
+}
+
+.toggleInput:checked + .toggleSwitch {
+  background: #8833B8;
+}
+
+.toggleInput:checked + .toggleSwitch::before {
+  transform: translateX(16px);
+}
+
+.toggleInput:active:not(:disabled) + .toggleSwitch::before {
+  width: 18px;
+}
+
+.toggleInput:checked:active:not(:disabled) + .toggleSwitch::before {
+  transform: translateX(14px);
+}
+
+.toggleInput:focus-visible + .toggleSwitch {
+  box-shadow: 0 0 0 2px #8833B8;
+}
+
+.toggleInput:disabled + .toggleSwitch {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toggleInput:disabled ~ .toggleLabel {
+  color: #667F99;
+  cursor: not-allowed;
+}
+
+.toggleLabel {
+  font-size: 13px;
+  color: #002955;
+  font-weight: 400;
+}
+
 .radioGroup {
   display: flex;
   flex-direction: column;
@@ -310,13 +405,26 @@
   border-radius: 50%;
 }
 
+.radioContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .radioLabel {
   font-size: 13px;
   color: #002955;
-  font-weight: 400;
+  font-weight: 600;
   cursor: pointer;
   user-select: none;
   line-height: 1.4;
+}
+
+.radioDescription {
+  font-size: 11px;
+  color: #667F99;
+  line-height: 1.4;
+  margin: 0;
 }
 
 .footer {
@@ -355,6 +463,12 @@
   box-shadow: 0 0 0 2px #00CDCD;
 }
 
+.cancelBtn:active {
+  background: #00CDCD;
+  color: #FCFDFD;
+  border-color: #00CDCD;
+}
+
 .saveBtn {
   background: #8833B8;
   color: #FCFDFD;
@@ -367,6 +481,10 @@
 .saveBtn:focus {
   outline: none;
   box-shadow: 0 0 0 2px #8833B8;
+}
+
+.saveBtn:active {
+  background: #6A00A7;
 }
 
 .closeViewBtn {
@@ -385,6 +503,12 @@
 .closeViewBtn:focus {
   outline: none;
   box-shadow: 0 0 0 2px #00CDCD;
+}
+
+.closeViewBtn:active {
+  background: #C2D6D8;
+  border-color: #C2D6D8;
+  color: #002955;
 }
 
 @media (max-width: 768px) {
