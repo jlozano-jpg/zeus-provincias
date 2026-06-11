@@ -29,9 +29,22 @@ const AVAILABLE_IIBB = [
 ]
 
 export default function ProvincePanel({ mode, province, onSave, onCancel }) {
-  const [formData, setFormData] = useState(province)
+  const [formData, setFormData] = useState(() => ({
+    ...province,
+    porcentajeIIBB: province?.porcentajeIIBB ?? 0.0,
+    leyendaComprobante: province?.leyendaComprobante ?? ''
+  }))
   const [hasChanges, setHasChanges] = useState(false)
   const firstInputRef = useRef(null)
+
+  useEffect(() => {
+    setFormData({
+      ...province,
+      porcentajeIIBB: province?.porcentajeIIBB ?? 0.0,
+      leyendaComprobante: province?.leyendaComprobante ?? ''
+    })
+    setHasChanges(false)
+  }, [province])
 
   useEffect(() => {
     firstInputRef.current?.focus()
@@ -233,10 +246,10 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
             </p>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Porcentaje de IIBB *</label>
+              <label className={styles.label}>Porcentaje de IIBB</label>
               <input
                 type="number"
-                value={formData.porcentajeIIBB}
+                value={formData.porcentajeIIBB ?? 0.0}
                 onChange={(e) => handleChange('porcentajeIIBB', parseFloat(e.target.value) || 0)}
                 disabled={mode === 'view'}
                 onKeyDown={handleKeyDown}
@@ -245,6 +258,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
                 min="0"
                 max="100"
                 step="0.01"
+                placeholder="0.0"
               />
               <p className={styles.helperText}>Alicuota de IIBB correspondiente a la actividad principal.</p>
             </div>
@@ -258,6 +272,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
                 onKeyDown={handleKeyDown}
                 className={styles.textarea}
                 aria-label="Leyenda a mostrar en comprobantes"
+                placeholder="Texto a imprimir en el comprobante"
                 rows="3"
               />
             </div>
@@ -282,7 +297,7 @@ export default function ProvincePanel({ mode, province, onSave, onCancel }) {
               <textarea
                 value={formData.leyendaConvenio}
                 onChange={(e) => handleChange('leyendaConvenio', e.target.value)}
-                disabled={mode === 'view'}
+                disabled={mode === 'view' || !formData.convenioMultilateral}
                 onKeyDown={handleKeyDown}
                 className={styles.textarea}
                 placeholder="Texto a imprimir en el comprobante"

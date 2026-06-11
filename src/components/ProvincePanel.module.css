@@ -236,7 +236,12 @@
 }
 
 .textarea::placeholder {
-  color: #C2D6D8;
+  color: #667F99;
+}
+
+/* Ensure placeholder remains visible and grey when textarea is disabled */
+.textarea:disabled::placeholder {
+  color: #667F99;
 }
 
 .checkboxGroup {

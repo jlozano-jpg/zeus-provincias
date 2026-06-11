@@ -30,10 +30,26 @@
   background: #FCFDFD;
 }
 
+.searchField {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #667F99;
+  font-size: 14px;
+  pointer-events: none;
+}
+
 .searchInput {
   width: 100%;
   max-width: 400px;
-  padding: 8px 12px;
+  padding: 8px 12px 8px 36px;
   font-size: 14px;
   border: 1px solid #C2D6D8;
   border-radius: 6px;
@@ -89,6 +105,54 @@
 .table thead th:last-child {
   width: 50px;
   text-align: center;
+}
+
+.columnHeader {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: #002955;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.columnHeader:hover,
+.activeHeader {
+  color: #8833B8;
+}
+
+.sortIndicator {
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+/* Resizer handle for table columns */
+.resizer {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+}
+
+.resizer::after {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 36px;
+  background: transparent;
+  margin: 6px auto;
+  border-radius: 2px;
+}
+
+.resizer:hover::after {
+  background: #C2D6D8;
 }
 
 .table tbody tr {
