@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './ProvincesList.module.css'
 
+const CONFIGURABLE_COLS = [
+  { key: 'code', label: 'Código' },
+  { key: 'name', label: 'Provincia' },
+]
+
+const GearIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+)
+
 export default function ProvincesList({ provinces, searchTerm, onSearchChange, onView, onEdit, onDelete }) {
   const [hoveredId, setHoveredId] = useState(null)
   const [openMenuId, setOpenMenuId] = useState(null)
@@ -13,9 +25,24 @@ export default function ProvincesList({ provinces, searchTerm, onSearchChange, o
   const onMoveRef = useRef(null)
   const onUpRef = useRef(null)
 
+  const [colsVisible, setColsVisible] = useState({ code: true, name: true })
+  const [colsMenuOpen, setColsMenuOpen] = useState(false)
+  const gearRef = useRef(null)
+
+  useEffect(() => {
+    if (!colsMenuOpen) return
+    const handler = (e) => {
+      if (gearRef.current && !gearRef.current.contains(e.target)) setColsMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [colsMenuOpen])
+
+  const vis = (key) => colsVisible[key]
+  const toggleCol = (key) => setColsVisible(prev => ({ ...prev, [key]: !prev[key] }))
+
   useEffect(() => {
     return () => {
-      // cleanup in case component unmounts while resizing
       if (onMoveRef.current) document.removeEventListener('mousemove', onMoveRef.current)
       if (onUpRef.current) document.removeEventListener('mouseup', onUpRef.current)
       document.body.style.userSelect = 'auto'
@@ -100,45 +127,76 @@ export default function ProvincesList({ provinces, searchTerm, onSearchChange, o
         <table className={styles.table}>
           <thead>
             <tr>
-              <th style={{ width: columnWidths.code }}>
-                <div style={{ position: 'relative' }}>
+              {vis('code') && (
+                <th style={{ width: columnWidths.code }}>
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      className={`${styles.columnHeader} ${sortBy === 'code' ? styles.activeHeader : ''}`}
+                      onClick={() => handleSort('code')}
+                      aria-sort={sortBy === 'code' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    >
+                      Código <span className={styles.sortIndicator}>{getSortIndicator('code')}</span>
+                    </button>
+                    <div
+                      className={styles.resizer}
+                      onMouseDown={(e) => initResize('code', e)}
+                      role="separator"
+                      aria-orientation="vertical"
+                      aria-label="Redimensionar columna código"
+                    />
+                  </div>
+                </th>
+              )}
+              {vis('name') && (
+                <th style={{ width: columnWidths.name }}>
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      className={`${styles.columnHeader} ${sortBy === 'name' ? styles.activeHeader : ''}`}
+                      onClick={() => handleSort('name')}
+                      aria-sort={sortBy === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    >
+                      Provincia <span className={styles.sortIndicator}>{getSortIndicator('name')}</span>
+                    </button>
+                    <div
+                      className={styles.resizer}
+                      onMouseDown={(e) => initResize('name', e)}
+                      role="separator"
+                      aria-orientation="vertical"
+                      aria-label="Redimensionar columna provincia"
+                    />
+                  </div>
+                </th>
+              )}
+              <th className={styles.menuCol}>
+                <div ref={gearRef} className={styles.gearWrap}>
                   <button
                     type="button"
-                    className={`${styles.columnHeader} ${sortBy === 'code' ? styles.activeHeader : ''}`}
-                    onClick={() => handleSort('code')}
-                    aria-sort={sortBy === 'code' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    className={styles.gearBtn}
+                    onClick={() => setColsMenuOpen(o => !o)}
+                    aria-label="Configurar columnas visibles"
+                    title="Columnas visibles"
                   >
-                    Código <span className={styles.sortIndicator}>{getSortIndicator('code')}</span>
+                    <GearIcon />
                   </button>
-                  <div
-                    className={styles.resizer}
-                    onMouseDown={(e) => initResize('code', e)}
-                    role="separator"
-                    aria-orientation="vertical"
-                    aria-label="Redimensionar columna código"
-                  />
+                  {colsMenuOpen && (
+                    <div className={styles.colsMenu}>
+                      <div className={styles.colsMenuHeader}>Columnas visibles</div>
+                      {CONFIGURABLE_COLS.map(col => (
+                        <label key={col.key} className={styles.colsMenuItem}>
+                          <input
+                            type="checkbox"
+                            checked={colsVisible[col.key]}
+                            onChange={() => toggleCol(col.key)}
+                          />
+                          {col.label}
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </th>
-              <th style={{ width: columnWidths.name }}>
-                <div style={{ position: 'relative' }}>
-                  <button
-                    type="button"
-                    className={`${styles.columnHeader} ${sortBy === 'name' ? styles.activeHeader : ''}`}
-                    onClick={() => handleSort('name')}
-                    aria-sort={sortBy === 'name' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  >
-                    Provincia <span className={styles.sortIndicator}>{getSortIndicator('name')}</span>
-                  </button>
-                  <div
-                    className={styles.resizer}
-                    onMouseDown={(e) => initResize('name', e)}
-                    role="separator"
-                    aria-orientation="vertical"
-                    aria-label="Redimensionar columna provincia"
-                  />
-                </div>
-              </th>
-              <th />
             </tr>
           </thead>
           <tbody>
@@ -156,8 +214,8 @@ export default function ProvincesList({ provinces, searchTerm, onSearchChange, o
                   onMouseEnter={() => setHoveredId(province.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
-                  <td className={styles.code} style={{ width: columnWidths.code }}>{String(province.code).padStart(2, '0')}</td>
-                  <td className={styles.name} style={{ width: columnWidths.name }}>{province.name}</td>
+                  {vis('code') && <td className={styles.code} style={{ width: columnWidths.code }}>{String(province.code).padStart(2, '0')}</td>}
+                  {vis('name') && <td className={styles.name} style={{ width: columnWidths.name }}>{province.name}</td>}
                   <td className={styles.menuCell}>
                     <div className={styles.menuContainer}>
                       <button
