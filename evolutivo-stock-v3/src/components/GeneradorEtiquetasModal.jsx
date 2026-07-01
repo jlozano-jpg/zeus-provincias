@@ -308,17 +308,15 @@ export default function GeneradorEtiquetasModal({ onClose, preselectedNode = nul
 
             <div className={styles.configSection}>
               <span className={styles.configSectionTitle}>Etiquetas por hoja A4</span>
-              <div className={styles.layoutGrid}>
+              <select
+                className={styles.layoutSelect}
+                value={layout}
+                onChange={e => setLayout(Number(e.target.value))}
+              >
                 {LAYOUTS.map(l => (
-                  <button
-                    key={l.value}
-                    className={`${styles.layoutBtn} ${layout === l.value ? styles.layoutBtnActive : ''}`}
-                    onClick={() => setLayout(l.value)}
-                  >
-                    {l.label}
-                  </button>
+                  <option key={l.value} value={l.value}>{l.label}</option>
                 ))}
-              </div>
+              </select>
             </div>
 
             <div className={styles.configSection}>
