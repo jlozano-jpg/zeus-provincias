@@ -1,0 +1,286 @@
+.wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #F3F7F7;
+  overflow: hidden;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  background: #FCFDFD;
+  border-bottom: 1px solid #C2D6D8;
+  flex-shrink: 0;
+}
+
+.searchField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #F3F7F7;
+  border: 1px solid #C2D6D8;
+  border-radius: 8px;
+  padding: 0 12px;
+  flex: 1;
+  max-width: 340px;
+  transition: border-color 150ms ease;
+}
+
+.searchField:focus-within {
+  border-color: #8833B8;
+  background: #FCFDFD;
+}
+
+.searchIcon {
+  width: 15px;
+  height: 15px;
+  stroke: #667F99;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: #002955;
+  outline: none;
+  flex: 1;
+}
+
+.searchInput::placeholder { color: #C2D6D8; }
+
+.createBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: #8833B8;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  color: #FCFDFD;
+  cursor: pointer;
+  transition: background 150ms ease;
+  white-space: nowrap;
+}
+
+.createBtn svg { width: 14px; height: 14px; stroke: #FCFDFD; }
+.createBtn:hover { background: #6A00A7; }
+
+/* ── Table ───────────────────────────────────────────────────── */
+
+.tableContainer {
+  flex: 1;
+  overflow: auto;
+  background: #FCFDFD;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+}
+
+.table thead th {
+  padding: 10px 24px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #667F99;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #F3F7F7;
+  border-bottom: 1px solid #C2D6D8;
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 12px 24px;
+  color: #335477;
+  border-bottom: 1px solid #F3F7F7;
+  vertical-align: middle;
+}
+
+.table tbody tr:hover td { background: #FAFCFC; }
+.rowActive td { background: #FAF5FD !important; }
+
+/* Columns */
+.codeCol  { width: 100px; text-align: center; }
+.colorCol { width: 160px; }
+.menuCol  { width: 52px; text-align: center; position: relative; }
+
+.codeCell {
+  font-weight: 700;
+  color: #002955;
+  text-align: center;
+}
+
+.descCell { font-weight: 500; }
+
+/* Color pill */
+.colorPill {
+  display: inline-block;
+  width: 80px;
+  height: 22px;
+  border-radius: 11px;
+}
+
+/* Empty */
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: #C2D6D8;
+  font-style: italic;
+}
+
+/* ── Column configurator ─────────────────────────────────────── */
+
+.gearCol {
+  width: 40px;
+  text-align: center;
+  position: relative;
+}
+
+/* menuCol already handles gear + dots — needs relative positioning */
+
+.gearBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #667F99;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.gearBtn svg { width: 15px; height: 15px; }
+.gearBtn:hover { background: #F0E5F6; color: #8833B8; }
+
+.colsMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 200;
+  background: #FCFDFD;
+  border: 1px solid #C2D6D8;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 8px 0;
+  min-width: 180px;
+  animation: colsMenuIn 120ms ease;
+}
+
+@keyframes colsMenuIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.colsMenuHeader {
+  padding: 6px 16px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #335477;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #F3F7F7;
+  margin-bottom: 4px;
+}
+
+.colsMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: #002955;
+  cursor: pointer;
+  transition: background 100ms ease;
+  user-select: none;
+}
+
+.colsMenuItem:hover { background: #F3F7F7; }
+
+.colsMenuItem input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #8833B8;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Row menu ────────────────────────────────────────────────── */
+
+.menuContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.menuBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #667F99;
+  font-size: 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 150ms ease;
+}
+
+.menuBtn:hover { background: #F0E5F6; color: #8833B8; }
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 150px;
+  background: #FCFDFD;
+  border: 1px solid #C2D6D8;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: #002955;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms ease;
+}
+
+.dropdownItem svg { width: 14px; height: 14px; flex-shrink: 0; }
+.dropdownItem:hover { background: #F3F7F7; }
+
+.dropdownItemDanger { color: #D32F2F; }
+.dropdownItemDanger svg { stroke: #D32F2F; }
+.dropdownItemDanger:hover { background: #FFF0F0; }

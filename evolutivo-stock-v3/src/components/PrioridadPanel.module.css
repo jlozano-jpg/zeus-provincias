@@ -1,0 +1,387 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 998;
+  animation: fadeIn 200ms ease;
+}
+
+.panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 500px;
+  background: #FCFDFD;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 200ms ease;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.secondaryBtn,
+.closeBtn {
+  border: none;
+  background: #F3F4F6;
+  color: #111827;
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 150ms ease;
+}
+
+.secondaryBtn:hover,
+.closeBtn:hover {
+  background: #E5E7EB;
+}
+
+.closeBtn {
+  min-width: 42px;
+  display: grid;
+  place-items: center;
+}
+
+/* ── Body ────────────────────────────────────────────────────── */
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 28px 22px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.input {
+  width: 100%;
+  min-height: 38px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #0F172A;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.input:disabled {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+.colorField {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  background: #F8FAFC;
+}
+
+.colorNative {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 10px;
+  appearance: none;
+}
+
+.colorHexInput {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #0F172A;
+  outline: none;
+}
+
+.colorHexInput::placeholder {
+  color: #9CA3AF;
+}
+
+.sectionBlock {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid #E2E8F0;
+  padding-top: 18px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.sectionDescription {
+  margin: 4px 0 0;
+  color: #4B5563;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.addRuleBtn,
+.addConditionBtn,
+.deleteRuleBtn,
+.removeConditionBtn {
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 10px 16px;
+}
+
+.addRuleBtn,
+.addConditionBtn {
+  background: #7C3AED;
+  color: #FFFFFF;
+}
+
+.addRuleBtn:hover,
+.addConditionBtn:hover {
+  background: #6D28D9;
+}
+
+.deleteRuleBtn,
+.removeConditionBtn {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+.deleteRuleBtn:hover,
+.removeConditionBtn:hover {
+  background: #E5E7EB;
+}
+
+.emptyState {
+  border: 1px dashed #D1D5DB;
+  border-radius: 14px;
+  padding: 18px;
+  color: #6B7280;
+  background: #F8FAFC;
+  font-size: 14px;
+}
+
+.ruleWrapper {
+  display: grid;
+  gap: 16px;
+}
+
+.orBadge {
+  width: max-content;
+  align-self: center;
+  justify-self: center;
+  background: #EDE9FE;
+  color: #7C3AED;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ruleCard {
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 16px;
+  background: #FFFFFF;
+  display: grid;
+  gap: 14px;
+}
+
+.ruleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.ruleTitle {
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.conditions {
+  display: grid;
+  gap: 12px;
+}
+
+.conditionRow {
+  display: grid;
+  gap: 8px;
+}
+
+.conditionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4B5563;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.conditionFields {
+  display: grid;
+  gap: 12px;
+}
+
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #111827;
+  background: #F9FAFB;
+  border: 1px solid #D1D5DB;
+  border-radius: 12px;
+}
+
+.numberField {
+  display: grid;
+  gap: 4px;
+}
+
+.infoIcon {
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #EEF2FF;
+  color: #4338CA;
+  border-radius: 999px;
+}
+
+.andLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  align-self: center;
+}
+
+.ruleFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #E5E7EB;
+  background: #F8FAFC;
+}
+
+.cancelBtn,
+.saveBtn {
+  min-width: 120px;
+}
+
+.cancelBtn {
+  padding: 12px 18px;
+  background: #F3F4F6;
+  color: #111827;
+  border: none;
+}
+
+.cancelBtn:hover {
+  background: #E5E7EB;
+}
+
+.saveBtn {
+  background: #7C3AED;
+  color: #FFFFFF;
+  border: none;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #6D28D9;
+}
+
+.saveBtn:disabled {
+  background: #C4B5FD;
+  cursor: not-allowed;
+}

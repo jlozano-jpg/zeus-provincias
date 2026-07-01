@@ -1,0 +1,180 @@
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #FCFDFD;
+  border-right: 1px solid #C2D6D8;
+  transition: width 200ms ease;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #C2D6D8;
+  min-height: 64px;
+}
+
+.menuToggle {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #002955;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.menuToggle::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+.menuToggle:hover {
+  background: #F0E5F6;
+  color: #8833B8;
+}
+
+.menuToggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #8833B8;
+}
+
+.menuToggle:active {
+  background: #F0E5F6;
+  color: #6A00A7;
+}
+
+.menuToggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.logo {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.brandName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #002955;
+  letter-spacing: 1px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.brandTag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8833B8;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+
+.menu {
+  flex: 1;
+  background: #00CDCD;
+  padding: 12px 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: #FCFDFD;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms ease;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+}
+
+.menuItem:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.menuItem:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 2px #FCFDFD;
+}
+
+.menuItemActive {
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+  border-left-color: #FCFDFD;
+}
+
+.menuLabel {
+  display: block;
+  flex: 1;
+}
+
+.expandIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.expandIconOpen {
+  transform: rotate(90deg);
+}
+
+.collapsed .menuItem {
+  padding: 12px 8px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 64px;
+  }
+
+  .brand {
+    display: none;
+  }
+
+  .menuItem {
+    padding: 12px 8px;
+  }
+}
