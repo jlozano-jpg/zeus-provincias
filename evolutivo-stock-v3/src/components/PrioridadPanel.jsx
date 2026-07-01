@@ -196,7 +196,7 @@ export default function PrioridadPanel({ mode, prioridad, onSave, onCancel, onEd
               <div>
                 <div className={styles.sectionLabel}>Reglas de asignación automática</div>
                 <p className={styles.sectionDescription}>
-                  Cada regla agrupa condiciones por <strong>y</strong>. Las reglas entre sí se combinan con <strong>o</strong>.
+                  Dentro de una regla, todas las condiciones deben cumplirse en conjunto. Entre distintas reglas, con que se cumpla una alcanza para aplicar la prioridad.
                 </p>
               </div>
               {!isReadOnly && (
