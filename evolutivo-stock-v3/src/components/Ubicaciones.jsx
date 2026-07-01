@@ -1,47 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import styles from './Ubicaciones.module.css'
-
-function makeDeposito(num) {
-  const d = `dep-${num}`
-  return {
-    id: d, codigo: `D${num}`, nombre: `Depósito ${num}`, tipo: 'deposito',
-    children: [1, 2].map(z => ({
-      id: `${d}-z${z}`, codigo: `Z${z}`, nombre: `Zona ${z}`, tipo: 'zona',
-      children: [1, 2].map(p => ({
-        id: `${d}-z${z}-p${p}`, codigo: `P${p}`, nombre: `Pasillo ${p}`, tipo: 'pasillo',
-        children: [1, 2].map(c => ({
-          id: `${d}-z${z}-p${p}-c${c}`, codigo: `C${c}`, nombre: `Casillero ${c}`, tipo: 'casillero',
-          children: []
-        }))
-      }))
-    }))
-  }
-}
-
-const DATA = [1, 2, 3, 4, 5].map(makeDeposito)
-
-function findNode(nodes, id) {
-  for (const node of nodes) {
-    if (node.id === id) return node
-    if (node.children?.length) {
-      const found = findNode(node.children, id)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-function getAncestors(nodes, targetId, path = []) {
-  for (const node of nodes) {
-    const next = [...path, node]
-    if (node.id === targetId) return next
-    if (node.children?.length) {
-      const found = getAncestors(node.children, targetId, next)
-      if (found) return found
-    }
-  }
-  return null
-}
+import GeneradorEtiquetasModal from './GeneradorEtiquetasModal'
+import { UBICACIONES_DATA as DATA, findNode, getAncestors } from '../data/ubicaciones'
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -168,7 +128,7 @@ function TreeNode({ node, selectedId, expandedIds, onSelect, onToggle, level }) 
 
 // ── Card ──────────────────────────────────────────────────────────────────
 
-function UbicacionCard({ node, onOpen, onEdit, onDelete }) {
+function UbicacionCard({ node, onOpen, onEdit, onDelete, onPrintLabel }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const Icon = TIPO_ICONS[node.tipo] || IconDeposito
@@ -202,6 +162,17 @@ function UbicacionCard({ node, onOpen, onEdit, onDelete }) {
         </button>
         {menuOpen && (
           <div className={styles.cardDropdown}>
+            {!hasChildren && (
+              <button
+                className={styles.cardDropdownItem}
+                onClick={() => { setMenuOpen(false); onPrintLabel(node) }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+                </svg>
+                Imprimir etiqueta
+              </button>
+            )}
             <button
               className={styles.cardDropdownItem}
               onClick={() => { setMenuOpen(false); onEdit(node) }}
@@ -356,6 +327,7 @@ export default function Ubicaciones() {
   const [expandedIds, setExpandedIds] = useState(new Set())
   const [viewMode, setViewMode] = useState('grid')
   const [editingNode, setEditingNode] = useState(null)
+  const [generadorNode, setGeneradorNode] = useState(undefined) // undefined=cerrado, null=todos, node=presel
 
   const toggleExpand = (nodeId) => {
     setExpandedIds(prev => {
@@ -447,6 +419,12 @@ export default function Ubicaciones() {
                   <IconList />
                 </button>
               </div>
+              <button className={styles.labelBtn} onClick={() => setGeneradorNode(null)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+                </svg>
+                Generar etiquetas
+              </button>
               <button className={styles.newBtn}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -468,6 +446,7 @@ export default function Ubicaciones() {
                   onOpen={handleSelect}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onPrintLabel={(n) => setGeneradorNode(n)}
                 />
               ))
             )}
@@ -483,6 +462,14 @@ export default function Ubicaciones() {
           />
         )}
       </div>
+
+      {/* ── Generador de etiquetas ── */}
+      {generadorNode !== undefined && (
+        <GeneradorEtiquetasModal
+          preselectedNode={generadorNode}
+          onClose={() => setGeneradorNode(undefined)}
+        />
+      )}
     </div>
   )
 }
