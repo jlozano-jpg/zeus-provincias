@@ -369,51 +369,55 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
                 />
               </div>
 
-              {/* ÁREA */}
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Área</label>
-                <select
-                  value={formData.area ?? ''}
-                  onChange={(e) => handleChange('area', e.target.value)}
-                  disabled={mode === 'view' || !formData.preparador}
-                  onKeyDown={handleKeyDown}
-                  className={styles.select}
-                  aria-label="Área"
-                >
-                  <option value="">Seleccionar área...</option>
-                  {AVAILABLE_AREAS.map(area => (
-                    <option key={area} value={area}>{area}</option>
-                  ))}
-                </select>
-                <p className={styles.helperText}>Disponible al activar el rol Preparador</p>
-              </div>
-
-              {/* ATRIBUTOS */}
-              <div className={styles.section}>
-                <h3 className={styles.sectionTitle}>Atributos</h3>
-
-                <label className={`${styles.toggleGroup} ${styles.atributoRow}`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.apto ?? false}
-                    onChange={() => handleCheckChange('apto')}
+              {/* ÁREA — solo preparador */}
+              {formData.preparador && (
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Área</label>
+                  <select
+                    value={formData.area ?? ''}
+                    onChange={(e) => handleChange('area', e.target.value)}
                     disabled={mode === 'view'}
-                    className={styles.toggleInput}
-                    aria-label="Apto autoelevador"
-                  />
-                  <span className={styles.toggleSwitch} aria-hidden="true" />
-                  <span className={styles.atributoTexto}>
-                    <span className={styles.atributoNombre}>Apto autoelevador</span>
-                    <span className={styles.atributoDesc}>Habilita preparaciones con ubicaciones en altura o pallets pesados.</span>
-                  </span>
-                </label>
-              </div>
+                    onKeyDown={handleKeyDown}
+                    className={styles.select}
+                    aria-label="Área"
+                  >
+                    <option value="">Seleccionar área...</option>
+                    {AVAILABLE_AREAS.map(area => (
+                      <option key={area} value={area}>{area}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* ATRIBUTOS — solo preparador */}
+              {formData.preparador && (
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>Atributos</h3>
+
+                  <label className={`${styles.toggleGroup} ${styles.atributoRow}`}>
+                    <input
+                      type="checkbox"
+                      checked={formData.apto ?? false}
+                      onChange={() => handleCheckChange('apto')}
+                      disabled={mode === 'view'}
+                      className={styles.toggleInput}
+                      aria-label="Apto autoelevador"
+                    />
+                    <span className={styles.toggleSwitch} aria-hidden="true" />
+                    <span className={styles.atributoTexto}>
+                      <span className={styles.atributoNombre}>Apto autoelevador</span>
+                      <span className={styles.atributoDesc}>Habilita preparaciones con ubicaciones en altura o pallets pesados.</span>
+                    </span>
+                  </label>
+                </div>
+              )}
 
               {/* INDICADORES CALCULADOS */}
               <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Indicadores Calculados</h3>
 
                 <div className={styles.indicadoresBox}>
+                  {/* Antigüedad — siempre, una sola vez */}
                   <div className={styles.indicadorRow}>
                     <span className={styles.indicadorIcon} aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -425,35 +429,71 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
                     <span className={styles.indicadorValor}>{calcAntiguedad(formData.inicioActividades)}</span>
                   </div>
 
-                  <div className={styles.indicadorRow}>
-                    <span className={styles.indicadorIcon} aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                        <polyline points="2 17 12 22 22 17"/>
-                        <polyline points="2 12 12 17 22 12"/>
-                      </svg>
-                    </span>
-                    <span className={styles.indicadorLabel}>Artículos promedio / preparación</span>
-                    <span className={styles.indicadorValor}>
-                      {formData.articulosPromedio != null ? formData.articulosPromedio : '--'}
-                    </span>
-                  </div>
+                  {/* Indicadores de preparador */}
+                  {formData.preparador && (
+                    <>
+                      <div className={styles.indicadorRow}>
+                        <span className={styles.indicadorIcon} aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            <polyline points="2 17 12 22 22 17"/>
+                            <polyline points="2 12 12 17 22 12"/>
+                          </svg>
+                        </span>
+                        <span className={styles.indicadorLabel}>Artículos promedio / preparación</span>
+                        <span className={styles.indicadorValor}>
+                          {formData.articulosPromedio != null ? formData.articulosPromedio : '--'}
+                        </span>
+                      </div>
 
-                  <div className={styles.indicadorRow}>
-                    <span className={styles.indicadorIcon} aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 7v5l3.5 2"/>
-                      </svg>
-                    </span>
-                    <span className={styles.indicadorLabel}>Tiempo promedio / ubicación</span>
-                    <span className={styles.indicadorValor}>
-                      {formData.tiempoPromedio != null ? formData.tiempoPromedio : '--'}
-                    </span>
-                  </div>
+                      <div className={styles.indicadorRow}>
+                        <span className={styles.indicadorIcon} aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7v5l3.5 2"/>
+                          </svg>
+                        </span>
+                        <span className={styles.indicadorLabel}>Tiempo promedio / ubicación</span>
+                        <span className={styles.indicadorValor}>
+                          {formData.tiempoPromedio != null ? formData.tiempoPromedio : '--'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Indicadores de controlador */}
+                  {formData.controlador && (
+                    <>
+                      <div className={styles.indicadorRow}>
+                        <span className={styles.indicadorIcon} aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                          </svg>
+                        </span>
+                        <span className={styles.indicadorLabel}>Artículos promedio por control</span>
+                        <span className={styles.indicadorValor}>
+                          {formData.articulosPromedioControl != null ? formData.articulosPromedioControl : '--'}
+                        </span>
+                      </div>
+
+                      <div className={styles.indicadorRow}>
+                        <span className={styles.indicadorIcon} aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7v5l3.5 2"/>
+                          </svg>
+                        </span>
+                        <span className={styles.indicadorLabel}>Tiempo promedio por control</span>
+                        <span className={styles.indicadorValor}>
+                          {formData.tiempoPromedioControl != null ? formData.tiempoPromedioControl : '--'}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <p className={styles.helperText}>No editable. Calculado en base al historial de preparaciones.</p>
+                <p className={styles.helperText}>No editable. Calculado en base al historial de actividad.</p>
               </div>
             </>
           )}
