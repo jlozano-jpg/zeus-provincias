@@ -132,7 +132,7 @@ function buildHeroCards(operarios) {
   return { preparadorCards, controladorCards }
 }
 
-export default function OperariosList({ operarios, searchTerm, onSearchChange, onView, onEdit, onCreate, onDelete, selectedOperario, onSelectOperario }) {
+export default function OperariosList({ operarios, searchTerm, onSearchChange, onView, onEdit, onCreate, onDelete, selectedOperario, onSelectOperario, onOpenAutoAssign }) {
   const [query, setQuery] = useState(searchTerm ?? '')
   const [openMenuId, setOpenMenuId] = useState(null)
 
@@ -252,6 +252,9 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
             <h1 className={styles.pageTitle}>Operadores de Stock</h1>
           </div>
           <div className={styles.headerActions}>
+            <button type="button" className={styles.secondaryBtn} onClick={onOpenAutoAssign}>
+              Asignación Automática
+            </button>
             <button type="button" className={styles.newBtn} onClick={onCreate}>
               Nuevo Operador
             </button>

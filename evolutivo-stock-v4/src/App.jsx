@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import Tabs from './components/Tabs'
 import OperariosList from './components/OperariosList'
 import OperarioPanel from './components/OperarioPanel'
+import AsignacionAutomaticaPanel from './components/AsignacionAutomaticaPanel'
 import PreparacionesList from './components/PreparacionesList'
 import PreparacionOrigenPanel from './components/PreparacionOrigenPanel'
 import PreparacionDocumentoPanel from './components/PreparacionDocumentoPanel'
@@ -135,6 +136,7 @@ export default function App() {
   const [articulosSinArea, setArticulosSinArea] = useState([])
   const [showAreasPanel, setShowAreasPanel] = useState(false)
   const [showAsignacionPanel, setShowAsignacionPanel] = useState(false)
+  const [showAutoAssignPanel, setShowAutoAssignPanel] = useState(false)
   const [selectedOrigenId, setSelectedOrigenId] = useState(null)
   const [pedidoVentaSeleccion, setPedidoVentaSeleccion] = useState(null)
   const [preparacionVista, setPreparacionVista] = useState(null)
@@ -180,6 +182,10 @@ export default function App() {
   const handleEditOperario = (operario) => {
     setSelectedOperario({ ...operario })
     setPanelMode('edit')
+  }
+
+  const handleOpenAutoAssign = () => {
+    setShowAutoAssignPanel(true)
   }
 
   const handleCreateOperario = () => {
@@ -504,6 +510,7 @@ export default function App() {
             onEdit={handleEditOperario}
             onDelete={handleDeleteOperario}
             onCreate={handleCreateOperario}
+            onOpenAutoAssign={handleOpenAutoAssign}
             selectedOperario={selectedOperario}
             onSelectOperario={handleViewOperario}
           />
@@ -568,6 +575,10 @@ export default function App() {
           onSave={handleSave}
           onCancel={handleCancel}
         />
+      )}
+
+      {showAutoAssignPanel && (
+        <AsignacionAutomaticaPanel onClose={() => setShowAutoAssignPanel(false)} />
       )}
 
       {showAreasPanel && pedidoVentaSeleccion ? (

@@ -215,6 +215,17 @@
   color: #172033;
 }
 
+.secondaryBtn {
+  border: 1px solid #e4dcf8;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: white;
+  color: #6d28d9;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .newBtn {
   border: none;
   border-radius: 999px;
