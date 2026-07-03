@@ -161,16 +161,9 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
     setQuery(searchTerm ?? '')
   }, [searchTerm])
 
-  useEffect(() => {
-    if (!filtered.length) return
-    if (!selectedOperario || !filtered.some((operario) => operario.id === selectedOperario.id)) {
-      onSelectOperario?.(filtered[0])
-    }
-  }, [filtered, selectedOperario, onSelectOperario])
-
   const selected = selectedOperario && filtered.some((operario) => operario.id === selectedOperario.id)
     ? selectedOperario
-    : filtered[0] || null
+    : null
 
   const { preparadorCards, controladorCards } = buildHeroCards(operarios || [])
 
@@ -551,7 +544,7 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
             </div>
           ) : (
             <div className={styles.placeholderCard}>
-              <h2 className={styles.placeholderTitle}>Selecciona un operador</h2>
+              <h2 className={styles.placeholderTitle}>Seleccione un operador</h2>
               <p className={styles.placeholderText}>La ficha central mostrará su información, sus indicadores y sus atributos.</p>
             </div>
           )}

@@ -125,7 +125,7 @@ const INICIO_TAB = { id: 'inicio', label: 'Inicio', closable: false }
 
 export default function App() {
   const [operarios, setOperarios] = useState(INITIAL_OPERARIOS)
-  const [selectedOperario, setSelectedOperario] = useState(INITIAL_OPERARIOS[0])
+  const [selectedOperario, setSelectedOperario] = useState(null)
   const [panelMode, setPanelMode] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeView, setActiveView] = useState(null)
