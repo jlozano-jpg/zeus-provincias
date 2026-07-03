@@ -1,0 +1,328 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 41, 85, 0.2);
+  z-index: 500;
+  animation: fadeIn 150ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  background: #FCFDFD;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  z-index: 501;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 200ms ease;
+  overflow: hidden;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #C2D6D8;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #002955;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #667F99;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover { background: #F0E5F6; color: #8833B8; }
+.closeBtn:focus { outline: none; box-shadow: 0 0 0 2px #8833B8; }
+
+/* ── Intro ───────────────────────────────────────────────────── */
+
+.intro {
+  font-size: 12px;
+  color: #667F99;
+  padding: 14px 24px 4px;
+  margin: 0;
+  line-height: 1.55;
+  flex-shrink: 0;
+}
+
+/* ── Criteria list ───────────────────────────────────────────── */
+
+.criteriosList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.criteriosList::-webkit-scrollbar { width: 6px; }
+.criteriosList::-webkit-scrollbar-track { background: #F3F7F7; }
+.criteriosList::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00CDCD 0%, #8833B8 100%);
+  border-radius: 6px;
+}
+
+.criterioRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 13px 12px;
+  border: 1px solid #E0EAEB;
+  border-radius: 10px;
+  background: #FCFDFD;
+  cursor: grab;
+  transition: border-color 150ms, box-shadow 150ms, background 150ms;
+  user-select: none;
+}
+
+.criterioRow:hover {
+  border-color: #C2D6D8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.criterioRow:active {
+  cursor: grabbing;
+}
+
+.criterioRowDragOver {
+  border-color: #8833B8;
+  box-shadow: 0 0 0 2px #F0E5F6;
+  background: #FAF5FD;
+}
+
+/* ── Row inner layout ────────────────────────────────────────── */
+
+.criterioContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  transition: opacity 200ms;
+}
+
+.criterioContentInactive {
+  opacity: 0.38;
+}
+
+/* ── Grip ────────────────────────────────────────────────────── */
+
+.grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C2D6D8;
+  flex-shrink: 0;
+  transition: color 150ms;
+}
+
+.grip svg {
+  width: 14px;
+  height: 14px;
+}
+
+.criterioRow:hover .grip { color: #8833B8; }
+
+/* ── Order badge ─────────────────────────────────────────────── */
+
+.orderBadge {
+  width: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #8833B8;
+  color: #FCFDFD;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Criterion icon ──────────────────────────────────────────── */
+
+.criterioIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #F3F7F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #335477;
+}
+
+.criterioIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Criterion info ──────────────────────────────────────────── */
+
+.criterioInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.criterioNombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: #002955;
+  line-height: 1.3;
+}
+
+.criterioDesc {
+  font-size: 11px;
+  color: #667F99;
+  line-height: 1.4;
+}
+
+/* ── Toggle ──────────────────────────────────────────────────── */
+
+.toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 200ms;
+  margin-left: 12px;
+}
+
+.toggleOn  { background: #8833B8; }
+.toggleOff { background: #C2D6D8; }
+
+.toggle:focus { outline: none; box-shadow: 0 0 0 2px #8833B8; }
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FCFDFD;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+  transition: transform 200ms;
+  pointer-events: none;
+}
+
+.toggleThumbOff { transform: translateX(3px); }
+.toggleThumbOn  { transform: translateX(21px); }
+
+/* ── Footer text ─────────────────────────────────────────────── */
+
+.footerText {
+  font-size: 11px;
+  color: #667F99;
+  padding: 12px 24px;
+  margin: 0;
+  border-top: 1px solid #F3F7F7;
+  line-height: 1.55;
+  flex-shrink: 0;
+}
+
+/* ── Footer buttons ──────────────────────────────────────────── */
+
+.footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #C2D6D8;
+  background: #F3F7F7;
+  flex-shrink: 0;
+}
+
+.cancelBtn {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  border: 1.5px solid #C2D6D8;
+  border-radius: 8px;
+  background: transparent;
+  color: #335477;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.cancelBtn:hover {
+  border-color: #8833B8;
+  color: #8833B8;
+  background: #F0E5F6;
+}
+
+.cancelBtn:focus { outline: none; box-shadow: 0 0 0 2px #8833B8; }
+
+.saveBtn {
+  flex: 1;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  border: none;
+  border-radius: 8px;
+  background: #8833B8;
+  color: #FCFDFD;
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.saveBtn:hover  { background: #6A00A7; }
+.saveBtn:focus  { outline: none; box-shadow: 0 0 0 2px #6A00A7; }
+
+@media (max-width: 768px) {
+  .panel { width: 100%; }
+}
