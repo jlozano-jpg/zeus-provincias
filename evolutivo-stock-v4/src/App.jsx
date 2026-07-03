@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Tabs from './components/Tabs'
+import HomeScreen from './components/HomeScreen'
 import OperariosList from './components/OperariosList'
 import OperarioPanel from './components/OperarioPanel'
 import AsignacionAutomaticaPanel from './components/AsignacionAutomaticaPanel'
@@ -127,7 +128,7 @@ export default function App() {
   const [selectedOperario, setSelectedOperario] = useState(INITIAL_OPERARIOS[0])
   const [panelMode, setPanelMode] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeView, setActiveView] = useState('operarios-stock')
+  const [activeView, setActiveView] = useState(null)
 
   const [preparaciones, setPreparaciones] = useState(INITIAL_PREPARACIONES)
   const [preparacionSearchTerm, setPreparacionSearchTerm] = useState('')
@@ -437,7 +438,10 @@ export default function App() {
     setActiveView(viewId)
 
     if (viewId === 'operarios-stock') {
-      setActiveTab('inicio')
+      setTabs(prev => prev.some(tab => tab.id === 'operarios-stock')
+        ? prev
+        : [...prev, { id: 'operarios-stock', label: 'Operadores de Stock', closable: true }])
+      setActiveTab('operarios-stock')
       return
     }
 
@@ -484,14 +488,14 @@ export default function App() {
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId)
-    setActiveView(tabId === 'inicio' ? 'operarios-stock' : tabId)
+    setActiveView(tabId === 'inicio' ? null : tabId)
   }
 
   const handleCloseTab = (tabId) => {
     setTabs(prev => prev.filter(tab => tab.id !== tabId))
     if (activeTab === tabId) {
       setActiveTab('inicio')
-      setActiveView('operarios-stock')
+      setActiveView(null)
     }
   }
 
@@ -501,7 +505,9 @@ export default function App() {
       <div className={styles.container}>
         <Tabs tabs={tabs} activeTab={activeTab} onSelectTab={handleSelectTab} onCloseTab={handleCloseTab} />
 
-        {activeTab === 'inicio' && (
+        {activeTab === 'inicio' && <HomeScreen />}
+
+        {activeTab === 'operarios-stock' && (
           <OperariosList
             operarios={filteredOperarios}
             searchTerm={searchTerm}

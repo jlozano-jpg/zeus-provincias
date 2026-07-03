@@ -3,10 +3,6 @@ import styles from './Sidebar.module.css'
 
 const MENU_ITEMS = [
   {
-    id: 'operarios-stock',
-    label: 'Operadores de Stock'
-  },
-  {
     id: 'configuracion',
     label: 'Configuración',
     children: [
@@ -21,6 +17,7 @@ const MENU_ITEMS = [
         id: 'tablas-generales',
         label: 'Tablas Generales',
         children: [
+          { id: 'operarios-stock', label: 'Operadores de Stock' },
           { id: 'prioridades', label: 'Prioridades' }
         ]
       }

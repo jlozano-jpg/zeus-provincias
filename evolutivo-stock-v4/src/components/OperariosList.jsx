@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './OperariosList.module.css'
 
 function calcAntiguedad(fechaStr) {
@@ -83,6 +83,8 @@ function buildHeroCards(operarios) {
       operator: preparadores.length > 0 ? formatOperator(bestPreparadorByArticles) : '--',
       average: preparadores.length > 0 ? `Promedio equipo: ${Math.round(preparadores.reduce((sum, op) => sum + Number(op.articulosPromedio || 0), 0) / preparadores.length)} art.` : 'Promedio equipo: --',
       accent: 'teal',
+      operarioRef: bestPreparadorByArticles,
+      description: 'Prepara en promedio la mayor cantidad de artículos por preparación.',
     },
     {
       title: 'Mejor tiempo promedio',
@@ -91,6 +93,8 @@ function buildHeroCards(operarios) {
       operator: preparadores.length > 0 ? formatOperator(bestPreparadorByTime) : '--',
       average: preparadores.length > 0 ? `Promedio equipo: ${Math.round(preparadores.reduce((sum, op) => sum + (parseTimeToSeconds(op.tiempoPromedio) || 0), 0) / preparadores.length)} s` : 'Promedio equipo: --',
       accent: 'violet',
+      operarioRef: bestPreparadorByTime,
+      description: 'Preparador con el menor tiempo promedio de recorrido por ubicación durante la preparación.',
     },
     {
       title: 'Mayor antigüedad',
@@ -99,6 +103,8 @@ function buildHeroCards(operarios) {
       operator: preparadores.length > 0 ? formatOperator(bestPreparadorByAntiguedad) : '--',
       average: preparadores.length > 0 ? `Promedio equipo: ${calcAntiguedad(preparadores[Math.floor(preparadores.length / 2)]?.inicioActividades || '')}` : 'Promedio equipo: --',
       accent: 'neutral',
+      operarioRef: bestPreparadorByAntiguedad,
+      description: 'Preparador con más tiempo de antigüedad en el rol, desde su inicio de actividades.',
     },
   ]
 
@@ -110,6 +116,8 @@ function buildHeroCards(operarios) {
       operator: controladores.length > 0 ? formatOperator(bestControladorByArticles) : '--',
       average: controladores.length > 0 ? `Promedio equipo: ${Math.round(controladores.reduce((sum, op) => sum + Number(op.articulosPromedioControl || 0), 0) / controladores.length)} art.` : 'Promedio equipo: --',
       accent: 'violet',
+      operarioRef: bestControladorByArticles,
+      description: 'Controla en promedio la mayor cantidad de artículos por preparación.',
     },
     {
       title: 'Mejor tiempo promedio',
@@ -118,6 +126,8 @@ function buildHeroCards(operarios) {
       operator: controladores.length > 0 ? formatOperator(bestControladorByTime) : '--',
       average: controladores.length > 0 ? `Promedio equipo: ${Math.round(controladores.reduce((sum, op) => sum + (parseTimeToSeconds(op.tiempoPromedioControl) || 0), 0) / controladores.length)} s` : 'Promedio equipo: --',
       accent: 'teal',
+      operarioRef: bestControladorByTime,
+      description: 'Controlador con el menor tiempo promedio por control realizado.',
     },
     {
       title: 'Mayor antigüedad',
@@ -126,6 +136,8 @@ function buildHeroCards(operarios) {
       operator: controladores.length > 0 ? formatOperator(bestControladorByAntiguedad) : '--',
       average: controladores.length > 0 ? `Promedio equipo: ${calcAntiguedad(controladores[Math.floor(controladores.length / 2)]?.inicioActividades || '')}` : 'Promedio equipo: --',
       accent: 'neutral',
+      description: 'Controlador con más tiempo de antigüedad en el rol, desde su inicio de actividades.',
+      operarioRef: bestControladorByAntiguedad,
     },
   ]
 
@@ -135,6 +147,7 @@ function buildHeroCards(operarios) {
 export default function OperariosList({ operarios, searchTerm, onSearchChange, onView, onEdit, onCreate, onDelete, selectedOperario, onSelectOperario, onOpenAutoAssign }) {
   const [query, setQuery] = useState(searchTerm ?? '')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const detailRef = useRef(null)
 
   const filtered = useMemo(() => {
     const term = query.toLowerCase()
@@ -164,6 +177,13 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
   const handleSearchChange = (value) => {
     setQuery(value)
     onSearchChange?.(value)
+  }
+
+  const handleHighlightClick = (operario) => {
+    if (!operario) return
+    handleSearchChange('')
+    onSelectOperario?.(operario)
+    detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const roleBadges = (operario) => {
@@ -216,29 +236,66 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
   const comparisonRows = (() => {
     if (!selected) return []
     const rows = []
+    const preparadoresTeam = (operarios || []).filter((op) => op.preparador)
+    const controladoresTeam = (operarios || []).filter((op) => op.controlador)
+
+    const buildRow = (label, operatorValue, operatorDisplay, teamValue, teamUnit, higherIsBetter) => {
+      const maxValue = Math.max(operatorValue, teamValue, 1)
+      const diff = operatorValue - teamValue
+      const diffPct = teamValue !== 0 ? Math.round((diff / teamValue) * 100) : 0
+      return {
+        label,
+        operatorValue,
+        operatorDisplay,
+        teamValue,
+        teamDisplay: `${Number.isInteger(teamValue) ? teamValue : teamValue.toFixed(1)} ${teamUnit}`,
+        operatorPct: Math.max(4, Math.round((operatorValue / maxValue) * 100)),
+        teamPct: Math.max(4, Math.round((teamValue / maxValue) * 100)),
+        isBetter: higherIsBetter ? diff > 0 : diff < 0,
+        isEqual: diff === 0,
+        diffPct: Math.abs(diffPct),
+      }
+    }
+
     if (selected.preparador) {
-      rows.push({
-        label: 'Artículos / preparación',
-        operator: selected.articulosPromedio != null ? `${selected.articulosPromedio} art.` : '--',
-        team: `${Math.round((operarios || []).filter((op) => op.preparador).reduce((sum, op) => sum + Number(op.articulosPromedio || 0), 0) / Math.max(1, (operarios || []).filter((op) => op.preparador).length))} art.`,
-      })
-      rows.push({
-        label: 'Tiempo / ubicación',
-        operator: selected.tiempoPromedio || '--',
-        team: `${Math.round((operarios || []).filter((op) => op.preparador).reduce((sum, op) => sum + (parseTimeToSeconds(op.tiempoPromedio) || 0), 0) / Math.max(1, (operarios || []).filter((op) => op.preparador).length))} s`,
-      })
+      const teamArticulos = preparadoresTeam.reduce((sum, op) => sum + Number(op.articulosPromedio || 0), 0) / Math.max(1, preparadoresTeam.length)
+      rows.push(buildRow(
+        'Artículos / preparación',
+        Number(selected.articulosPromedio || 0),
+        selected.articulosPromedio != null ? `${selected.articulosPromedio} art.` : '--',
+        teamArticulos,
+        'art.',
+        true,
+      ))
+      const teamTiempo = preparadoresTeam.reduce((sum, op) => sum + (parseTimeToSeconds(op.tiempoPromedio) || 0), 0) / Math.max(1, preparadoresTeam.length)
+      rows.push(buildRow(
+        'Tiempo / ubicación',
+        parseTimeToSeconds(selected.tiempoPromedio) || 0,
+        selected.tiempoPromedio || '--',
+        teamTiempo,
+        's',
+        false,
+      ))
     }
     if (selected.controlador) {
-      rows.push({
-        label: 'Artículos / control',
-        operator: selected.articulosPromedioControl != null ? `${selected.articulosPromedioControl} art.` : '--',
-        team: `${Math.round((operarios || []).filter((op) => op.controlador).reduce((sum, op) => sum + Number(op.articulosPromedioControl || 0), 0) / Math.max(1, (operarios || []).filter((op) => op.controlador).length))} art.`,
-      })
-      rows.push({
-        label: 'Tiempo / control',
-        operator: selected.tiempoPromedioControl || '--',
-        team: `${Math.round((operarios || []).filter((op) => op.controlador).reduce((sum, op) => sum + (parseTimeToSeconds(op.tiempoPromedioControl) || 0), 0) / Math.max(1, (operarios || []).filter((op) => op.controlador).length))} s`,
-      })
+      const teamArticulosControl = controladoresTeam.reduce((sum, op) => sum + Number(op.articulosPromedioControl || 0), 0) / Math.max(1, controladoresTeam.length)
+      rows.push(buildRow(
+        'Artículos / control',
+        Number(selected.articulosPromedioControl || 0),
+        selected.articulosPromedioControl != null ? `${selected.articulosPromedioControl} art.` : '--',
+        teamArticulosControl,
+        'art.',
+        true,
+      ))
+      const teamTiempoControl = controladoresTeam.reduce((sum, op) => sum + (parseTimeToSeconds(op.tiempoPromedioControl) || 0), 0) / Math.max(1, controladoresTeam.length)
+      rows.push(buildRow(
+        'Tiempo / control',
+        parseTimeToSeconds(selected.tiempoPromedioControl) || 0,
+        selected.tiempoPromedioControl || '--',
+        teamTiempoControl,
+        's',
+        false,
+      ))
     }
     return rows
   })()
@@ -268,7 +325,14 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
             <div className={styles.highlightHeader}>Preparadores</div>
             <div className={styles.highlightGrid}>
               {preparadorCards.map((card) => (
-                <button key={card.title} type="button" className={`${styles.highlightCard} ${styles[card.accent]}`}>
+                <button
+                  key={card.title}
+                  type="button"
+                  className={`${styles.highlightCard} ${styles[card.accent]}`}
+                  onClick={() => handleHighlightClick(card.operarioRef)}
+                  disabled={!card.operarioRef}
+                  data-tooltip={card.operarioRef ? card.description : `${card.description} Sin datos disponibles.`}
+                >
                   <span className={styles.highlightIcon}>{card.icon}</span>
                   <div className={styles.highlightBody}>
                     <p className={styles.highlightTitle}>{card.title}</p>
@@ -287,7 +351,14 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
             <div className={styles.highlightHeader}>Controladores</div>
             <div className={styles.highlightGrid}>
               {controladorCards.map((card) => (
-                <button key={card.title} type="button" className={`${styles.highlightCard} ${styles[card.accent]}`}>
+                <button
+                  key={card.title}
+                  type="button"
+                  className={`${styles.highlightCard} ${styles[card.accent]}`}
+                  onClick={() => handleHighlightClick(card.operarioRef)}
+                  disabled={!card.operarioRef}
+                  data-tooltip={card.operarioRef ? card.description : `${card.description} Sin datos disponibles.`}
+                >
                   <span className={styles.highlightIcon}>{card.icon}</span>
                   <div className={styles.highlightBody}>
                     <p className={styles.highlightTitle}>{card.title}</p>
@@ -384,7 +455,7 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
           </div>
         </aside>
 
-        <section className={styles.detailPanel}>
+        <section className={styles.detailPanel} ref={detailRef}>
           {selected ? (
             <div className={styles.detailCard}>
               <div className={styles.detailHero}>
@@ -438,13 +509,31 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
                 <div className={styles.compareList}>
                   {comparisonRows.map((row) => (
                     <div key={row.label} className={styles.compareRow}>
-                      <div>
+                      <div className={styles.compareRowHeader}>
                         <p className={styles.compareLabel}>{row.label}</p>
-                        <p className={styles.compareOperator}>{row.operator}</p>
+                        {row.isEqual ? (
+                          <span className={`${styles.compareDelta} ${styles.compareDeltaNeutral}`}>= promedio equipo</span>
+                        ) : (
+                          <span className={`${styles.compareDelta} ${row.isBetter ? styles.compareDeltaGood : styles.compareDeltaBad}`}>
+                            {row.isBetter ? '▲' : '▼'} {row.diffPct}% {row.isBetter ? 'mejor' : 'peor'} que el equipo
+                          </span>
+                        )}
                       </div>
-                      <div className={styles.compareTeamBox}>
-                        <span className={styles.compareTeamLabel}>Promedio equipo</span>
-                        <strong className={styles.compareTeamValue}>{row.team}</strong>
+                      <div className={styles.compareBars}>
+                        <div className={styles.compareBarLine}>
+                          <span className={styles.compareBarTag}>Operador</span>
+                          <div className={styles.compareBarTrack}>
+                            <div className={styles.compareBarFillOperator} style={{ width: `${row.operatorPct}%` }} />
+                          </div>
+                          <span className={styles.compareBarValue}>{row.operatorDisplay}</span>
+                        </div>
+                        <div className={styles.compareBarLine}>
+                          <span className={styles.compareBarTag}>Equipo</span>
+                          <div className={styles.compareBarTrack}>
+                            <div className={styles.compareBarFillTeam} style={{ width: `${row.teamPct}%` }} />
+                          </div>
+                          <span className={styles.compareBarValue}>{row.teamDisplay}</span>
+                        </div>
                       </div>
                     </div>
                   ))}

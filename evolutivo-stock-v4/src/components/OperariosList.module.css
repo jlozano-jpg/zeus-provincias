@@ -6,6 +6,7 @@
   min-height: 0;
   padding: 24px;
   background: #f7f8fa;
+  overflow-y: auto;
 }
 
 .stickyHeader {
@@ -71,7 +72,7 @@
   padding: 16px;
   border-radius: 20px;
   background: #ffffff;
-  border: 1px solid #eceff5;
+  border: 1px solid #dde3ee;
   box-shadow: 0 10px 30px rgba(26, 35, 50, 0.04);
 }
 
@@ -90,21 +91,77 @@
 }
 
 .highlightCard {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1.5px solid #dfe3ec;
   border-radius: 16px;
   background: white;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
   cursor: pointer;
   text-align: left;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
-.highlightCard:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+.highlightCard[data-tooltip]::before,
+.highlightCard[data-tooltip]::after {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  z-index: 30;
+}
+
+.highlightCard[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(2px);
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #172033;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.22);
+}
+
+.highlightCard[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-1px);
+  border: 6px solid transparent;
+  border-bottom-color: #172033;
+}
+
+.highlightCard[data-tooltip]:hover::after,
+.highlightCard[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(8px);
+}
+
+.highlightCard[data-tooltip]:hover::before,
+.highlightCard[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(5px);
+}
+
+.highlightCard:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.highlightCard:disabled {
+  cursor: default;
+  opacity: 0.65;
 }
 
 .highlightIcon {
@@ -151,14 +208,17 @@
 
 .teal {
   background: linear-gradient(135deg, #f5fffe 0%, #ffffff 100%);
+  border-color: #a7e8e2;
 }
 
 .violet {
   background: linear-gradient(135deg, #faf6ff 0%, #ffffff 100%);
+  border-color: #d8c3fa;
 }
 
 .neutral {
   background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-color: #c7d0de;
 }
 
 .mainGrid {
@@ -196,9 +256,15 @@
   flex: 1;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid #e7ebf2;
+  border: 1.5px solid #c7cfdc;
   border-radius: 12px;
   background: #f8fafc;
+  transition: border-color 150ms ease;
+}
+
+.searchField:focus-within {
+  border-color: #8833b8;
+  background: #ffffff;
 }
 
 .searchIcon {
@@ -253,22 +319,24 @@
   gap: 8px;
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid transparent;
+  border: 1.5px solid #c7cfdc;
   border-radius: 14px;
   background: #fcfdff;
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
   transition: all 150ms ease;
 }
 
 .operatorRow:hover {
-  border-color: #e2d5f7;
+  border-color: #c7a6f0;
   background: #f8f4ff;
 }
 
 .operatorRowActive {
   border-color: #8833b8;
   background: #f7efff;
+  box-shadow: 0 6px 16px rgba(136, 51, 184, 0.12);
 }
 
 .operatorRowMain {
@@ -407,7 +475,8 @@
   padding: 18px;
   border-radius: 18px;
   background: linear-gradient(135deg, #f8f4ff 0%, #ffffff 100%);
-  border: 1px solid #efe7ff;
+  border: 2px solid #d8c3fa;
+  box-shadow: 0 6px 18px rgba(109, 40, 217, 0.08);
 }
 
 .detailHeroIdentity {
@@ -494,6 +563,8 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .metaLabel {
@@ -520,7 +591,8 @@
   padding: 14px;
   border-radius: 16px;
   background: linear-gradient(135deg, #faf6ff 0%, #ffffff 100%);
-  border: 1px solid #f1e9ff;
+  border: 1.5px solid #e3d3fb;
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.05);
 }
 
 .kpiIcon {
@@ -558,7 +630,7 @@
   padding: 16px;
   border-radius: 16px;
   background: #fbfcfe;
-  border: 1px solid #eef2f7;
+  border: 1.5px solid #d7deea;
 }
 
 .sectionTitle {
@@ -573,48 +645,105 @@
 .compareList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .compareRow {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: white;
+  border: 1.5px solid #c7cfdc;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.compareRowHeader {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: white;
+  flex-wrap: wrap;
 }
 
 .compareLabel {
   margin: 0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: #172033;
 }
 
-.compareOperator {
-  margin: 3px 0 0;
-  font-size: 14px;
+.compareDelta {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 700;
-  color: #7c3aed;
+  white-space: nowrap;
 }
 
-.compareTeamBox {
+.compareDeltaGood {
+  color: #0f766e;
+  background: #e1f8f4;
+}
+
+.compareDeltaBad {
+  color: #b91c1c;
+  background: #fdecec;
+}
+
+.compareDeltaNeutral {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.compareBars {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  gap: 6px;
 }
 
-.compareTeamLabel {
+.compareBarLine {
+  display: grid;
+  grid-template-columns: 56px 1fr 64px;
+  align-items: center;
+  gap: 10px;
+}
+
+.compareBarTag {
   font-size: 11px;
+  font-weight: 600;
   color: #64748b;
 }
 
-.compareTeamValue {
-  font-size: 13px;
+.compareBarTrack {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: #eef1f6;
+  overflow: hidden;
+}
+
+.compareBarFillOperator,
+.compareBarFillTeam {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 200ms ease;
+}
+
+.compareBarFillOperator {
+  background: linear-gradient(90deg, #8833b8 0%, #6d28d9 100%);
+}
+
+.compareBarFillTeam {
+  background: #a8b3c4;
+}
+
+.compareBarValue {
+  font-size: 12px;
+  font-weight: 700;
   color: #172033;
+  text-align: right;
 }
 
 .attributeList {
