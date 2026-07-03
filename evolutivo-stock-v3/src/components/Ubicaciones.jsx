@@ -206,6 +206,14 @@ function UbicacionCard({ node, onOpen, onEdit, onDelete, onPrintLabel }) {
         <span className={styles.cardBadge}>{node.codigo}</span>
         <span className={styles.cardName}>{node.nombre}</span>
       </div>
+      {node.enAltura && (
+        <div className={styles.cardAlturaTag}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
+          En altura
+        </div>
+      )}
       <div className={styles.cardFooter}>
         {hasChildren ? (
           <span className={styles.cardAbrirBtn}>
@@ -236,7 +244,7 @@ function EditUbicacionPanel({ node, parentName, onClose }) {
   const [codigo, setCodigo] = useState(node.codigo)
   const [descripcion, setDescripcion] = useState(node.nombre)
   const [area, setArea] = useState('')
-  const [enAltura, setEnAltura] = useState(false)
+  const [enAltura, setEnAltura] = useState(node.enAltura ?? false)
 
   return (
     <div className={styles.editPanel}>

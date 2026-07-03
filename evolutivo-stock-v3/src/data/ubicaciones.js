@@ -11,6 +11,7 @@ function makeDeposito(num) {
           codigo: `${num}${z}${p}${c}`,
           nombre: `Casillero ${c}`,
           tipo: 'casillero',
+          enAltura: c === 2 && p === 2,
           children: []
         }))
       }))
