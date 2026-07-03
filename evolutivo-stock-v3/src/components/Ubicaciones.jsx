@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
 import styles from './Ubicaciones.module.css'
 import GeneradorEtiquetasModal from './GeneradorEtiquetasModal'
-import { UBICACIONES_DATA as DATA, findNode, getAncestors } from '../data/ubicaciones'
+import { UBICACIONES_DATA, findNode, getAncestors } from '../data/ubicaciones'
+
+function updateNodeInTree(nodes, id, updates) {
+  return nodes.map(node => {
+    if (node.id === id) return { ...node, ...updates }
+    if (node.children?.length) return { ...node, children: updateNodeInTree(node.children, id, updates) }
+    return node
+  })
+}
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -240,11 +248,15 @@ function IconAltura() {
   )
 }
 
-function EditUbicacionPanel({ node, parentName, onClose }) {
+function EditUbicacionPanel({ node, parentName, onClose, onSave }) {
   const [codigo, setCodigo] = useState(node.codigo)
   const [descripcion, setDescripcion] = useState(node.nombre)
-  const [area, setArea] = useState('')
+  const [area, setArea] = useState(node.area ?? '')
   const [enAltura, setEnAltura] = useState(node.enAltura ?? false)
+
+  const handleSave = () => {
+    onSave({ codigo, nombre: descripcion, area, enAltura })
+  }
 
   return (
     <div className={styles.editPanel}>
@@ -322,7 +334,7 @@ function EditUbicacionPanel({ node, parentName, onClose }) {
 
       <div className={styles.editPanelFooter}>
         <button className={styles.editCancelBtn} onClick={onClose}>Cancelar</button>
-        <button className={styles.editSaveBtn}>Actualizar</button>
+        <button className={styles.editSaveBtn} onClick={handleSave}>Actualizar</button>
       </div>
     </div>
   )
@@ -331,6 +343,7 @@ function EditUbicacionPanel({ node, parentName, onClose }) {
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function Ubicaciones() {
+  const [data, setData] = useState(UBICACIONES_DATA)
   const [selectedId, setSelectedId] = useState(null)
   const [expandedIds, setExpandedIds] = useState(new Set())
   const [viewMode, setViewMode] = useState('grid')
@@ -353,15 +366,19 @@ export default function Ubicaciones() {
   }
 
   const handleEdit = (node) => setEditingNode(node)
+  const handleSaveEdit = (updates) => {
+    setData(prev => updateNodeInTree(prev, editingNode.id, updates))
+    setEditingNode(null)
+  }
   const handleDelete = (node) => {
     if (confirm(`¿Eliminar "${node.nombre}"?`)) {
       // sin funcionalidad real por ahora
     }
   }
 
-  const selectedNode = selectedId ? findNode(DATA, selectedId) : null
-  const cards = selectedNode ? (selectedNode.children ?? []) : DATA
-  const breadcrumb = selectedId ? getAncestors(DATA, selectedId) ?? [] : []
+  const selectedNode = selectedId ? findNode(data,selectedId) : null
+  const cards = selectedNode ? (selectedNode.children ?? []) : data
+  const breadcrumb = selectedId ? getAncestors(data,selectedId) ?? [] : []
   const parentName = selectedNode?.nombre ?? null
 
   return (
@@ -375,7 +392,7 @@ export default function Ubicaciones() {
         <aside className={styles.sidebar}>
           <div className={styles.sidebarHeader}>Depósitos</div>
           <div className={styles.treeRoot}>
-            {DATA.map(node => (
+            {data.map(node => (
               <TreeNode
                 key={node.id}
                 node={node}
@@ -467,6 +484,7 @@ export default function Ubicaciones() {
             node={editingNode}
             parentName={parentName}
             onClose={() => setEditingNode(null)}
+            onSave={handleSaveEdit}
           />
         )}
       </div>
