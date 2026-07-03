@@ -245,6 +245,7 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
         operatorPct: Math.max(4, Math.round((operatorValue / maxValue) * 100)),
         teamPct: Math.max(4, Math.round((teamValue / maxValue) * 100)),
         isBetter: higherIsBetter ? diff > 0 : diff < 0,
+        isAboveTeam: diff > 0,
         isEqual: diff === 0,
         diffPct: Math.abs(diffPct),
       }
@@ -508,7 +509,7 @@ export default function OperariosList({ operarios, searchTerm, onSearchChange, o
                           <span className={`${styles.compareDelta} ${styles.compareDeltaNeutral}`}>= promedio equipo</span>
                         ) : (
                           <span className={`${styles.compareDelta} ${row.isBetter ? styles.compareDeltaGood : styles.compareDeltaBad}`}>
-                            {row.isBetter ? '▲' : '▼'} {row.diffPct}% {row.isBetter ? 'mejor' : 'peor'} que el equipo
+                            {row.isAboveTeam ? '▲' : '▼'} {row.diffPct}% {row.isAboveTeam ? 'superior al equipo' : 'por debajo del equipo'}
                           </span>
                         )}
                       </div>
