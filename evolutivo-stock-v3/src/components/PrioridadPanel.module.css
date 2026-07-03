@@ -341,6 +341,67 @@
   align-self: center;
 }
 
+/* ── Fecha de entrega ─────────────────────────────────────────── */
+
+.fechaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectFecha {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #111827;
+  background: #F9FAFB;
+  border: 1px solid #D1D5DB;
+  border-radius: 12px;
+}
+
+.diasInput {
+  width: 72px;
+  min-height: 44px;
+  padding: 10px 10px;
+  font-size: 13px;
+  text-align: center;
+  color: #0F172A;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.diasInput:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.diasInput:disabled {
+  background: #F3F4F6;
+  color: #9CA3AF;
+}
+
+.diasSuffix {
+  font-size: 13px;
+  color: #4B5563;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.diasSuffixDisabled {
+  color: #9CA3AF;
+}
+
+.helperText {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.55;
+}
+
 .ruleFooter {
   display: flex;
   justify-content: flex-end;

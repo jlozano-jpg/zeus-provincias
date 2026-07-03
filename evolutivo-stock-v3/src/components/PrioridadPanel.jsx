@@ -14,18 +14,37 @@ const CLIENT_TYPES = [
   { value: 'Consumidor final', label: 'Consumidor final' },
 ]
 
-const DATE_OPTIONS = [
-  { value: 'ayer', label: 'Ayer' },
-  { value: 'hoy', label: 'Hoy' },
-  { value: 'manana', label: 'Mañana' },
-]
-
 const createRule = () => ({
   id: `${Date.now()}-${Math.random()}`,
   conditions: [
-    { id: `${Date.now()}-${Math.random()}`, attribute: 'fechaEntrega', value: '' }
+    { id: `${Date.now()}-${Math.random()}`, attribute: 'fechaEntrega', operator: 'ultimos', dias: 5 }
   ]
 })
+
+// ── Fecha de entrega helpers ──────────────────────────────────────────────────
+
+function calcFechaEjemplo(deltaDays) {
+  const base = new Date(2000, 6, 3) // 03/07 fija
+  base.setDate(base.getDate() + deltaDays)
+  const dd = String(base.getDate()).padStart(2, '0')
+  const mm = String(base.getMonth() + 1).padStart(2, '0')
+  return `${dd}/${mm}`
+}
+
+function FechaHelper({ operator, dias }) {
+  if (operator === 'hoy') {
+    return <p className={styles.helperText}>La regla aplica a comprobantes cuya fecha de entrega es igual a la fecha actual.</p>
+  }
+  const n = dias
+  if (operator === 'proximos') {
+    return <p className={styles.helperText}>Ejemplo: si la fecha actual es 03/07 y se configuran {n} días, la regla aplica a comprobantes con fecha de entrega entre el 03/07 y el {calcFechaEjemplo(n)}.</p>
+  }
+  if (operator === 'vencida') {
+    return <p className={styles.helperText}>Ejemplo: si la fecha actual es 03/07 y se configuran {n} días, la regla aplica a comprobantes con fecha de entrega anterior al {calcFechaEjemplo(-n)}.</p>
+  }
+  // ultimos (default)
+  return <p className={styles.helperText}>Ejemplo: si la fecha actual es 03/07 y se configuran {n} días, la regla aplica a comprobantes con fecha de entrega entre el {calcFechaEjemplo(-n)} y el 03/07.</p>
+}
 
 export default function PrioridadPanel({ mode, prioridad, onSave, onCancel, onEdit }) {
   const isReadOnly = mode === 'view'
@@ -81,7 +100,7 @@ export default function PrioridadPanel({ mode, prioridad, onSave, onCancel, onEd
         ...rule,
         conditions: [
           ...rule.conditions,
-          { id: `${Date.now()}-${Math.random()}`, attribute: 'fechaEntrega', value: '' }
+          { id: `${Date.now()}-${Math.random()}`, attribute: 'fechaEntrega', operator: 'ultimos', dias: 5 }
         ]
       }
     }))
@@ -227,7 +246,22 @@ export default function PrioridadPanel({ mode, prioridad, onSave, onCancel, onEd
                             id={`attr-${condition.id}`}
                             className={styles.select}
                             value={condition.attribute}
-                            onChange={e => updateCondition(rule.id, condition.id, 'attribute', e.target.value)}
+                            onChange={e => {
+                              const newAttr = e.target.value
+                              setRules(prev => prev.map(r => {
+                                if (r.id !== rule.id) return r
+                                return {
+                                  ...r,
+                                  conditions: r.conditions.map(c => {
+                                    if (c.id !== condition.id) return c
+                                    if (newAttr === 'fechaEntrega') {
+                                      return { id: c.id, attribute: newAttr, operator: 'ultimos', dias: 5 }
+                                    }
+                                    return { id: c.id, attribute: newAttr, value: '' }
+                                  })
+                                }
+                              }))
+                            }}
                             disabled={isReadOnly}
                           >
                             {ATTRIBUTE_OPTIONS.map(option => (
@@ -236,17 +270,39 @@ export default function PrioridadPanel({ mode, prioridad, onSave, onCancel, onEd
                           </select>
 
                           {condition.attribute === 'fechaEntrega' && (
-                            <select
-                              className={styles.select}
-                              value={condition.value}
-                              onChange={e => updateCondition(rule.id, condition.id, 'value', e.target.value)}
-                              disabled={isReadOnly}
-                            >
-                              <option value="">Seleccionar</option>
-                              {DATE_OPTIONS.map(option => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                              ))}
-                            </select>
+                            <div>
+                              <div className={styles.fechaRow}>
+                                <select
+                                  className={styles.selectFecha}
+                                  value={condition.operator ?? 'ultimos'}
+                                  onChange={e => updateCondition(rule.id, condition.id, 'operator', e.target.value)}
+                                  disabled={isReadOnly}
+                                >
+                                  <option value="ultimos">Dentro de los últimos</option>
+                                  <option value="proximos">Dentro de los próximos</option>
+                                  <option value="vencida">Vencida hace más de</option>
+                                  <option value="hoy">Hoy</option>
+                                </select>
+                                <input
+                                  type="number"
+                                  className={styles.diasInput}
+                                  value={condition.dias ?? 5}
+                                  min={1}
+                                  max={365}
+                                  step={1}
+                                  disabled={isReadOnly || (condition.operator ?? 'ultimos') === 'hoy'}
+                                  onChange={e => updateCondition(rule.id, condition.id, 'dias', Number(e.target.value))}
+                                  onBlur={e => {
+                                    let v = parseInt(e.target.value, 10)
+                                    if (isNaN(v) || v < 1) v = 1
+                                    if (v > 365) v = 365
+                                    updateCondition(rule.id, condition.id, 'dias', v)
+                                  }}
+                                />
+                                <span className={`${styles.diasSuffix}${(condition.operator ?? 'ultimos') === 'hoy' ? ` ${styles.diasSuffixDisabled}` : ''}`}>días</span>
+                              </div>
+                              <FechaHelper operator={condition.operator ?? 'ultimos'} dias={condition.dias ?? 5} />
+                            </div>
                           )}
 
                           {condition.attribute === 'tipoCliente' && (
