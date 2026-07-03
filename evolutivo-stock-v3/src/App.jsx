@@ -23,12 +23,12 @@ import styles from './App.module.css'
 
 
 const INITIAL_OPERARIOS = [
-  { id: 1, code: '001', name: 'Juan Pérez', usuarioZeus: 'U001 - jperez', inicioActividades: '2020-03-02', fechaNacimiento: '1990-05-20', preparador: true, controlador: false, deposito: 'D01 - Depósito Central', area: '01 - Depósito Central', apto: true, articulosPromedio: 28, tiempoPromedio: '1.4 min' },
-  { id: 2, code: '002', name: 'María Gómez', usuarioZeus: 'U002 - mgomez', inicioActividades: '2019-11-15', fechaNacimiento: '1988-02-11', preparador: false, controlador: true, deposito: 'D02 - Sucursal Norte', area: '', apto: false, articulosPromedio: null, tiempoPromedio: null },
-  { id: 3, code: '003', name: 'Carlos Fernández', usuarioZeus: 'U003 - cfernandez', inicioActividades: '2021-06-01', fechaNacimiento: '1995-09-30', preparador: true, controlador: true, deposito: 'D01 - Depósito Central', area: '02 - Depósito Norte', apto: true, articulosPromedio: 22, tiempoPromedio: '2.1 min' },
-  { id: 4, code: '004', name: 'Lucía Romero', usuarioZeus: 'U004 - lromero', inicioActividades: '2022-01-10', fechaNacimiento: '1992-12-05', preparador: false, controlador: true, deposito: 'D03 - Sucursal Sur', area: '', apto: false, articulosPromedio: null, tiempoPromedio: null },
-  { id: 5, code: '005', name: 'Diego Sosa', usuarioZeus: 'U005 - dsosa', inicioActividades: '2018-08-22', fechaNacimiento: '1985-07-18', preparador: true, controlador: false, deposito: 'D03 - Sucursal Sur', area: '03 - Depósito Sur', apto: true, articulosPromedio: 35, tiempoPromedio: '0.9 min' },
-  { id: 6, code: '006', name: 'Ana Torres', usuarioZeus: 'U006 - atorres', inicioActividades: '2023-02-14', fechaNacimiento: '1998-04-23', preparador: true, controlador: true, deposito: 'D02 - Sucursal Norte', area: '04 - Recepción', apto: false, articulosPromedio: 19, tiempoPromedio: '1.8 min' },
+  { id: 1, code: '001', name: 'Juan Pérez', usuarioZeus: 'U001 - jperez', inicioActividades: '2020-03-02', fechaNacimiento: '1990-05-20', preparador: true, controlador: false, depositos: ['D01 - Depósito Central'], area: '01 - Depósito Central', apto: true, articulosPromedio: 28, tiempoPromedio: '1.4 min' },
+  { id: 2, code: '002', name: 'María Gómez', usuarioZeus: 'U002 - mgomez', inicioActividades: '2019-11-15', fechaNacimiento: '1988-02-11', preparador: false, controlador: true, depositos: ['D02 - Sucursal Norte'], area: '', apto: false, articulosPromedio: null, tiempoPromedio: null },
+  { id: 3, code: '003', name: 'Carlos Fernández', usuarioZeus: 'U003 - cfernandez', inicioActividades: '2021-06-01', fechaNacimiento: '1995-09-30', preparador: true, controlador: true, depositos: ['D01 - Depósito Central', 'D02 - Sucursal Norte'], area: '02 - Depósito Norte', apto: true, articulosPromedio: 22, tiempoPromedio: '2.1 min' },
+  { id: 4, code: '004', name: 'Lucía Romero', usuarioZeus: 'U004 - lromero', inicioActividades: '2022-01-10', fechaNacimiento: '1992-12-05', preparador: false, controlador: true, depositos: ['D03 - Sucursal Sur'], area: '', apto: false, articulosPromedio: null, tiempoPromedio: null },
+  { id: 5, code: '005', name: 'Diego Sosa', usuarioZeus: 'U005 - dsosa', inicioActividades: '2018-08-22', fechaNacimiento: '1985-07-18', preparador: true, controlador: false, depositos: ['D03 - Sucursal Sur'], area: '03 - Depósito Sur', apto: true, articulosPromedio: 35, tiempoPromedio: '0.9 min' },
+  { id: 6, code: '006', name: 'Ana Torres', usuarioZeus: 'U006 - atorres', inicioActividades: '2023-02-14', fechaNacimiento: '1998-04-23', preparador: true, controlador: true, depositos: ['D02 - Sucursal Norte', 'D03 - Sucursal Sur'], area: '04 - Recepción', apto: false, articulosPromedio: 19, tiempoPromedio: '1.8 min' },
 ]
 
 const INITIAL_PREPARACIONES = [
@@ -191,7 +191,7 @@ export default function App() {
       fechaNacimiento: '',
       preparador: false,
       controlador: false,
-      deposito: '',
+      depositos: [],
       area: '',
       apto: false,
       articulosPromedio: null,

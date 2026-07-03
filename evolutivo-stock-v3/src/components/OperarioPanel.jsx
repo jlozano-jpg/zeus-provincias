@@ -16,7 +16,129 @@ const AVAILABLE_DEPOSITOS = [
   'D01 - Depósito Central',
   'D02 - Sucursal Norte',
   'D03 - Sucursal Sur',
+  'D04 - Almacén Este',
+  'D05 - Almacén Oeste',
 ]
+
+// ── Multi-select de depósitos ─────────────────────────────────────────────────
+
+function MultiDepositoSelect({ value = [], onChange, disabled, options }) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e) => {
+      if (!containerRef.current?.contains(e.target)) {
+        setOpen(false)
+        setSearch('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const filtered = options.filter(o => o.toLowerCase().includes(search.toLowerCase()))
+
+  const toggle = (opt) => {
+    onChange(value.includes(opt) ? value.filter(v => v !== opt) : [...value, opt])
+  }
+
+  const removePill = (opt, e) => {
+    e.stopPropagation()
+    onChange(value.filter(v => v !== opt))
+  }
+
+  return (
+    <div className={styles.multiSelect} ref={containerRef}>
+      <div
+        className={[
+          styles.multiSelectTrigger,
+          disabled ? styles.multiSelectDisabled : '',
+          open ? styles.multiSelectOpen : '',
+        ].join(' ')}
+        onClick={() => !disabled && setOpen(o => !o)}
+        role="combobox"
+        aria-expanded={open}
+        tabIndex={disabled ? -1 : 0}
+        onKeyDown={e => {
+          if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
+            e.preventDefault()
+            setOpen(o => !o)
+          }
+          if (e.key === 'Escape') { setOpen(false); setSearch('') }
+        }}
+      >
+        <div className={styles.multiSelectPills}>
+          {value.length === 0
+            ? <span className={styles.multiSelectPlaceholder}>Seleccionar depósitos...</span>
+            : value.map(v => (
+                <span key={v} className={styles.pill}>
+                  {v}
+                  {!disabled && (
+                    <button
+                      type="button"
+                      className={styles.pillRemove}
+                      onClick={(e) => removePill(v, e)}
+                      aria-label={`Quitar ${v}`}
+                    >×</button>
+                  )}
+                </span>
+              ))
+          }
+        </div>
+        {!disabled && (
+          <span className={`${styles.multiSelectChevron} ${open ? styles.multiSelectChevronOpen : ''}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </span>
+        )}
+      </div>
+
+      {open && (
+        <div className={styles.multiSelectDropdown} role="listbox" aria-multiselectable="true">
+          <div className={styles.multiSelectSearchWrap}>
+            <svg className={styles.multiSelectSearchIcon} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              className={styles.multiSelectSearch}
+              placeholder="Buscar depósito..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              autoFocus
+              onClick={e => e.stopPropagation()}
+            />
+            {search && (
+              <button type="button" className={styles.multiSelectSearchClear} onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
+          <div className={styles.multiSelectList}>
+            {filtered.length === 0
+              ? <div className={styles.multiSelectEmpty}>Sin resultados</div>
+              : filtered.map(opt => {
+                  const checked = value.includes(opt)
+                  return (
+                    <label key={opt} className={`${styles.multiSelectOption} ${checked ? styles.multiSelectOptionChecked : ''}`}>
+                      <input
+                        type="checkbox"
+                        className={styles.multiSelectCheckbox}
+                        checked={checked}
+                        onChange={() => toggle(opt)}
+                      />
+                      <span className={styles.multiSelectOptionLabel}>{opt}</span>
+                    </label>
+                  )
+                })
+            }
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const AVAILABLE_AREAS = [
   '01 - Depósito Central',
@@ -236,22 +358,15 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
           {/* Secciones visibles solo cuando hay al menos un rol activo */}
           {isOperador && (
             <>
-              {/* DEPÓSITO */}
+              {/* DEPÓSITOS */}
               <div className={styles.formGroup}>
-                <label className={styles.label}>Depósito</label>
-                <select
-                  value={formData.deposito ?? ''}
-                  onChange={(e) => handleChange('deposito', e.target.value)}
+                <label className={styles.label}>Depósitos</label>
+                <MultiDepositoSelect
+                  value={formData.depositos ?? []}
+                  onChange={v => handleChange('depositos', v)}
                   disabled={mode === 'view'}
-                  onKeyDown={handleKeyDown}
-                  className={styles.select}
-                  aria-label="Depósito"
-                >
-                  <option value="">Seleccionar depósito...</option>
-                  {AVAILABLE_DEPOSITOS.map(d => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
+                  options={AVAILABLE_DEPOSITOS}
+                />
               </div>
 
               {/* ÁREA */}
