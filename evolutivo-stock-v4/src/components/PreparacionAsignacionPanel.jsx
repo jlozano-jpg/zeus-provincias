@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import AsignacionAutomaticaPanel from './AsignacionAutomaticaPanel'
 import styles from './PreparacionAsignacionPanel.module.css'
 
 const ESTADOS_OCUPADO = ['Pendiente', 'En Proceso']
@@ -42,7 +41,6 @@ export default function PreparacionAsignacionPanel({
 
   const [preparador, setPreparador] = useState(defaultPreparador)
   const [prioridad, setPrioridad] = useState(defaultPrioridad)
-  const [showAutoAssignPanel, setShowAutoAssignPanel] = useState(false)
 
   const getBusyPrep = (formattedValue) => {
     const name = formattedValue.split(' - ').slice(1).join(' - ')
@@ -75,12 +73,6 @@ export default function PreparacionAsignacionPanel({
           <p className={styles.bannerText}>
             El sistema sugiere el preparador y la prioridad en función de los comprobantes seleccionados y las reglas de asignación configuradas. Podés modificarlos si lo deseás.
           </p>
-        </div>
-
-        <div className={styles.inlineActions}>
-          <button type="button" className={styles.autoAssignButton} onClick={() => setShowAutoAssignPanel(true)}>
-            Asignación automática
-          </button>
         </div>
 
         <div className={styles.card}>
@@ -139,10 +131,6 @@ export default function PreparacionAsignacionPanel({
         <button className={styles.cancelBtn} type="button" onClick={onCancel}>Cancelar</button>
         <button className={styles.confirmBtn} type="button" onClick={handleConfirm}>Confirmar</button>
       </div>
-
-      {showAutoAssignPanel && (
-        <AsignacionAutomaticaPanel onClose={() => setShowAutoAssignPanel(false)} />
-      )}
     </div>
   )
 }
