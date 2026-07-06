@@ -191,6 +191,10 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
   }
 
   const handleSave = () => {
+    if (!String(formData.code ?? '').trim()) {
+      alert('El código del operador es requerido')
+      return
+    }
     if (!formData.usuarioZeus) {
       alert('El usuario ZEUS ERP & POS es requerido')
       return
@@ -202,7 +206,7 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
 
     const normalized = {
       ...formData,
-      code: String(formData.code ?? '').trim() || `OP-${String(Date.now()).slice(-4)}`,
+      code: String(formData.code ?? '').trim(),
     }
     onSave(normalized)
   }
@@ -251,6 +255,11 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
             <p className={styles.summaryLabel}>{mode === 'create' ? 'Alta rápida' : 'Actualización del perfil'}</p>
             <h3 className={styles.summaryTitle}>{formData.name || 'Operador sin nombre'}</h3>
             <p className={styles.summaryText}>Ajustá los datos del operador y sus permisos sin salir del flujo de gestión.</p>
+          </div>
+
+          <div className={styles.formSection}>
+            <label className={styles.label}>Código</label>
+            <input ref={mode === 'create' ? firstInputRef : undefined} type="text" value={formData.code ?? ''} onChange={(event) => handleChange('code', event.target.value)} disabled={mode === 'view'} onKeyDown={handleKeyDown} className={styles.input} aria-label="Código" placeholder="Ej: 007" />
           </div>
 
           <div className={styles.formSection}>
