@@ -44,8 +44,14 @@
   border: 1px solid #dde3ee;
   border-radius: 10px;
   background: #ffffff;
-  color: #64748b;
-  cursor: not-allowed;
+  color: #344055;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.secondaryBtn:hover {
+  border-color: #7f72ba;
+  color: #7f72ba;
 }
 
 .toolbar {

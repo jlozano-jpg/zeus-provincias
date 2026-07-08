@@ -4,6 +4,7 @@ import { ARTICULOS_INICIALES } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
 import FiltrosCodigosBarraPanel, { filtrosVacios, hayFiltrosActivos } from './FiltrosCodigosBarraPanel'
+import GeneracionMasivaPanel from './GeneracionMasivaPanel'
 import styles from './CodigosBarraList.module.css'
 
 function tiposAsignados(articulo) {
@@ -57,6 +58,7 @@ export default function CodigosBarraList() {
   const [showFiltros, setShowFiltros] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [panelState, setPanelState] = useState(null)
+  const [showGeneracionMasiva, setShowGeneracionMasiva] = useState(false)
 
   const filtrados = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
@@ -91,6 +93,13 @@ export default function CodigosBarraList() {
     setArticulos((prev) => prev.map((a) => (a.id === articuloId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
   }
 
+  const agregarCodigosMasivo = (resultados) => {
+    setArticulos((prev) => prev.map((a) => {
+      const nuevos = resultados.filter((r) => r.articuloId === a.id).map((r) => r.codigo)
+      return nuevos.length ? { ...a, codigos: [...a.codigos, ...nuevos] } : a
+    }))
+  }
+
   const articuloPanel = panelState ? articulos.find((a) => a.id === panelState.articuloId) : null
 
   return (
@@ -100,7 +109,7 @@ export default function CodigosBarraList() {
           <h1 className={styles.title}>Gestión de códigos de barra</h1>
           <p className={styles.subtitle}>Configurá los estándares de código y asignalos a los artículos.</p>
         </div>
-        <button type="button" className={styles.secondaryBtn} disabled title="Disponible próximamente">
+        <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
           Generación masiva
         </button>
       </div>
@@ -194,6 +203,14 @@ export default function CodigosBarraList() {
           filtros={filtros}
           onApply={setFiltros}
           onClose={() => setShowFiltros(false)}
+        />
+      )}
+
+      {showGeneracionMasiva && (
+        <GeneracionMasivaPanel
+          articulos={articulos}
+          onGenerar={agregarCodigosMasivo}
+          onClose={() => setShowGeneracionMasiva(false)}
         />
       )}
     </div>
