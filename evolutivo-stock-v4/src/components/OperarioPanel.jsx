@@ -251,11 +251,13 @@ export default function OperarioPanel({ mode, operario, onSave, onCancel }) {
         </div>
 
         <div className={styles.content}>
-          <div className={styles.summaryCard}>
-            <p className={styles.summaryLabel}>{mode === 'create' ? 'Alta rápida' : 'Actualización del perfil'}</p>
-            <h3 className={styles.summaryTitle}>{formData.name || 'Operador sin nombre'}</h3>
-            <p className={styles.summaryText}>Ajustá los datos del operador y sus permisos sin salir del flujo de gestión.</p>
-          </div>
+          {mode !== 'create' && (
+            <div className={styles.summaryCard}>
+              <p className={styles.summaryLabel}>Actualización del perfil</p>
+              <h3 className={styles.summaryTitle}>{formData.name || 'Operador sin nombre'}</h3>
+              <p className={styles.summaryText}>Ajustá los datos del operador y sus permisos sin salir del flujo de gestión.</p>
+            </div>
+          )}
 
           <div className={styles.formSection}>
             <label className={styles.label}>Código</label>
