@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconSearch, IconDotsVertical, IconEye, IconPlus, IconTrash, IconBarcode, IconFilter } from '@tabler/icons-react'
+import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconBarcode, IconFilter } from '@tabler/icons-react'
 import { ARTICULOS_INICIALES } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
@@ -13,7 +13,7 @@ function tiposAsignados(articulo) {
   return Array.from(counts.entries())
 }
 
-function RowMenu({ articulo, openMenuId, setOpenMenuId, onVerEditar, onAgregar, onEliminarTodos }) {
+function RowMenu({ articulo, openMenuId, setOpenMenuId, onVisualizar, onEditar, onAgregar }) {
   const isOpen = openMenuId === articulo.id
   const close = () => setOpenMenuId(null)
   return (
@@ -29,21 +29,17 @@ function RowMenu({ articulo, openMenuId, setOpenMenuId, onVerEditar, onAgregar, 
       </button>
       {isOpen && (
         <div className={styles.dropdown}>
-          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onVerEditar(articulo); close() }}>
+          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onVisualizar(articulo); close() }}>
             <IconEye size={15} className={styles.dropdownIcon} />
-            Ver/editar códigos
+            Visualizar
+          </button>
+          <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onEditar(articulo); close() }}>
+            <IconPencil size={15} className={styles.dropdownIcon} />
+            Editar
           </button>
           <button className={styles.dropdownItem} onClick={(e) => { e.stopPropagation(); onAgregar(articulo); close() }}>
             <IconPlus size={15} className={styles.dropdownIcon} />
-            Agregar código
-          </button>
-          <button
-            className={`${styles.dropdownItem} ${styles.deleteItem}`}
-            disabled={articulo.codigos.length === 0}
-            onClick={(e) => { e.stopPropagation(); onEliminarTodos(articulo); close() }}
-          >
-            <IconTrash size={15} className={styles.dropdownIcon} />
-            Eliminar códigos
+            Agregar Código
           </button>
         </div>
       )}
@@ -76,14 +72,10 @@ export default function CodigosBarraList() {
     })
   }, [articulos, searchTerm, filtros])
 
-  const abrirDetalle = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'detalle' })
-  const abrirAgregar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'agregar' })
+  const abrirVisualizar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'detalle', soloLectura: true })
+  const abrirEditar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'detalle', soloLectura: false })
+  const abrirAgregar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'agregar', soloLectura: false })
   const cerrarPanel = () => setPanelState(null)
-
-  const eliminarTodos = (articulo) => {
-    if (!window.confirm(`¿Eliminar los ${articulo.codigos.length} códigos asignados a ${articulo.codigo}?`)) return
-    setArticulos((prev) => prev.map((a) => (a.id === articulo.id ? { ...a, codigos: [] } : a)))
-  }
 
   const agregarCodigo = (articuloId, codigo) => {
     setArticulos((prev) => prev.map((a) => (a.id === articuloId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
@@ -156,7 +148,7 @@ export default function CodigosBarraList() {
               </tr>
             ) : (
               filtrados.map((articulo) => (
-                <tr key={articulo.id} className={styles.clickableRow} onClick={() => abrirDetalle(articulo)}>
+                <tr key={articulo.id} className={styles.clickableRow} onClick={() => abrirEditar(articulo)}>
                   <td className={styles.codigoCell}>{articulo.codigo}</td>
                   <td>{articulo.descripcion}</td>
                   <td>
@@ -175,9 +167,9 @@ export default function CodigosBarraList() {
                       articulo={articulo}
                       openMenuId={openMenuId}
                       setOpenMenuId={setOpenMenuId}
-                      onVerEditar={abrirDetalle}
+                      onVisualizar={abrirVisualizar}
+                      onEditar={abrirEditar}
                       onAgregar={abrirAgregar}
-                      onEliminarTodos={eliminarTodos}
                     />
                   </td>
                 </tr>
@@ -192,6 +184,7 @@ export default function CodigosBarraList() {
           articulo={articuloPanel}
           articulos={articulos}
           initialLayer={panelState.layer}
+          soloLectura={panelState.soloLectura}
           onClose={cerrarPanel}
           onAddCodigo={agregarCodigo}
           onDeleteCodigo={eliminarCodigo}

@@ -25,7 +25,7 @@ function extraInfo(codigo) {
   return `Cantidad: ${codigo.cantidad}`
 }
 
-export default function CodigoBarraPanel({ articulo, articulos, initialLayer, onClose, onAddCodigo, onDeleteCodigo }) {
+export default function CodigoBarraPanel({ articulo, articulos, initialLayer, soloLectura = false, onClose, onAddCodigo, onDeleteCodigo }) {
   const [layer, setLayer] = useState(initialLayer)
   const [form, setForm] = useState(() => defaultForm(articulo))
 
@@ -129,10 +129,12 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, on
                 <div className={styles.emptyState}>
                   <IconBarcodeOff size={32} className={styles.emptyIcon} />
                   <p className={styles.emptyText}>Este artículo todavía no tiene códigos asignados.</p>
-                  <button className={styles.primaryBtn} onClick={irAAgregar}>
-                    <IconPlus size={16} />
-                    Agregar el primero
-                  </button>
+                  {!soloLectura && (
+                    <button className={styles.primaryBtn} onClick={irAAgregar}>
+                      <IconPlus size={16} />
+                      Agregar el primero
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className={styles.codeList}>
@@ -143,21 +145,23 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, on
                         <span className={styles.codeValue}>{codigo.codigo}</span>
                         <span className={styles.codeExtra}>{extraInfo(codigo)}</span>
                       </div>
-                      <button
-                        className={styles.deleteRowBtn}
-                        onClick={() => onDeleteCodigo(articulo.id, codigo.id)}
-                        aria-label={`Eliminar código ${codigo.codigo}`}
-                        title="Eliminar"
-                      >
-                        <IconTrash size={16} />
-                      </button>
+                      {!soloLectura && (
+                        <button
+                          className={styles.deleteRowBtn}
+                          onClick={() => onDeleteCodigo(articulo.id, codigo.id)}
+                          aria-label={`Eliminar código ${codigo.codigo}`}
+                          title="Eliminar"
+                        >
+                          <IconTrash size={16} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {articulo.codigos.length > 0 && (
+            {!soloLectura && articulo.codigos.length > 0 && (
               <div className={styles.footer}>
                 <button className={styles.primaryBtn} onClick={irAAgregar}>
                   <IconPlus size={16} />

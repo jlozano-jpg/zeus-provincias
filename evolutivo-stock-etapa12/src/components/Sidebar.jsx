@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconMenu2, IconChevronRight, IconBarcode } from '@tabler/icons-react'
+import { IconMenu2, IconChevronRight, IconSettings } from '@tabler/icons-react'
 import styles from './Sidebar.module.css'
 
 const MENU_ITEMS = [
@@ -11,7 +11,7 @@ const MENU_ITEMS = [
         id: 'tablas-productos',
         label: 'Tablas de productos',
         children: [
-          { id: 'codigos-barra', label: 'Gestión de Códigos de Barra', icon: IconBarcode },
+          { id: 'codigos-barra', label: 'Gestión de Códigos de Barra', icon: IconSettings },
         ],
       },
     ],

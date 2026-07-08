@@ -302,13 +302,3 @@
 .dropdownIcon {
   flex-shrink: 0;
 }
-
-.deleteItem {
-  color: #e85c5c;
-  border-top: 1px solid #eef2f7;
-}
-
-.deleteItem:hover:not(:disabled) {
-  background: #ffe5e5;
-  color: #c82828;
-}
