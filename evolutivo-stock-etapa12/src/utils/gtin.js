@@ -1,46 +1,93 @@
+// Estructura de cada estándar tal como fue validada con el PO
+// (ver generador_codigos_barra.ts). El dígito verificador usa el
+// algoritmo estándar GS1 módulo 10, igual para GTIN-8/13/14.
+
 const LENGTH_BY_TYPE = { 'GTIN-8': 8, 'GTIN-13': 13, 'GTIN-14': 14 }
+
+const MAX_PREFIJO_BY_TYPE = { 'GTIN-8': 6, 'GTIN-13': 11, 'GTIN-14': 11, 'GTIN-128': 11 }
+
+export function maxPrefijoGs1(tipo) {
+  return MAX_PREFIJO_BY_TYPE[tipo] ?? 0
+}
 
 function checkDigit(payload) {
   const digits = payload.split('').reverse().map(Number)
   const sum = digits.reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0)
-  return (10 - (sum % 10)) % 10
+  const resto = sum % 10
+  return resto === 0 ? 0 : 10 - resto
 }
 
-function randomDigits(length) {
-  let out = ''
-  for (let i = 0; i < length; i++) out += Math.floor(Math.random() * 10)
-  return out
+// Numeración interna secuencial (usada como referencia de artículo, y como
+// reemplazo del prefijo de empresa cuando no hay Prefijo GS1 configurado).
+let contadorSecuencial = 1
+function siguienteSecuencial() {
+  return contadorSecuencial++
 }
 
-const PAYLOAD_LENGTH_BY_TYPE = { 'GTIN-8': 7, 'GTIN-13': 12, 'GTIN-14': 13, 'GTIN-128': 13 }
-
-export function maxPrefijoGs1(tipo) {
-  const payloadLength = PAYLOAD_LENGTH_BY_TYPE[tipo]
-  return payloadLength ? payloadLength - 1 : 0
+function numeracionInterna(longitud, secuencial) {
+  return String(secuencial).padStart(longitud, '0').slice(-longitud)
 }
 
-function randomPayload(length, prefijo = '') {
-  const prefix = prefijo.slice(0, length)
-  return prefix + randomDigits(length - prefix.length)
+// GTIN-8: prefijo (config, o 3 dígitos internos) + referencia (completa a 7) + verificador.
+// GS1 no permite armar un GTIN-8 libremente: este código es válido en formato,
+// pero de uso interno. Un GTIN-8 oficial se carga por "Ingresar existente".
+function generarGTIN8(prefijo) {
+  const longitudPrefijo = prefijo ? prefijo.length : 3
+  const longitudReferencia = 7 - longitudPrefijo
+  const prefijoFinal = prefijo || numeracionInterna(longitudPrefijo, 0)
+  const referencia = numeracionInterna(longitudReferencia, siguienteSecuencial())
+  const base = prefijoFinal + referencia
+  return base + checkDigit(base)
 }
 
-export function generarCodigo(tipo, { lote, prefijo } = {}) {
-  if (tipo === 'GTIN-8' || tipo === 'GTIN-13') {
-    const payload = randomPayload(LENGTH_BY_TYPE[tipo] - 1, prefijo)
-    return payload + checkDigit(payload)
-  }
-  if (tipo === 'GTIN-14') {
-    const payload = randomPayload(13, prefijo)
-    return payload + checkDigit(payload)
-  }
-  if (tipo === 'GTIN-128') {
-    const gtinPayload = randomPayload(13, prefijo)
-    const gtin14 = gtinPayload + checkDigit(gtinPayload)
-    const vencimiento = lote?.vencimiento ? lote.vencimiento.slice(2).split('-').reverse().join('') : '260101'
-    const loteTexto = (lote?.lote || '').replace(/[^A-Za-z0-9]/g, '')
-    return `01${gtin14}17${vencimiento}10${loteTexto}`
-  }
-  return `INT-${randomDigits(5)}`
+// GTIN-13: prefijo de empresa (config, o numeración interna de 7) + referencia
+// (completa a 12) + verificador.
+function generarGTIN13(prefijo) {
+  const prefijoFinal = prefijo || numeracionInterna(7, 0)
+  const longitudReferencia = 12 - prefijoFinal.length
+  const referencia = numeracionInterna(longitudReferencia, siguienteSecuencial())
+  const base = prefijoFinal + referencia
+  return base + checkDigit(base)
+}
+
+// GTIN-14: indicador de variable logística (1-8) + base de 12 dígitos
+// (misma lógica que GTIN-13 sin su verificador) + verificador recalculado.
+// La cantidad (ej. pack de 6) no se codifica acá, se guarda aparte en Zeus.
+function generarGTIN14(prefijo, indicadorLogistico = 1) {
+  const prefijoFinal = prefijo || numeracionInterna(7, 0)
+  const longitudReferencia = 12 - prefijoFinal.length
+  const referencia = numeracionInterna(longitudReferencia, siguienteSecuencial())
+  const base = String(indicadorLogistico) + prefijoFinal + referencia
+  return base + checkDigit(base)
+}
+
+function formatearFechaAI17(vencimientoIso) {
+  const [yyyy, mm, dd] = vencimientoIso.split('-')
+  return `${yyyy.slice(-2)}${mm}${dd}`
+}
+
+// GTIN-128: (01) GTIN-14 del artículo + (10) lote + (17) vencimiento (AAMMDD)
+// + (30) cantidad representada por este código puntual. Lote y vencimiento
+// provienen de un lote ya existente del artículo.
+function generarGTIN128(prefijo, lote, cantidad) {
+  const gtin14Articulo = generarGTIN14(prefijo)
+  const ai01 = `(01)${gtin14Articulo}`
+  const ai10 = `(10)${lote.lote}`
+  const ai17 = `(17)${formatearFechaAI17(lote.vencimiento)}`
+  const ai30 = `(30)${cantidad}`
+  return ai01 + ai10 + ai17 + ai30
+}
+
+function generarCodigoManual() {
+  return `INT-${String(siguienteSecuencial()).padStart(6, '0')}`
+}
+
+export function generarCodigo(tipo, { lote, prefijo, cantidad } = {}) {
+  if (tipo === 'GTIN-8') return generarGTIN8(prefijo)
+  if (tipo === 'GTIN-13') return generarGTIN13(prefijo)
+  if (tipo === 'GTIN-14') return generarGTIN14(prefijo)
+  if (tipo === 'GTIN-128') return generarGTIN128(prefijo, lote, cantidad)
+  return generarCodigoManual()
 }
 
 export function validarFormato(tipo, codigo) {

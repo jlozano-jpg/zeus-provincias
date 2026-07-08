@@ -93,7 +93,11 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
           return
         }
       }
-      codigoFinal = generarCodigo(form.tipo, { lote: loteSeleccionado, prefijo: form.usarPrefijoGs1 ? form.prefijoGs1 : undefined })
+      codigoFinal = generarCodigo(form.tipo, {
+        lote: loteSeleccionado,
+        prefijo: form.usarPrefijoGs1 ? form.prefijoGs1 : undefined,
+        cantidad: info.cantidadFija ?? Number(form.cantidad),
+      })
     }
 
     onAddCodigo(articulo.id, {
@@ -219,6 +223,11 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 </select>
                 {!articulo.manejaLotes && (
                   <p className={styles.helperText}>GTIN-128 no disponible: este artículo no gestiona lotes.</p>
+                )}
+                {form.origen === 'nuevo' && form.tipo === 'GTIN-8' && (
+                  <p className={styles.helperText}>
+                    Este GTIN-8 es de uso interno de Zeus: GS1 no permite asignarlo libremente. Si necesitás un GTIN-8 oficial, cargalo desde "Ingresar existente".
+                  </p>
                 )}
               </div>
 
