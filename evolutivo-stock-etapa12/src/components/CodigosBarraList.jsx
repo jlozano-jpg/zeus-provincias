@@ -101,9 +101,6 @@ export default function CodigosBarraList() {
           <h1 className={styles.title}>Gestión de códigos de barra</h1>
           <p className={styles.subtitle}>Configurá los estándares de código y asignalos a los artículos.</p>
         </div>
-        <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
-          Generación masiva
-        </button>
       </div>
 
       <div className={styles.toolbar}>
@@ -128,6 +125,10 @@ export default function CodigosBarraList() {
         >
           <IconFilter size={18} />
           {hayFiltrosActivos(filtros) && <span className={styles.filterDot} />}
+        </button>
+
+        <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
+          Generación masiva
         </button>
       </div>
 
