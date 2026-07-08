@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconMenu2, IconChevronRight, IconSettings } from '@tabler/icons-react'
+import { IconMenu2, IconChevronRight } from '@tabler/icons-react'
 import styles from './Sidebar.module.css'
 
 const MENU_ITEMS = [
@@ -11,7 +11,7 @@ const MENU_ITEMS = [
         id: 'tablas-productos',
         label: 'Tablas de productos',
         children: [
-          { id: 'codigos-barra', label: 'Gestión de Códigos de Barra', icon: IconSettings },
+          { id: 'codigos-barra', label: 'Gestión de Códigos de Barra' },
         ],
       },
     ],
@@ -36,7 +36,6 @@ export default function Sidebar({ activeView, onSelectView, onSelectHome }) {
       const hasChildren = Array.isArray(item.children) && item.children.length > 0
       const isExpanded = expandedIds.has(item.id)
       const isActive = !hasChildren && activeView === item.id
-      const Icon = item.icon
 
       return (
         <div key={item.id}>
@@ -51,7 +50,6 @@ export default function Sidebar({ activeView, onSelectView, onSelectHome }) {
             {hasChildren && (
               <IconChevronRight size={14} className={`${styles.expandIcon} ${isExpanded ? styles.expandIconOpen : ''}`} />
             )}
-            {Icon && <Icon size={18} className={styles.menuIcon} />}
             <span className={styles.menuLabel}>{item.label}</span>
           </button>
           {hasChildren && isExpanded && renderMenuItems(item.children, level + 1)}

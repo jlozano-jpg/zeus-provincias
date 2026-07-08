@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconBarcode, IconFilter } from '@tabler/icons-react'
+import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter } from '@tabler/icons-react'
 import { ARTICULOS_INICIALES } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
@@ -138,7 +138,7 @@ export default function CodigosBarraList() {
               <th>Código</th>
               <th>Descripción</th>
               <th>Tipos de código asignados</th>
-              <th className={styles.menuHeaderCell}><IconBarcode size={16} /></th>
+              <th className={styles.menuHeaderCell}><IconSettings size={16} /></th>
             </tr>
           </thead>
           <tbody>
