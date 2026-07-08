@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { IconSearch, IconDotsVertical, IconEye, IconPlus, IconTrash, IconBarcode } from '@tabler/icons-react'
-import { ARTICULOS_INICIALES, FAMILIAS, PROVEEDORES } from '../data/codigosBarra'
+import { IconSearch, IconDotsVertical, IconEye, IconPlus, IconTrash, IconBarcode, IconFilter } from '@tabler/icons-react'
+import { ARTICULOS_INICIALES } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
+import FiltrosCodigosBarraPanel, { filtrosVacios, hayFiltrosActivos } from './FiltrosCodigosBarraPanel'
 import styles from './CodigosBarraList.module.css'
 
 function tiposAsignados(articulo) {
@@ -52,9 +53,8 @@ function RowMenu({ articulo, openMenuId, setOpenMenuId, onVerEditar, onAgregar, 
 export default function CodigosBarraList() {
   const [articulos, setArticulos] = useState(ARTICULOS_INICIALES)
   const [searchTerm, setSearchTerm] = useState('')
-  const [familia, setFamilia] = useState('')
-  const [proveedor, setProveedor] = useState('')
-  const [soloSinCodigo, setSoloSinCodigo] = useState(false)
+  const [filtros, setFiltros] = useState(filtrosVacios)
+  const [showFiltros, setShowFiltros] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [panelState, setPanelState] = useState(null)
 
@@ -62,12 +62,17 @@ export default function CodigosBarraList() {
     const term = searchTerm.trim().toLowerCase()
     return articulos.filter((a) => {
       if (term && !`${a.codigo} ${a.descripcion}`.toLowerCase().includes(term)) return false
-      if (familia && a.familia !== familia) return false
-      if (proveedor && a.proveedor !== proveedor) return false
-      if (soloSinCodigo && a.codigos.length > 0) return false
+      if (filtros.sucursal && a.sucursal !== filtros.sucursal) return false
+      if (filtros.familia && a.familia !== filtros.familia) return false
+      if (filtros.proveedor && a.proveedor !== filtros.proveedor) return false
+      if (filtros.grupo && a.grupo !== filtros.grupo) return false
+      if (filtros.marca && a.marca !== filtros.marca) return false
+      if (filtros.categoria && a.categoria !== filtros.categoria) return false
+      if (filtros.codigoFabricante && !a.codigoFabricante?.toLowerCase().includes(filtros.codigoFabricante.trim().toLowerCase())) return false
+      if (filtros.soloSinCodigo && a.codigos.length > 0) return false
       return true
     })
-  }, [articulos, searchTerm, familia, proveedor, soloSinCodigo])
+  }, [articulos, searchTerm, filtros])
 
   const abrirDetalle = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'detalle' })
   const abrirAgregar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'agregar' })
@@ -92,7 +97,6 @@ export default function CodigosBarraList() {
     <div className={styles.wrapper}>
       <div className={styles.headerCard}>
         <div>
-          <p className={styles.eyebrow}>Evolutivo de stock · Etapa 12</p>
           <h1 className={styles.title}>Gestión de códigos de barra</h1>
           <p className={styles.subtitle}>Configurá los estándares de código y asignalos a los artículos.</p>
         </div>
@@ -114,23 +118,15 @@ export default function CodigosBarraList() {
           />
         </label>
 
-        <select className={styles.filterSelect} value={familia} onChange={(e) => setFamilia(e.target.value)} aria-label="Filtrar por familia">
-          <option value="">Todas las familias</option>
-          {FAMILIAS.map((f) => <option key={f} value={f}>{f}</option>)}
-        </select>
-
-        <select className={styles.filterSelect} value={proveedor} onChange={(e) => setProveedor(e.target.value)} aria-label="Filtrar por proveedor">
-          <option value="">Todos los proveedores</option>
-          {PROVEEDORES.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
-
         <button
           type="button"
-          className={`${styles.chip} ${soloSinCodigo ? styles.chipActive : ''}`}
-          onClick={() => setSoloSinCodigo((v) => !v)}
-          aria-pressed={soloSinCodigo}
+          className={`${styles.filterBtn} ${hayFiltrosActivos(filtros) ? styles.filterBtnActive : ''}`}
+          onClick={() => setShowFiltros(true)}
+          title="Filtros"
+          aria-label="Filtros"
         >
-          Solo sin código asignado
+          <IconFilter size={18} />
+          {hayFiltrosActivos(filtros) && <span className={styles.filterDot} />}
         </button>
       </div>
 
@@ -190,6 +186,14 @@ export default function CodigosBarraList() {
           onClose={cerrarPanel}
           onAddCodigo={agregarCodigo}
           onDeleteCodigo={eliminarCodigo}
+        />
+      )}
+
+      {showFiltros && (
+        <FiltrosCodigosBarraPanel
+          filtros={filtros}
+          onApply={setFiltros}
+          onClose={() => setShowFiltros(false)}
         />
       )}
     </div>
