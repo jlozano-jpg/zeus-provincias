@@ -208,6 +208,20 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 </div>
               </div>
 
+              <div className={styles.formSection}>
+                <label className={styles.label}>Tipo de código</label>
+                <select className={styles.select} value={form.tipo} onChange={(e) => handleTipoChange(e.target.value)}>
+                  {TIPOS_CODIGO.map((t) => (
+                    <option key={t.value} value={t.value} disabled={t.requiereLotes && !articulo.manejaLotes}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+                {!articulo.manejaLotes && (
+                  <p className={styles.helperText}>GTIN-128 no disponible: este artículo no gestiona lotes.</p>
+                )}
+              </div>
+
               {form.origen === 'nuevo' && form.tipo !== 'MANUAL' && (
                 <div className={styles.formSection}>
                   <label className={styles.toggleRow}>
@@ -243,20 +257,6 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                   )}
                 </div>
               )}
-
-              <div className={styles.formSection}>
-                <label className={styles.label}>Tipo de código</label>
-                <select className={styles.select} value={form.tipo} onChange={(e) => handleTipoChange(e.target.value)}>
-                  {TIPOS_CODIGO.map((t) => (
-                    <option key={t.value} value={t.value} disabled={t.requiereLotes && !articulo.manejaLotes}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-                {!articulo.manejaLotes && (
-                  <p className={styles.helperText}>GTIN-128 no disponible: este artículo no gestiona lotes.</p>
-                )}
-              </div>
 
               {info.cantidadFija ? (
                 <p className={styles.staticInfo}>Cantidad que representa este código: {info.cantidadFija} (fija)</p>
