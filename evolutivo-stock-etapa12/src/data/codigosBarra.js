@@ -19,7 +19,7 @@ export const TIPOS_CODIGO = [
   { value: 'GTIN-8', label: 'GTIN-8', digits: 8, cantidadFija: 1, color: '#3370AC', prefijoGs1: null },
   { value: 'GTIN-13', label: 'GTIN-13', digits: 13, cantidadFija: 1, color: '#7f72ba', prefijoGs1: '7791234' },
   { value: 'GTIN-14', label: 'GTIN-14', digits: 14, color: '#00A3A3', prefijoGs1: '07791234' },
-  { value: 'GTIN-128', label: 'GTIN-128', requiereLotes: true, color: '#C87F0A', prefijoGs1: null },
+  { value: 'GTIN-128', label: 'GTIN-128', requiereLotes: true, color: '#C87F0A', prefijoGs1: '07791234' },
   { value: 'MANUAL', label: 'Código Manual', color: '#64748b', prefijoGs1: null },
 ]
 
