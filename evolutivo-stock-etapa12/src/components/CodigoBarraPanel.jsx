@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { IconX, IconChevronLeft, IconTrash, IconBarcodeOff, IconPlus } from '@tabler/icons-react'
 import { TIPOS_CODIGO, tipoInfo } from '../data/codigosBarra'
-import { generarCodigo, validarFormato, mensajeFormatoInvalido, existeCodigoDuplicado } from '../utils/gtin'
+import { generarCodigo, validarFormato, mensajeFormatoInvalido, existeCodigoDuplicado, maxPrefijoGs1 } from '../utils/gtin'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import styles from './CodigoBarraPanel.module.css'
 
@@ -12,6 +12,8 @@ function defaultForm(articulo) {
     cantidad: '1',
     loteId: articulo.lotes[0]?.id ?? '',
     codigoTexto: '',
+    usarPrefijoGs1: false,
+    prefijoGs1: '',
     error: '',
   }
 }
@@ -43,6 +45,8 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, on
       tipo,
       cantidad: info.cantidadFija ? String(info.cantidadFija) : '1',
       loteId: tipo === 'GTIN-128' ? (articulo.lotes[0]?.id ?? '') : '',
+      usarPrefijoGs1: tipo === 'MANUAL' ? false : form.usarPrefijoGs1,
+      prefijoGs1: form.prefijoGs1.slice(0, maxPrefijoGs1(tipo)),
     })
   }
 
@@ -82,7 +86,14 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, on
       }
       codigoFinal = texto
     } else {
-      codigoFinal = generarCodigo(form.tipo, { lote: loteSeleccionado })
+      if (form.usarPrefijoGs1) {
+        const max = maxPrefijoGs1(form.tipo)
+        if (!/^\d+$/.test(form.prefijoGs1) || form.prefijoGs1.length > max) {
+          setForm((prev) => ({ ...prev, error: `Ingresá un prefijo GS1 numérico de hasta ${max} dígitos.` }))
+          return
+        }
+      }
+      codigoFinal = generarCodigo(form.tipo, { lote: loteSeleccionado, prefijo: form.usarPrefijoGs1 ? form.prefijoGs1 : undefined })
     }
 
     onAddCodigo(articulo.id, {
@@ -192,6 +203,42 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, on
                   </button>
                 </div>
               </div>
+
+              {form.origen === 'nuevo' && form.tipo !== 'MANUAL' && (
+                <div className={styles.formSection}>
+                  <label className={styles.toggleRow}>
+                    <span className={styles.label}>Prefijo GS1</span>
+                    <span
+                      className={`${styles.toggle} ${form.usarPrefijoGs1 ? styles.toggleActive : ''}`}
+                      role="switch"
+                      aria-checked={form.usarPrefijoGs1}
+                      tabIndex={0}
+                      onClick={() => updateForm({ usarPrefijoGs1: !form.usarPrefijoGs1 })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          updateForm({ usarPrefijoGs1: !form.usarPrefijoGs1 })
+                        }
+                      }}
+                    >
+                      <span className={styles.toggleKnob} />
+                    </span>
+                  </label>
+                  {form.usarPrefijoGs1 && (
+                    <>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`${styles.input} ${styles.mono}`}
+                        value={form.prefijoGs1}
+                        onChange={(e) => updateForm({ prefijoGs1: e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(form.tipo)) })}
+                        placeholder="Ej: 779"
+                      />
+                      <p className={styles.helperText}>Hasta {maxPrefijoGs1(form.tipo)} dígitos para {tipoInfo(form.tipo).label}.</p>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className={styles.formSection}>
                 <label className={styles.label}>Tipo de código</label>

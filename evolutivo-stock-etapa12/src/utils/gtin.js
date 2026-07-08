@@ -12,17 +12,29 @@ function randomDigits(length) {
   return out
 }
 
-export function generarCodigo(tipo, { lote } = {}) {
+const PAYLOAD_LENGTH_BY_TYPE = { 'GTIN-8': 7, 'GTIN-13': 12, 'GTIN-14': 13, 'GTIN-128': 13 }
+
+export function maxPrefijoGs1(tipo) {
+  const payloadLength = PAYLOAD_LENGTH_BY_TYPE[tipo]
+  return payloadLength ? payloadLength - 1 : 0
+}
+
+function randomPayload(length, prefijo = '') {
+  const prefix = prefijo.slice(0, length)
+  return prefix + randomDigits(length - prefix.length)
+}
+
+export function generarCodigo(tipo, { lote, prefijo } = {}) {
   if (tipo === 'GTIN-8' || tipo === 'GTIN-13') {
-    const payload = randomDigits(LENGTH_BY_TYPE[tipo] - 1)
+    const payload = randomPayload(LENGTH_BY_TYPE[tipo] - 1, prefijo)
     return payload + checkDigit(payload)
   }
   if (tipo === 'GTIN-14') {
-    const payload = randomDigits(13)
+    const payload = randomPayload(13, prefijo)
     return payload + checkDigit(payload)
   }
   if (tipo === 'GTIN-128') {
-    const gtinPayload = randomDigits(13)
+    const gtinPayload = randomPayload(13, prefijo)
     const gtin14 = gtinPayload + checkDigit(gtinPayload)
     const vencimiento = lote?.vencimiento ? lote.vencimiento.slice(2).split('-').reverse().join('') : '260101'
     const loteTexto = (lote?.lote || '').replace(/[^A-Za-z0-9]/g, '')
