@@ -20,7 +20,7 @@ export const TIPOS_CODIGO = [
   { value: 'GTIN-13', label: 'GTIN-13', digits: 13, cantidadFija: 1, color: '#7f72ba' },
   { value: 'GTIN-14', label: 'GTIN-14', digits: 14, color: '#00A3A3' },
   { value: 'GTIN-128', label: 'GTIN-128', requiereLotes: true, color: '#C87F0A' },
-  { value: 'MANUAL', label: 'Código manual/interno', color: '#64748b' },
+  { value: 'MANUAL', label: 'Código Manual', color: '#64748b' },
 ]
 
 export function tipoInfo(value) {
