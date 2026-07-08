@@ -148,6 +148,15 @@
   flex: 1;
 }
 
+.expandIcon {
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.expandIconOpen {
+  transform: rotate(90deg);
+}
+
 .collapsed .menuItem {
   padding: 12px 8px;
 }

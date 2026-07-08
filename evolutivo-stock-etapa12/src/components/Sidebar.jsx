@@ -1,15 +1,63 @@
 import { useState } from 'react'
-import { IconMenu2, IconSettings, IconTable, IconBarcode } from '@tabler/icons-react'
+import { IconMenu2, IconChevronRight, IconBarcode } from '@tabler/icons-react'
 import styles from './Sidebar.module.css'
 
 const MENU_ITEMS = [
-  { id: 'configuracion', label: 'Configuración', icon: IconSettings },
-  { id: 'tablas-productos', label: 'Tablas de productos', icon: IconTable },
-  { id: 'codigos-barra', label: 'Gestión de Códigos de Barra', icon: IconBarcode },
+  {
+    id: 'configuracion',
+    label: 'Configuración',
+    children: [
+      {
+        id: 'tablas-productos',
+        label: 'Tablas de productos',
+        children: [
+          { id: 'codigos-barra', label: 'Gestión de Códigos de Barra', icon: IconBarcode },
+        ],
+      },
+    ],
+  },
 ]
 
 export default function Sidebar({ activeView, onSelectView, onSelectHome }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [expandedIds, setExpandedIds] = useState(new Set(['configuracion', 'tablas-productos']))
+
+  const toggleExpanded = (id) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const renderMenuItems = (items, level = 0) =>
+    items.map((item) => {
+      const hasChildren = Array.isArray(item.children) && item.children.length > 0
+      const isExpanded = expandedIds.has(item.id)
+      const isActive = !hasChildren && activeView === item.id
+      const Icon = item.icon
+
+      return (
+        <div key={item.id}>
+          <button
+            className={`${styles.menuItem} ${isActive ? styles.menuItemActive : ''}`}
+            style={{ paddingLeft: `${20 + level * 16}px` }}
+            onClick={() => (hasChildren ? toggleExpanded(item.id) : onSelectView(item.id))}
+            title={item.label}
+            aria-current={isActive ? 'page' : undefined}
+            aria-expanded={hasChildren ? isExpanded : undefined}
+          >
+            {hasChildren && (
+              <IconChevronRight size={14} className={`${styles.expandIcon} ${isExpanded ? styles.expandIconOpen : ''}`} />
+            )}
+            {Icon && <Icon size={18} className={styles.menuIcon} />}
+            <span className={styles.menuLabel}>{item.label}</span>
+          </button>
+          {hasChildren && isExpanded && renderMenuItems(item.children, level + 1)}
+        </div>
+      )
+    })
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
@@ -40,22 +88,7 @@ export default function Sidebar({ activeView, onSelectView, onSelectHome }) {
       </div>
 
       <nav className={styles.menu} aria-label="Menú principal">
-        {MENU_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = activeView === item.id
-          return (
-            <button
-              key={item.id}
-              className={`${styles.menuItem} ${isActive ? styles.menuItemActive : ''}`}
-              onClick={() => onSelectView(item.id)}
-              title={item.label}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <Icon size={18} className={styles.menuIcon} />
-              <span className={styles.menuLabel}>{item.label}</span>
-            </button>
-          )
-        })}
+        {renderMenuItems(MENU_ITEMS)}
       </nav>
     </aside>
   )
