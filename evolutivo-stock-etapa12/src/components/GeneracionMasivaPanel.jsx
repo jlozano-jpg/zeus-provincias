@@ -5,6 +5,15 @@ import { generarCodigo, maxPrefijoGs1 } from '../utils/gtin'
 import { filtrosVacios } from './FiltrosCodigosBarraPanel'
 import styles from './GeneracionMasivaPanel.module.css'
 
+const TIPOS_DISPONIBLES = TIPOS_CODIGO.filter((t) => t.value !== 'GTIN-8')
+
+const DESCRIPCION_TIPO = {
+  'GTIN-13': '13 dígitos. Identifica de forma única un artículo para venta al público.',
+  'GTIN-14': '14 dígitos. Sirve para referenciar variantes de cantidad de un mismo artículo, como cajas o packs.',
+  'GS1-128': 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento. Los artículos sin lotes quedan excluidos automáticamente.',
+  MANUAL: 'Código interno generado por Zeus; no sigue un estándar GS1.',
+}
+
 function coincideFiltros(articulo, filtros) {
   if (filtros.sucursal && articulo.sucursal !== filtros.sucursal) return false
   if (filtros.familia && articulo.familia !== filtros.familia) return false
@@ -187,12 +196,10 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
               <div className={styles.formSection}>
                 <label className={styles.label}>Tipo de código a generar</label>
                 <select className={styles.select} value={tipo} onChange={(e) => handleTipoChange(e.target.value)}>
-                  {TIPOS_CODIGO.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {TIPOS_DISPONIBLES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
-                {tipo === 'GS1-128' && (
-                  <p className={styles.helperText}>
-                    Vas a poder elegir el lote de cada artículo en la previsualización. Los artículos que no gestionan lotes quedan excluidos automáticamente.
-                  </p>
+                {DESCRIPCION_TIPO[tipo] && (
+                  <p className={styles.helperText}>{DESCRIPCION_TIPO[tipo]}</p>
                 )}
               </div>
 
@@ -216,6 +223,9 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                       <span className={styles.toggleKnob} />
                     </span>
                   </label>
+                  <p className={styles.helperText}>
+                    Prefijo de empresa suministrado por GS1: se va a mostrar en todos los códigos generados en esta tanda.
+                  </p>
                   {usarPrefijoGs1 && (
                     <>
                       <input
@@ -226,7 +236,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                         onChange={(e) => setPrefijoGs1(e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(tipo)))}
                         placeholder="Ej: 779"
                       />
-                      <p className={styles.helperText}>Hasta {maxPrefijoGs1(tipo)} dígitos. Se va a aplicar a toda la tanda generada.</p>
+                      <p className={styles.helperText}>Hasta {maxPrefijoGs1(tipo)} dígitos.</p>
                     </>
                   )}
                 </div>
