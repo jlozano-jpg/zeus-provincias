@@ -7,6 +7,9 @@ import styles from './GeneracionMasivaPanel.module.css'
 
 const TIPOS_DISPONIBLES = TIPOS_CODIGO.filter((t) => t.value !== 'GTIN-8')
 
+const LONGITUD_MANUAL_MIN = 8
+const LONGITUD_MANUAL_MAX = 48
+
 const DESCRIPCION_TIPO = {
   'GTIN-13': '13 dígitos. Identifica de forma única un artículo para venta al público.',
   'GTIN-14': '14 dígitos. Sirve para referenciar variantes de cantidad de un mismo artículo, como cajas o packs.',
@@ -57,7 +60,7 @@ function construirFilasPorExcel(articulos, tipo) {
   })
 }
 
-function ejecutarGeneracion(filas, tipo, prefijo, articulos) {
+function ejecutarGeneracion(filas, tipo, prefijo, articulos, longitud) {
   const incluidas = filas.filter((f) => f.incluido && f.estado !== 'error' && f.estado !== 'sinLotes')
   const exitosos = []
   const errores = []
@@ -79,7 +82,7 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos) {
       codigo: {
         id: `c${Date.now()}-${index}`,
         tipo,
-        codigo: generarCodigo(tipo, { prefijo, cantidad, lote: loteSeleccionado }),
+        codigo: generarCodigo(tipo, { prefijo, cantidad, lote: loteSeleccionado, longitud }),
         cantidad,
         ...(tipo === 'GS1-128' && loteSeleccionado ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
       },
@@ -93,6 +96,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const [tipo, setTipo] = useState('GTIN-13')
   const [usarPrefijoGs1, setUsarPrefijoGs1] = useState(false)
   const [prefijoGs1, setPrefijoGs1] = useState('')
+  const [longitudManual, setLongitudManual] = useState('12')
   const [metodo, setMetodo] = useState('filtros')
   const [filtros, setFiltros] = useState(filtrosVacios)
   const [archivoNombre, setArchivoNombre] = useState('')
@@ -118,6 +122,11 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   }
 
   const prefijoInvalido = usarPrefijoGs1 && (!/^\d+$/.test(prefijoGs1) || prefijoGs1.length === 0 || prefijoGs1.length > maxPrefijoGs1(tipo))
+  const longitudManualInvalida = tipo === 'MANUAL' && (
+    !Number.isInteger(Number(longitudManual)) ||
+    Number(longitudManual) < LONGITUD_MANUAL_MIN ||
+    Number(longitudManual) > LONGITUD_MANUAL_MAX
+  )
 
   const handleContinuarLayer2 = () => {
     const nuevasFilas = metodo === 'filtros'
@@ -142,7 +151,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const handleGenerar = () => {
     setGenerando(true)
     setTimeout(() => {
-      const res = ejecutarGeneracion(filas, tipo, usarPrefijoGs1 ? prefijoGs1 : undefined, articulos)
+      const res = ejecutarGeneracion(filas, tipo, usarPrefijoGs1 ? prefijoGs1 : undefined, articulos, Number(longitudManual))
       onGenerar(res.exitosos)
       setResultado(res)
       setGenerando(false)
@@ -239,6 +248,23 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                       <p className={styles.helperText}>Hasta {maxPrefijoGs1(tipo)} dígitos.</p>
                     </>
                   )}
+                </div>
+              )}
+
+              {tipo === 'MANUAL' && (
+                <div className={styles.formSection}>
+                  <label className={styles.label}>Cantidad de caracteres</label>
+                  <input
+                    type="number"
+                    min={LONGITUD_MANUAL_MIN}
+                    max={LONGITUD_MANUAL_MAX}
+                    className={styles.input}
+                    value={longitudManual}
+                    onChange={(e) => setLongitudManual(e.target.value)}
+                  />
+                  <p className={styles.helperText}>
+                    Definí cuántos caracteres va a tener cada código interno generado, entre {LONGITUD_MANUAL_MIN} y {LONGITUD_MANUAL_MAX}.
+                  </p>
                 </div>
               )}
             </>
@@ -470,7 +496,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
         <div className={styles.footer}>
           {layer === 1 && (
-            <button className={styles.primaryBtn} onClick={() => setLayer(2)} disabled={prefijoInvalido}>Continuar</button>
+            <button className={styles.primaryBtn} onClick={() => setLayer(2)} disabled={prefijoInvalido || longitudManualInvalida}>Continuar</button>
           )}
           {layer === 2 && (
             <button className={styles.primaryBtn} onClick={handleContinuarLayer2} disabled={metodo === 'excel' && !archivoNombre}>

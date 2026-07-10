@@ -78,16 +78,16 @@ function generarGS1128(prefijo, lote, cantidad) {
   return ai01 + ai10 + ai17 + ai30
 }
 
-function generarCodigoManual() {
-  return `INT-${String(siguienteSecuencial()).padStart(6, '0')}`
+function generarCodigoManual(longitud = 10) {
+  return numeracionInterna(longitud, siguienteSecuencial())
 }
 
-export function generarCodigo(tipo, { lote, prefijo, cantidad } = {}) {
+export function generarCodigo(tipo, { lote, prefijo, cantidad, longitud } = {}) {
   if (tipo === 'GTIN-8') return generarGTIN8(prefijo)
   if (tipo === 'GTIN-13') return generarGTIN13(prefijo)
   if (tipo === 'GTIN-14') return generarGTIN14(prefijo)
   if (tipo === 'GS1-128') return generarGS1128(prefijo, lote, cantidad)
-  return generarCodigoManual()
+  return generarCodigoManual(longitud)
 }
 
 export function validarFormato(tipo, codigo) {
