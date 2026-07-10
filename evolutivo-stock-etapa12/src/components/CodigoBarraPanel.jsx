@@ -19,7 +19,7 @@ function defaultForm(articulo) {
 }
 
 function extraInfo(codigo) {
-  if (codigo.tipo === 'GTIN-128') {
+  if (codigo.tipo === 'GS1-128') {
     return `Lote ${codigo.loteId ?? '--'} · vence ${codigo.vencimiento ?? '--'}`
   }
   return `Cantidad: ${codigo.cantidad}`
@@ -44,7 +44,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
     updateForm({
       tipo,
       cantidad: info.cantidadFija ? String(info.cantidadFija) : '1',
-      loteId: tipo === 'GTIN-128' ? (articulo.lotes[0]?.id ?? '') : '',
+      loteId: tipo === 'GS1-128' ? (articulo.lotes[0]?.id ?? '') : '',
       usarPrefijoGs1: tipo === 'MANUAL' ? false : form.usarPrefijoGs1,
       prefijoGs1: form.prefijoGs1.slice(0, maxPrefijoGs1(tipo)),
     })
@@ -59,9 +59,9 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
 
   const handleSubmit = () => {
     const info = tipoInfo(form.tipo)
-    const loteSeleccionado = form.tipo === 'GTIN-128' ? articulo.lotes.find((l) => l.id === form.loteId) : null
+    const loteSeleccionado = form.tipo === 'GS1-128' ? articulo.lotes.find((l) => l.id === form.loteId) : null
 
-    if (form.tipo === 'GTIN-128' && !loteSeleccionado) {
+    if (form.tipo === 'GS1-128' && !loteSeleccionado) {
       updateForm({ error: 'Seleccioná un lote.' })
       return
     }
@@ -105,7 +105,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       tipo: form.tipo,
       codigo: codigoFinal,
       cantidad: info.cantidadFija ?? Number(form.cantidad),
-      ...(form.tipo === 'GTIN-128' ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
+      ...(form.tipo === 'GS1-128' ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
     })
     setLayer('detalle')
   }
@@ -222,7 +222,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                   ))}
                 </select>
                 {!articulo.manejaLotes && (
-                  <p className={styles.helperText}>GTIN-128 no disponible: este artículo no gestiona lotes.</p>
+                  <p className={styles.helperText}>GS1-128 no disponible: este artículo no gestiona lotes.</p>
                 )}
                 {form.origen === 'nuevo' && form.tipo === 'GTIN-8' && (
                   <p className={styles.helperText}>
@@ -269,7 +269,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
 
               {info.cantidadFija ? (
                 <p className={styles.staticInfo}>Cantidad que representa este código: {info.cantidadFija} (fija)</p>
-              ) : form.tipo === 'GTIN-128' ? (
+              ) : form.tipo === 'GS1-128' ? (
                 <>
                   <div className={styles.formSection}>
                     <label className={styles.label}>Lote</label>
@@ -324,7 +324,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                     className={`${styles.input} ${styles.mono}`}
                     value={form.codigoTexto}
                     onChange={(e) => updateForm({ codigoTexto: e.target.value })}
-                    placeholder={form.tipo === 'MANUAL' ? 'Ej: INT-00458' : 'Escaneá o tipeá el código'}
+                    placeholder={form.tipo === 'MANUAL' ? 'Ej: 123456' : 'Escaneá o tipeá el código'}
                   />
                 </div>
               )}

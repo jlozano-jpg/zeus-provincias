@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { IconX, IconChevronLeft, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2 } from '@tabler/icons-react'
-import { TIPOS_CODIGO, tipoInfo, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
-import { generarCodigo } from '../utils/gtin'
+import { TIPOS_CODIGO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
+import { generarCodigo, maxPrefijoGs1 } from '../utils/gtin'
 import { filtrosVacios } from './FiltrosCodigosBarraPanel'
 import styles from './GeneracionMasivaPanel.module.css'
 
@@ -18,7 +18,7 @@ function coincideFiltros(articulo, filtros) {
 }
 
 function construirFila(articulo, tipo) {
-  const requiereLote = tipo === 'GTIN-128'
+  const requiereLote = tipo === 'GS1-128'
   const sinLotes = requiereLote && !articulo.manejaLotes
   const yaExiste = articulo.codigos.some((c) => c.tipo === tipo)
   return {
@@ -58,10 +58,10 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos) {
       errores.push({ codigo: fila.codigo, motivo: 'Conflicto detectado en el servidor durante la generación.' })
       return
     }
-    const requiereCantidad = tipo === 'GTIN-14' || tipo === 'GTIN-128'
+    const requiereCantidad = tipo === 'GTIN-14' || tipo === 'GS1-128'
     const cantidad = requiereCantidad ? (Number(fila.cantidad) || 1) : 1
     let loteSeleccionado = null
-    if (tipo === 'GTIN-128') {
+    if (tipo === 'GS1-128') {
       const articulo = articulos.find((a) => a.id === fila.articuloId)
       loteSeleccionado = articulo?.lotes.find((l) => l.id === fila.loteId)
     }
@@ -72,7 +72,7 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos) {
         tipo,
         codigo: generarCodigo(tipo, { prefijo, cantidad, lote: loteSeleccionado }),
         cantidad,
-        ...(tipo === 'GTIN-128' && loteSeleccionado ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
+        ...(tipo === 'GS1-128' && loteSeleccionado ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
       },
     })
   })
@@ -82,6 +82,8 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos) {
 export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar }) {
   const [layer, setLayer] = useState(1)
   const [tipo, setTipo] = useState('GTIN-13')
+  const [usarPrefijoGs1, setUsarPrefijoGs1] = useState(false)
+  const [prefijoGs1, setPrefijoGs1] = useState('')
   const [metodo, setMetodo] = useState('filtros')
   const [filtros, setFiltros] = useState(filtrosVacios)
   const [archivoNombre, setArchivoNombre] = useState('')
@@ -98,8 +100,15 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const info = tipoInfo(tipo)
   const updateFiltro = (patch) => setFiltros((prev) => ({ ...prev, ...patch }))
+
+  const handleTipoChange = (nuevoTipo) => {
+    setTipo(nuevoTipo)
+    setPrefijoGs1((prev) => prev.slice(0, maxPrefijoGs1(nuevoTipo)))
+    if (nuevoTipo === 'MANUAL') setUsarPrefijoGs1(false)
+  }
+
+  const prefijoInvalido = usarPrefijoGs1 && (!/^\d+$/.test(prefijoGs1) || prefijoGs1.length === 0 || prefijoGs1.length > maxPrefijoGs1(tipo))
 
   const handleContinuarLayer2 = () => {
     const nuevasFilas = metodo === 'filtros'
@@ -124,7 +133,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const handleGenerar = () => {
     setGenerando(true)
     setTimeout(() => {
-      const res = ejecutarGeneracion(filas, tipo, info.prefijoGs1, articulos)
+      const res = ejecutarGeneracion(filas, tipo, usarPrefijoGs1 ? prefijoGs1 : undefined, articulos)
       onGenerar(res.exitosos)
       setResultado(res)
       setGenerando(false)
@@ -140,8 +149,8 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   }
 
   const seleccionados = filas.filter((f) => f.incluido).length
-  const mostrarCantidad = tipo === 'GTIN-14' || tipo === 'GTIN-128'
-  const mostrarLote = tipo === 'GTIN-128'
+  const mostrarCantidad = tipo === 'GTIN-14' || tipo === 'GS1-128'
+  const mostrarLote = tipo === 'GS1-128'
   const columnas = 3 + (mostrarCantidad ? 1 : 0) + (mostrarLote ? 1 : 0)
 
   const titulos = {
@@ -174,17 +183,55 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
         <div className={styles.content}>
           {layer === 1 && (
-            <div className={styles.formSection}>
-              <label className={styles.label}>Tipo de código a generar</label>
-              <select className={styles.select} value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                {TIPOS_CODIGO.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              {tipo === 'GTIN-128' && (
-                <p className={styles.helperText}>
-                  Vas a poder elegir el lote de cada artículo en la previsualización. Los artículos que no gestionan lotes quedan excluidos automáticamente.
-                </p>
+            <>
+              <div className={styles.formSection}>
+                <label className={styles.label}>Tipo de código a generar</label>
+                <select className={styles.select} value={tipo} onChange={(e) => handleTipoChange(e.target.value)}>
+                  {TIPOS_CODIGO.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+                {tipo === 'GS1-128' && (
+                  <p className={styles.helperText}>
+                    Vas a poder elegir el lote de cada artículo en la previsualización. Los artículos que no gestionan lotes quedan excluidos automáticamente.
+                  </p>
+                )}
+              </div>
+
+              {tipo !== 'MANUAL' && (
+                <div className={styles.formSection}>
+                  <label className={styles.toggleRow}>
+                    <span className={styles.label}>Prefijo GS1</span>
+                    <span
+                      className={`${styles.toggle} ${usarPrefijoGs1 ? styles.toggleActive : ''}`}
+                      role="switch"
+                      aria-checked={usarPrefijoGs1}
+                      tabIndex={0}
+                      onClick={() => setUsarPrefijoGs1((v) => !v)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setUsarPrefijoGs1((v) => !v)
+                        }
+                      }}
+                    >
+                      <span className={styles.toggleKnob} />
+                    </span>
+                  </label>
+                  {usarPrefijoGs1 && (
+                    <>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`${styles.input} ${styles.mono}`}
+                        value={prefijoGs1}
+                        onChange={(e) => setPrefijoGs1(e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(tipo)))}
+                        placeholder="Ej: 779"
+                      />
+                      <p className={styles.helperText}>Hasta {maxPrefijoGs1(tipo)} dígitos. Se va a aplicar a toda la tanda generada.</p>
+                    </>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {layer === 2 && (
@@ -296,7 +343,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     />
                   </div>
                   <p className={styles.helperText}>
-                    Columna de SKU obligatoria. Columna de cantidad opcional (aplica si el tipo elegido es GTIN-14 o GTIN-128).
+                    Columna de SKU obligatoria. Columna de cantidad opcional (aplica si el tipo elegido es GTIN-14 o GS1-128).
                   </p>
                 </div>
               )}
@@ -306,7 +353,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
           {layer === 3 && (
             <>
               <div className={styles.infoBar}>
-                {info.prefijoGs1 ? `Prefijo GS1: ${info.prefijoGs1}` : 'Sin prefijo (código interno)'}
+                {usarPrefijoGs1 ? `Prefijo GS1: ${prefijoGs1}` : 'Sin prefijo (código interno)'}
               </div>
               <p className={styles.counter}>{seleccionados} de {filas.length} artículos seleccionados para generar</p>
               <div className={styles.tableContainer}>
@@ -413,7 +460,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
         <div className={styles.footer}>
           {layer === 1 && (
-            <button className={styles.primaryBtn} onClick={() => setLayer(2)}>Continuar</button>
+            <button className={styles.primaryBtn} onClick={() => setLayer(2)} disabled={prefijoInvalido}>Continuar</button>
           )}
           {layer === 2 && (
             <button className={styles.primaryBtn} onClick={handleContinuarLayer2} disabled={metodo === 'excel' && !archivoNombre}>

@@ -16,11 +16,11 @@ export const MARCAS = ['Marca A', 'Marca B', 'Marca C', 'Marca D']
 export const CATEGORIAS = ['Categoría 1', 'Categoría 2', 'Categoría 3']
 
 export const TIPOS_CODIGO = [
-  { value: 'GTIN-8', label: 'GTIN-8', digits: 8, cantidadFija: 1, color: '#3370AC', prefijoGs1: null },
-  { value: 'GTIN-13', label: 'GTIN-13', digits: 13, cantidadFija: 1, color: '#7f72ba', prefijoGs1: '7791234' },
-  { value: 'GTIN-14', label: 'GTIN-14', digits: 14, color: '#00A3A3', prefijoGs1: '07791234' },
-  { value: 'GTIN-128', label: 'GTIN-128', requiereLotes: true, color: '#C87F0A', prefijoGs1: '07791234' },
-  { value: 'MANUAL', label: 'Código Manual', color: '#64748b', prefijoGs1: null },
+  { value: 'GTIN-8', label: 'GTIN-8', digits: 8, cantidadFija: 1, color: '#3370AC' },
+  { value: 'GTIN-13', label: 'GTIN-13', digits: 13, cantidadFija: 1, color: '#7f72ba' },
+  { value: 'GTIN-14', label: 'GTIN-14', digits: 14, color: '#00A3A3' },
+  { value: 'GS1-128', label: 'GS1-128', requiereLotes: true, color: '#C87F0A' },
+  { value: 'MANUAL', label: 'code-128', color: '#64748b' },
 ]
 
 export function tipoInfo(value) {
@@ -99,7 +99,7 @@ export const ARTICULOS_INICIALES = [
     ],
     codigos: [
       { id: 'c5', tipo: 'GTIN-13', codigo: '7791234567913', cantidad: 1 },
-      { id: 'c6', tipo: 'GTIN-128', codigo: '00177912345679135310241231', cantidad: 30, loteId: 'L1', vencimiento: '2026-08-31' },
+      { id: 'c6', tipo: 'GS1-128', codigo: '00177912345679135310241231', cantidad: 30, loteId: 'L1', vencimiento: '2026-08-31' },
     ],
   },
   {

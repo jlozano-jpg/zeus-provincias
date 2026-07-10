@@ -4,7 +4,7 @@
 
 const LENGTH_BY_TYPE = { 'GTIN-8': 8, 'GTIN-13': 13, 'GTIN-14': 14 }
 
-const MAX_PREFIJO_BY_TYPE = { 'GTIN-8': 6, 'GTIN-13': 11, 'GTIN-14': 11, 'GTIN-128': 11 }
+const MAX_PREFIJO_BY_TYPE = { 'GTIN-8': 6, 'GTIN-13': 11, 'GTIN-14': 11, 'GS1-128': 11 }
 
 export function maxPrefijoGs1(tipo) {
   return MAX_PREFIJO_BY_TYPE[tipo] ?? 0
@@ -66,10 +66,10 @@ function formatearFechaAI17(vencimientoIso) {
   return `${yyyy.slice(-2)}${mm}${dd}`
 }
 
-// GTIN-128: (01) GTIN-14 del artículo + (10) lote + (17) vencimiento (AAMMDD)
+// GS1-128: (01) GTIN-14 del artículo + (10) lote + (17) vencimiento (AAMMDD)
 // + (30) cantidad representada por este código puntual. Lote y vencimiento
 // provienen de un lote ya existente del artículo.
-function generarGTIN128(prefijo, lote, cantidad) {
+function generarGS1128(prefijo, lote, cantidad) {
   const gtin14Articulo = generarGTIN14(prefijo)
   const ai01 = `(01)${gtin14Articulo}`
   const ai10 = `(10)${lote.lote}`
@@ -86,12 +86,12 @@ export function generarCodigo(tipo, { lote, prefijo, cantidad } = {}) {
   if (tipo === 'GTIN-8') return generarGTIN8(prefijo)
   if (tipo === 'GTIN-13') return generarGTIN13(prefijo)
   if (tipo === 'GTIN-14') return generarGTIN14(prefijo)
-  if (tipo === 'GTIN-128') return generarGTIN128(prefijo, lote, cantidad)
+  if (tipo === 'GS1-128') return generarGS1128(prefijo, lote, cantidad)
   return generarCodigoManual()
 }
 
 export function validarFormato(tipo, codigo) {
-  if (tipo === 'MANUAL' || tipo === 'GTIN-128') {
+  if (tipo === 'MANUAL' || tipo === 'GS1-128') {
     return codigo.trim().length > 0
   }
   const length = LENGTH_BY_TYPE[tipo]
@@ -102,7 +102,7 @@ export function validarFormato(tipo, codigo) {
 }
 
 export function mensajeFormatoInvalido(tipo) {
-  if (tipo === 'GTIN-128') return 'Ingresá el código escaneado.'
+  if (tipo === 'GS1-128') return 'Ingresá el código escaneado.'
   if (tipo === 'MANUAL') return 'Ingresá un código.'
   const length = LENGTH_BY_TYPE[tipo]
   return `Debe tener ${length} dígitos numéricos con dígito verificador válido.`

@@ -146,6 +146,10 @@
   background: #ffffff;
 }
 
+.mono {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
 .helperText {
   margin: 0;
   font-size: 12px;
