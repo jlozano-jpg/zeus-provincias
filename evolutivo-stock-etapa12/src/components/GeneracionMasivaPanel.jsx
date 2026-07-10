@@ -233,7 +233,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     </span>
                   </label>
                   <p className={styles.helperText}>
-                    Prefijo de empresa suministrado por GS1: se va a mostrar en todos los códigos generados en esta tanda.
+                    Prefijo de empresa suministrado por GS1: Se incluirá en todos los códigos generados.
                   </p>
                   {usarPrefijoGs1 && (
                     <>
