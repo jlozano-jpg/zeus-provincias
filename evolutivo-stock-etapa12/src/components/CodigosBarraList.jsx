@@ -5,6 +5,7 @@ import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
 import FiltrosCodigosBarraPanel, { filtrosVacios, hayFiltrosActivos } from './FiltrosCodigosBarraPanel'
 import GeneracionMasivaPanel from './GeneracionMasivaPanel'
+import ImportarCodigosPanel from './ImportarCodigosPanel'
 import styles from './CodigosBarraList.module.css'
 
 function tiposAsignados(articulo) {
@@ -55,6 +56,7 @@ export default function CodigosBarraList() {
   const [openMenuId, setOpenMenuId] = useState(null)
   const [panelState, setPanelState] = useState(null)
   const [showGeneracionMasiva, setShowGeneracionMasiva] = useState(false)
+  const [showImportarCodigos, setShowImportarCodigos] = useState(false)
 
   const filtrados = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
@@ -128,7 +130,7 @@ export default function CodigosBarraList() {
         </button>
 
         <div className={styles.toolbarActions}>
-          <button type="button" className={styles.secondaryBtn} disabled title="Disponible próximamente">
+          <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
             Importar Códigos
           </button>
 
@@ -211,6 +213,14 @@ export default function CodigosBarraList() {
           articulos={articulos}
           onGenerar={agregarCodigosMasivo}
           onClose={() => setShowGeneracionMasiva(false)}
+        />
+      )}
+
+      {showImportarCodigos && (
+        <ImportarCodigosPanel
+          articulos={articulos}
+          onImportar={agregarCodigosMasivo}
+          onClose={() => setShowImportarCodigos(false)}
         />
       )}
     </div>
