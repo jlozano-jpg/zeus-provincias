@@ -127,9 +127,15 @@ export default function CodigosBarraList() {
           {hayFiltrosActivos(filtros) && <span className={styles.filterDot} />}
         </button>
 
-        <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
-          Generación masiva
-        </button>
+        <div className={styles.toolbarActions}>
+          <button type="button" className={styles.secondaryBtn} disabled title="Disponible próximamente">
+            Importar Códigos
+          </button>
+
+          <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
+            Generación masiva
+          </button>
+        </div>
       </div>
 
       <div className={styles.tableContainer}>
