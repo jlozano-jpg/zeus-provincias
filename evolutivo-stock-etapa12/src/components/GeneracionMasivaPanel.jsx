@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IconX, IconChevronLeft, IconChevronDown, IconCheck, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2 } from '@tabler/icons-react'
+import { IconX, IconChevronLeft, IconChevronDown, IconCheck, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2, IconDownload } from '@tabler/icons-react'
 import { TIPOS_CODIGO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
 import { generarCodigo, maxPrefijoGs1 } from '../utils/gtin'
 import { filtrosVacios } from './FiltrosCodigosBarraPanel'
@@ -179,6 +179,20 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
     setArrastrando(false)
     const file = event.dataTransfer.files?.[0]
     if (file) setArchivoNombre(file.name)
+  }
+
+  const descargarErrores = () => {
+    const encabezado = 'Código;Motivo\n'
+    const filasCsv = resultado.errores.map((err) => `${err.codigo};${err.motivo}`).join('\n')
+    const blob = new Blob([encabezado + filasCsv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'errores-generacion-masiva.csv'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   const seleccionados = filas.filter((f) => f.incluido).length
@@ -515,7 +529,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                               </td>
                             )}
                             <td>
-                              {fila.estado === 'nuevo' && <span className={styles.estadoNuevo}>Nuevo</span>}
+                              {fila.estado === 'nuevo' && <span className={styles.estadoNuevo}>Sin código</span>}
                               {fila.estado === 'duplicado' && (
                                 <span className={styles.estadoDuplicado}><IconAlertTriangle size={14} /> Ya tiene código</span>
                               )}
@@ -544,7 +558,18 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
               </div>
               {resultado.errores.length > 0 && (
                 <div className={styles.formSection}>
-                  <label className={styles.label}>Errores durante la generación</label>
+                  <div className={styles.erroresHeader}>
+                    <label className={styles.label}>Errores durante la generación</label>
+                    <button
+                      type="button"
+                      className={styles.downloadBtn}
+                      onClick={descargarErrores}
+                      title="Descargar detalle de errores"
+                      aria-label="Descargar detalle de errores"
+                    >
+                      <IconDownload size={16} />
+                    </button>
+                  </div>
                   <div className={styles.erroresList}>
                     {resultado.errores.map((err, i) => (
                       <div key={i} className={styles.erroresItem}>

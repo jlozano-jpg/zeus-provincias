@@ -496,6 +496,33 @@
   color: #172033;
 }
 
+.erroresHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.downloadBtn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dde3ee;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.downloadBtn:hover {
+  border-color: #7f72ba;
+  color: #7f72ba;
+}
+
 .erroresList {
   display: flex;
   flex-direction: column;
