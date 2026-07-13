@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IconX, IconChevronLeft, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2 } from '@tabler/icons-react'
+import { IconX, IconChevronLeft, IconChevronDown, IconCheck, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2 } from '@tabler/icons-react'
 import { TIPOS_CODIGO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
 import { generarCodigo, maxPrefijoGs1 } from '../utils/gtin'
 import { filtrosVacios } from './FiltrosCodigosBarraPanel'
@@ -15,6 +15,15 @@ const DESCRIPCION_TIPO = {
   'GTIN-14': '14 dígitos. Sirve para referenciar variantes de cantidad de un mismo artículo, como cajas o packs.',
   'GS1-128': 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento. Los artículos sin lotes quedan excluidos automáticamente.',
   MANUAL: 'Código interno generado por Zeus; no sigue un estándar GS1.',
+}
+
+const CONFIG_SELECTORES = {
+  sucursal: { titulo: 'Sucursal', opciones: SUCURSALES, todas: 'Todas' },
+  familia: { titulo: 'Familia', opciones: FAMILIAS, todas: 'Todas' },
+  proveedor: { titulo: 'Proveedor', opciones: PROVEEDORES, todas: 'Todos' },
+  grupo: { titulo: 'Grupo', opciones: GRUPOS, todas: 'Todos' },
+  marca: { titulo: 'Marca', opciones: MARCAS, todas: 'Todas' },
+  categoria: { titulo: 'Categoría', opciones: CATEGORIAS, todas: 'Todas' },
 }
 
 function coincideFiltros(articulo, filtros) {
@@ -99,6 +108,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const [longitudManual, setLongitudManual] = useState('12')
   const [metodo, setMetodo] = useState('filtros')
   const [filtros, setFiltros] = useState(filtrosVacios)
+  const [selectorActivo, setSelectorActivo] = useState(null)
   const [archivoNombre, setArchivoNombre] = useState('')
   const [arrastrando, setArrastrando] = useState(false)
   const [filas, setFilas] = useState([])
@@ -114,6 +124,11 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   }, [onClose])
 
   const updateFiltro = (patch) => setFiltros((prev) => ({ ...prev, ...patch }))
+
+  const seleccionarOpcionFiltro = (campo, valor) => {
+    updateFiltro({ [campo]: valor })
+    setSelectorActivo(null)
+  }
 
   const handleTipoChange = (nuevoTipo) => {
     setTipo(nuevoTipo)
@@ -184,14 +199,18 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
       <aside className={styles.panel} role="dialog" aria-modal="true">
         <div className={styles.header}>
           <div className={styles.headerWithBack}>
-            {layer > 1 && layer < 4 && (
-              <button className={styles.backBtn} onClick={() => setLayer((l) => l - 1)} aria-label="Volver">
+            {(selectorActivo || (layer > 1 && layer < 4)) && (
+              <button
+                className={styles.backBtn}
+                onClick={() => (selectorActivo ? setSelectorActivo(null) : setLayer((l) => l - 1))}
+                aria-label="Volver"
+              >
                 <IconChevronLeft size={18} />
               </button>
             )}
             <div>
               <p className={styles.eyebrow}>Generación masiva</p>
-              <h2 className={styles.title}>{titulos[layer]}</h2>
+              <h2 className={styles.title}>{selectorActivo ? CONFIG_SELECTORES[selectorActivo].titulo : titulos[layer]}</h2>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar panel" title="Cerrar (Esc)">
@@ -200,6 +219,30 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
         </div>
 
         <div className={styles.content}>
+          {selectorActivo ? (
+            <div className={styles.selectorList}>
+              <button
+                type="button"
+                className={`${styles.selectorOption} ${!filtros[selectorActivo] ? styles.selectorOptionActive : ''}`}
+                onClick={() => seleccionarOpcionFiltro(selectorActivo, '')}
+              >
+                {CONFIG_SELECTORES[selectorActivo].todas}
+                {!filtros[selectorActivo] && <IconCheck size={16} />}
+              </button>
+              {CONFIG_SELECTORES[selectorActivo].opciones.map((op) => (
+                <button
+                  key={op}
+                  type="button"
+                  className={`${styles.selectorOption} ${filtros[selectorActivo] === op ? styles.selectorOptionActive : ''}`}
+                  onClick={() => seleccionarOpcionFiltro(selectorActivo, op)}
+                >
+                  {op}
+                  {filtros[selectorActivo] === op && <IconCheck size={16} />}
+                </button>
+              ))}
+            </div>
+          ) : (
+          <>
           {layer === 1 && (
             <>
               <div className={styles.formSection}>
@@ -278,67 +321,89 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     Filtros
                   </button>
                   <button type="button" className={`${styles.segmentedBtn} ${metodo === 'excel' ? styles.segmentedBtnActive : ''}`} onClick={() => setMetodo('excel')}>
-                    Cargar Excel
+                    Cargar Archivo
                   </button>
                 </div>
               </div>
 
               {metodo === 'filtros' ? (
                 <>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Sucursal</label>
-                    <select className={styles.select} value={filtros.sucursal} onChange={(e) => updateFiltro({ sucursal: e.target.value })}>
-                      <option value="">Todas</option>
-                      {SUCURSALES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                  <div className={styles.formRow}>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Sucursal</label>
+                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('sucursal')}>
+                        <span className={!filtros.sucursal ? styles.selectTriggerPlaceholder : undefined}>
+                          {filtros.sucursal || CONFIG_SELECTORES.sucursal.todas}
+                        </span>
+                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                      </button>
+                    </div>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Familia</label>
+                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('familia')}>
+                        <span className={!filtros.familia ? styles.selectTriggerPlaceholder : undefined}>
+                          {filtros.familia || CONFIG_SELECTORES.familia.todas}
+                        </span>
+                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Familia</label>
-                    <select className={styles.select} value={filtros.familia} onChange={(e) => updateFiltro({ familia: e.target.value })}>
-                      <option value="">Todas</option>
-                      {FAMILIAS.map((f) => <option key={f} value={f}>{f}</option>)}
-                    </select>
+
+                  <div className={styles.formRow}>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Proveedor</label>
+                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('proveedor')}>
+                        <span className={!filtros.proveedor ? styles.selectTriggerPlaceholder : undefined}>
+                          {filtros.proveedor || CONFIG_SELECTORES.proveedor.todas}
+                        </span>
+                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                      </button>
+                    </div>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Código de fabricante</label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        value={filtros.codigoFabricante}
+                        onChange={(e) => updateFiltro({ codigoFabricante: e.target.value })}
+                        placeholder="Ej: FAB-1001"
+                      />
+                    </div>
                   </div>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Proveedor</label>
-                    <select className={styles.select} value={filtros.proveedor} onChange={(e) => updateFiltro({ proveedor: e.target.value })}>
-                      <option value="">Todos</option>
-                      {PROVEEDORES.map((p) => <option key={p} value={p}>{p}</option>)}
-                    </select>
+
+                  <div className={styles.formRow}>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Grupo</label>
+                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('grupo')}>
+                        <span className={!filtros.grupo ? styles.selectTriggerPlaceholder : undefined}>
+                          {filtros.grupo || CONFIG_SELECTORES.grupo.todas}
+                        </span>
+                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                      </button>
+                    </div>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Marca</label>
+                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('marca')}>
+                        <span className={!filtros.marca ? styles.selectTriggerPlaceholder : undefined}>
+                          {filtros.marca || CONFIG_SELECTORES.marca.todas}
+                        </span>
+                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Código de fabricante</label>
-                    <input
-                      type="text"
-                      className={styles.input}
-                      value={filtros.codigoFabricante}
-                      onChange={(e) => updateFiltro({ codigoFabricante: e.target.value })}
-                      placeholder="Ej: FAB-1001"
-                    />
-                  </div>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Grupo</label>
-                    <select className={styles.select} value={filtros.grupo} onChange={(e) => updateFiltro({ grupo: e.target.value })}>
-                      <option value="">Todos</option>
-                      {GRUPOS.map((g) => <option key={g} value={g}>{g}</option>)}
-                    </select>
-                  </div>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Marca</label>
-                    <select className={styles.select} value={filtros.marca} onChange={(e) => updateFiltro({ marca: e.target.value })}>
-                      <option value="">Todas</option>
-                      {MARCAS.map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  </div>
+
                   <div className={styles.formSection}>
                     <label className={styles.label}>Categoría</label>
-                    <select className={styles.select} value={filtros.categoria} onChange={(e) => updateFiltro({ categoria: e.target.value })}>
-                      <option value="">Todas</option>
-                      {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('categoria')}>
+                      <span className={!filtros.categoria ? styles.selectTriggerPlaceholder : undefined}>
+                        {filtros.categoria || CONFIG_SELECTORES.categoria.todas}
+                      </span>
+                      <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                    </button>
                   </div>
+
                   <label className={styles.toggleRow}>
-                    <span className={styles.label}>Solo sin código asignado</span>
+                    <span className={styles.label}>Sin código de barras asignado</span>
                     <span
                       className={`${styles.toggle} ${filtros.soloSinCodigo ? styles.toggleActive : ''}`}
                       role="switch"
@@ -373,13 +438,13 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     <input
                       id="gm-file-input"
                       type="file"
-                      accept=".xlsx,.xls,.csv"
+                      accept=".xlsx,.xls,.csv,.txt"
                       className={styles.hiddenInput}
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) setArchivoNombre(f.name) }}
                     />
                   </div>
                   <p className={styles.helperText}>
-                    Columna de SKU obligatoria. Columna de cantidad opcional (aplica si el tipo elegido es GTIN-14 o GS1-128).
+                    Se aceptan archivos Excel, TXT y CSV. Columna de SKU obligatoria. Columna de cantidad opcional (aplica si el tipo elegido es GTIN-14 o GS1-128).
                   </p>
                 </div>
               )}
@@ -491,6 +556,8 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                 </div>
               )}
             </>
+          )}
+          </>
           )}
         </div>
 

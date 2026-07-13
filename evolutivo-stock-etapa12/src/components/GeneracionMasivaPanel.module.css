@@ -121,6 +121,12 @@
   gap: 8px;
 }
 
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .label {
   font-size: 12px;
   font-weight: 700;
@@ -148,6 +154,68 @@
 
 .mono {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #dde3ee;
+  border-radius: 10px;
+  color: #172033;
+  background: #f7f8fa;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease;
+}
+
+.selectTrigger:hover, .selectTrigger:focus-visible {
+  outline: none;
+  border-color: #7f72ba;
+}
+
+.selectTriggerPlaceholder {
+  color: #94a3b8;
+}
+
+.selectTriggerIcon {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.selectorList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selectorOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #344055;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selectorOption:hover {
+  background: #f7f8fa;
+}
+
+.selectorOptionActive {
+  background: #f0ecff;
+  color: #7f72ba;
+  font-weight: 700;
 }
 
 .helperText {

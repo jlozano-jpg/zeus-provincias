@@ -118,7 +118,7 @@ export default function FiltrosCodigosBarraPanel({ filtros, onApply, onClose }) 
           </div>
 
           <label className={styles.toggleRow}>
-            <span className={styles.label}>Solo sin código asignado</span>
+            <span className={styles.label}>Sin código de barras asignado</span>
             <span
               className={`${styles.toggle} ${form.soloSinCodigo ? styles.toggleActive : ''}`}
               role="switch"
