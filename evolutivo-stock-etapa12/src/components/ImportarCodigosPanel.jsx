@@ -182,7 +182,6 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
                 <div className={styles.tiposBadgeRow}>
                   {TIPOS_IMPORTABLES.map((tipo) => <TipoCodigoBadge key={tipo} tipo={tipo} />)}
                 </div>
-                <p className={styles.helperText}>Por el momento no se pueden importar códigos GS1-128.</p>
               </div>
 
               <button type="button" className={styles.exampleBtn} onClick={descargarEjemplo}>

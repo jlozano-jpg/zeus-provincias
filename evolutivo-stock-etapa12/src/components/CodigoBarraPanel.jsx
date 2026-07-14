@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { IconX, IconChevronLeft, IconTrash, IconBarcodeOff, IconPlus } from '@tabler/icons-react'
-import { TIPOS_CODIGO, tipoInfo } from '../data/codigosBarra'
+import { TIPOS_CODIGO_SIN_GTIN8, DESCRIPCION_TIPO, tipoInfo } from '../data/codigosBarra'
 import { generarCodigo, validarFormato, mensajeFormatoInvalido, existeCodigoDuplicado, maxPrefijoGs1 } from '../utils/gtin'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import styles from './CodigoBarraPanel.module.css'
@@ -215,19 +215,17 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
               <div className={styles.formSection}>
                 <label className={styles.label}>Tipo de código</label>
                 <select className={styles.select} value={form.tipo} onChange={(e) => handleTipoChange(e.target.value)}>
-                  {TIPOS_CODIGO.map((t) => (
+                  {TIPOS_CODIGO_SIN_GTIN8.map((t) => (
                     <option key={t.value} value={t.value} disabled={t.requiereLotes && !articulo.manejaLotes}>
                       {t.label}
                     </option>
                   ))}
                 </select>
+                {DESCRIPCION_TIPO[form.tipo] && (
+                  <p className={styles.helperText}>{DESCRIPCION_TIPO[form.tipo]}</p>
+                )}
                 {!articulo.manejaLotes && (
                   <p className={styles.helperText}>GS1-128 no disponible: este artículo no gestiona lotes.</p>
-                )}
-                {form.origen === 'nuevo' && form.tipo === 'GTIN-8' && (
-                  <p className={styles.helperText}>
-                    Este GTIN-8 es de uso interno de Zeus: GS1 no permite asignarlo libremente. Si necesitás un GTIN-8 oficial, cargalo desde "Ingresar existente".
-                  </p>
                 )}
               </div>
 

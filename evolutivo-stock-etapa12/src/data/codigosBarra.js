@@ -27,6 +27,15 @@ export function tipoInfo(value) {
   return TIPOS_CODIGO.find((t) => t.value === value)
 }
 
+export const TIPOS_CODIGO_SIN_GTIN8 = TIPOS_CODIGO.filter((t) => t.value !== 'GTIN-8')
+
+export const DESCRIPCION_TIPO = {
+  'GTIN-13': '13 dígitos. Identifica de forma única un artículo para venta al público.',
+  'GTIN-14': '14 dígitos. Sirve para referenciar variantes de cantidad de un mismo artículo, como cajas o packs.',
+  'GS1-128': 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento. Los artículos sin lotes quedan excluidos automáticamente.',
+  MANUAL: 'Código interno generado por Zeus; no sigue un estándar GS1.',
+}
+
 export const MOCK_EXCEL_SKUS = ['ART-001', 'ART-030', 'SKU-999']
 
 export const ARTICULOS_INICIALES = [

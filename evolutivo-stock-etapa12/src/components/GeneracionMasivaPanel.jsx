@@ -1,21 +1,14 @@
 import { useEffect, useState } from 'react'
 import { IconX, IconChevronLeft, IconChevronDown, IconCheck, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2, IconDownload } from '@tabler/icons-react'
-import { TIPOS_CODIGO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
+import { TIPOS_CODIGO_SIN_GTIN8, DESCRIPCION_TIPO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
 import { generarCodigo, maxPrefijoGs1 } from '../utils/gtin'
 import { filtrosVacios } from './FiltrosCodigosBarraPanel'
 import styles from './GeneracionMasivaPanel.module.css'
 
-const TIPOS_DISPONIBLES = TIPOS_CODIGO.filter((t) => t.value !== 'GTIN-8')
+const TIPOS_DISPONIBLES = TIPOS_CODIGO_SIN_GTIN8
 
 const LONGITUD_MANUAL_MIN = 8
 const LONGITUD_MANUAL_MAX = 48
-
-const DESCRIPCION_TIPO = {
-  'GTIN-13': '13 dígitos. Identifica de forma única un artículo para venta al público.',
-  'GTIN-14': '14 dígitos. Sirve para referenciar variantes de cantidad de un mismo artículo, como cajas o packs.',
-  'GS1-128': 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento. Los artículos sin lotes quedan excluidos automáticamente.',
-  MANUAL: 'Código interno generado por Zeus; no sigue un estándar GS1.',
-}
 
 const CONFIG_SELECTORES = {
   sucursal: { titulo: 'Sucursal', opciones: SUCURSALES, todas: 'Todas' },
