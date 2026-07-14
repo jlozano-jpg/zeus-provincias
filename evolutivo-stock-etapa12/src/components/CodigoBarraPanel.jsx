@@ -12,7 +12,6 @@ function defaultForm(articulo) {
     cantidad: '1',
     loteId: articulo.lotes[0]?.id ?? '',
     codigoTexto: '',
-    usarPrefijoGs1: false,
     prefijoGs1: '',
     error: '',
   }
@@ -45,7 +44,6 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       tipo,
       cantidad: info.cantidadFija ? String(info.cantidadFija) : '1',
       loteId: tipo === 'GS1-128' ? (articulo.lotes[0]?.id ?? '') : '',
-      usarPrefijoGs1: tipo === 'MANUAL' ? false : form.usarPrefijoGs1,
       prefijoGs1: form.prefijoGs1.slice(0, maxPrefijoGs1(tipo)),
     })
   }
@@ -86,16 +84,16 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       }
       codigoFinal = texto
     } else {
-      if (form.usarPrefijoGs1) {
+      if (form.tipo !== 'MANUAL') {
         const max = maxPrefijoGs1(form.tipo)
-        if (!/^\d+$/.test(form.prefijoGs1) || form.prefijoGs1.length > max) {
+        if (!/^\d+$/.test(form.prefijoGs1) || form.prefijoGs1.length === 0 || form.prefijoGs1.length > max) {
           setForm((prev) => ({ ...prev, error: `Ingresá un prefijo GS1 numérico de hasta ${max} dígitos.` }))
           return
         }
       }
       codigoFinal = generarCodigo(form.tipo, {
         lote: loteSeleccionado,
-        prefijo: form.usarPrefijoGs1 ? form.prefijoGs1 : undefined,
+        prefijo: form.tipo !== 'MANUAL' ? form.prefijoGs1 : undefined,
         cantidad: info.cantidadFija ?? Number(form.cantidad),
       })
     }
@@ -231,37 +229,18 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
 
               {form.origen === 'nuevo' && form.tipo !== 'MANUAL' && (
                 <div className={styles.formSection}>
-                  <label className={styles.toggleRow}>
-                    <span className={styles.label}>Prefijo GS1</span>
-                    <span
-                      className={`${styles.toggle} ${form.usarPrefijoGs1 ? styles.toggleActive : ''}`}
-                      role="switch"
-                      aria-checked={form.usarPrefijoGs1}
-                      tabIndex={0}
-                      onClick={() => updateForm({ usarPrefijoGs1: !form.usarPrefijoGs1 })}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          updateForm({ usarPrefijoGs1: !form.usarPrefijoGs1 })
-                        }
-                      }}
-                    >
-                      <span className={styles.toggleKnob} />
-                    </span>
-                  </label>
-                  {form.usarPrefijoGs1 && (
-                    <>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={`${styles.input} ${styles.mono}`}
-                        value={form.prefijoGs1}
-                        onChange={(e) => updateForm({ prefijoGs1: e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(form.tipo)) })}
-                        placeholder="Ej: 779"
-                      />
-                      <p className={styles.helperText}>Hasta {maxPrefijoGs1(form.tipo)} dígitos para {tipoInfo(form.tipo).label}.</p>
-                    </>
-                  )}
+                  <label className={styles.label}>Prefijo GS1</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.mono}`}
+                    value={form.prefijoGs1}
+                    onChange={(e) => updateForm({ prefijoGs1: e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(form.tipo)) })}
+                    placeholder="Ej: 779"
+                  />
+                  <p className={styles.helperText}>
+                    Prefijo de empresa suministrado por GS1: se incluirá en el código generado. Hasta {maxPrefijoGs1(form.tipo)} dígitos para {tipoInfo(form.tipo).label}.
+                  </p>
                 </div>
               )}
 

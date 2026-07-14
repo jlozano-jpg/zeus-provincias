@@ -80,7 +80,6 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos, longitud) {
 export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar }) {
   const [layer, setLayer] = useState(1)
   const [tipo, setTipo] = useState('GTIN-13')
-  const [usarPrefijoGs1, setUsarPrefijoGs1] = useState(false)
   const [prefijoGs1, setPrefijoGs1] = useState('')
   const [longitudManual, setLongitudManual] = useState('12')
   const [metodo, setMetodo] = useState('filtros')
@@ -110,10 +109,9 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const handleTipoChange = (nuevoTipo) => {
     setTipo(nuevoTipo)
     setPrefijoGs1((prev) => prev.slice(0, maxPrefijoGs1(nuevoTipo)))
-    if (nuevoTipo === 'MANUAL') setUsarPrefijoGs1(false)
   }
 
-  const prefijoInvalido = usarPrefijoGs1 && (!/^\d+$/.test(prefijoGs1) || prefijoGs1.length === 0 || prefijoGs1.length > maxPrefijoGs1(tipo))
+  const prefijoInvalido = tipo !== 'MANUAL' && (!/^\d+$/.test(prefijoGs1) || prefijoGs1.length === 0 || prefijoGs1.length > maxPrefijoGs1(tipo))
   const longitudManualInvalida = tipo === 'MANUAL' && (
     !Number.isInteger(Number(longitudManual)) ||
     Number(longitudManual) < LONGITUD_MANUAL_MIN ||
@@ -139,7 +137,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const handleGenerar = () => {
     setGenerando(true)
     setTimeout(() => {
-      const res = ejecutarGeneracion(filas, tipo, usarPrefijoGs1 ? prefijoGs1 : undefined, articulos, Number(longitudManual))
+      const res = ejecutarGeneracion(filas, tipo, tipo !== 'MANUAL' ? prefijoGs1 : undefined, articulos, Number(longitudManual))
       onGenerar(res.exitosos)
       setResultado(res)
       setGenerando(false)
@@ -243,40 +241,18 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
               {tipo !== 'MANUAL' && (
                 <div className={styles.formSection}>
-                  <label className={styles.toggleRow}>
-                    <span className={styles.label}>Prefijo GS1</span>
-                    <span
-                      className={`${styles.toggle} ${usarPrefijoGs1 ? styles.toggleActive : ''}`}
-                      role="switch"
-                      aria-checked={usarPrefijoGs1}
-                      tabIndex={0}
-                      onClick={() => setUsarPrefijoGs1((v) => !v)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          setUsarPrefijoGs1((v) => !v)
-                        }
-                      }}
-                    >
-                      <span className={styles.toggleKnob} />
-                    </span>
-                  </label>
+                  <label className={styles.label}>Prefijo GS1</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.mono}`}
+                    value={prefijoGs1}
+                    onChange={(e) => setPrefijoGs1(e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(tipo)))}
+                    placeholder="Ej: 779"
+                  />
                   <p className={styles.helperText}>
-                    Prefijo de empresa suministrado por GS1: Se incluirá en todos los códigos generados.
+                    Prefijo de empresa suministrado por GS1: se incluirá en todos los códigos generados en esta tanda. Hasta {maxPrefijoGs1(tipo)} dígitos.
                   </p>
-                  {usarPrefijoGs1 && (
-                    <>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={`${styles.input} ${styles.mono}`}
-                        value={prefijoGs1}
-                        onChange={(e) => setPrefijoGs1(e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(tipo)))}
-                        placeholder="Ej: 779"
-                      />
-                      <p className={styles.helperText}>Hasta {maxPrefijoGs1(tipo)} dígitos.</p>
-                    </>
-                  )}
                 </div>
               )}
 
@@ -440,7 +416,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
           {layer === 3 && (
             <>
               <div className={styles.infoBar}>
-                {usarPrefijoGs1 ? `Prefijo GS1: ${prefijoGs1}` : 'Sin prefijo (código interno)'}
+                {tipo !== 'MANUAL' ? `Prefijo GS1: ${prefijoGs1}` : 'Sin prefijo (código interno)'}
               </div>
               <p className={styles.counter}>{seleccionados} de {filas.length} artículos seleccionados para generar</p>
               <div className={styles.tableContainer}>
