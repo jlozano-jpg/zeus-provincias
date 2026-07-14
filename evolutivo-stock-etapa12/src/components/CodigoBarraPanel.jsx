@@ -17,6 +17,13 @@ function defaultForm(articulo) {
   }
 }
 
+function descripcionTipo(tipo) {
+  if (tipo === 'GS1-128') {
+    return 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento.'
+  }
+  return DESCRIPCION_TIPO[tipo]
+}
+
 function extraInfo(codigo) {
   if (codigo.tipo === 'GS1-128') {
     return `Lote ${codigo.loteId ?? '--'} · vence ${codigo.vencimiento ?? '--'}`
@@ -219,8 +226,8 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                     </option>
                   ))}
                 </select>
-                {DESCRIPCION_TIPO[form.tipo] && (
-                  <p className={styles.helperText}>{DESCRIPCION_TIPO[form.tipo]}</p>
+                {descripcionTipo(form.tipo) && (
+                  <p className={styles.helperText}>{descripcionTipo(form.tipo)}</p>
                 )}
                 {!articulo.manejaLotes && (
                   <p className={styles.helperText}>GS1-128 no disponible: este artículo no gestiona lotes.</p>
