@@ -189,6 +189,12 @@
   color: #7f72ba;
 }
 
+.tiposBadgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .resumenOk {
   display: flex;
   flex-direction: column;

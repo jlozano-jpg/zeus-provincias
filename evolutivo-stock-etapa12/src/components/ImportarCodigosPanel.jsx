@@ -1,22 +1,32 @@
 import { useEffect, useState } from 'react'
 import { IconX, IconChevronLeft, IconUpload, IconFileDownload, IconAlertCircle, IconCircleCheck, IconLoader2, IconDownload } from '@tabler/icons-react'
 import { validarFormato, existeCodigoDuplicado } from '../utils/gtin'
+import TipoCodigoBadge from './TipoCodigoBadge'
 import styles from './ImportarCodigosPanel.module.css'
 
-const MOCK_FILAS_IMPORTACION = [
-  { sku: 'ART-002', codigo: '7791234500000' },
-  { sku: 'ART-030', codigo: 'INT-777888' },
-  { sku: 'SKU-999', codigo: '1234567890128' },
-  { sku: 'ART-002', codigo: '7791234567890' },
-  { sku: 'ART-010', codigo: '' },
-]
+const TIPOS_IMPORTABLES = ['GTIN-13', 'GTIN-14', 'MANUAL']
 
-function detectarTipoCodigo(codigo) {
-  for (const tipo of ['GTIN-8', 'GTIN-13', 'GTIN-14']) {
-    if (validarFormato(tipo, codigo)) return tipo
-  }
-  return 'MANUAL'
+const ETIQUETA_TIPO_ARCHIVO = { 'GTIN-13': 'GTIN-13', 'GTIN-14': 'GTIN-14', MANUAL: 'CODE-128' }
+
+function normalizarTipoImportado(valor) {
+  const v = (valor || '').trim().toUpperCase()
+  if (v === 'GTIN-13') return 'GTIN-13'
+  if (v === 'GTIN-14') return 'GTIN-14'
+  if (v === 'CODE-128' || v === 'MANUAL') return 'MANUAL'
+  if (v === 'GS1-128') return 'GS1-128'
+  return null
 }
+
+const MOCK_FILAS_IMPORTACION = [
+  { sku: 'ART-002', codigo: '7791234500000', tipo: 'GTIN-13' },
+  { sku: 'ART-030', codigo: '10779123400017', tipo: 'GTIN-14' },
+  { sku: 'ART-030', codigo: 'INT-777888', tipo: 'CODE-128' },
+  { sku: 'SKU-999', codigo: '1234567890128', tipo: 'GTIN-13' },
+  { sku: 'ART-002', codigo: '7791234567890', tipo: 'GTIN-13' },
+  { sku: 'ART-020', codigo: '', tipo: 'GTIN-13' },
+  { sku: 'ART-020', codigo: '00177912345679999', tipo: 'GS1-128' },
+  { sku: 'ART-010', codigo: '999', tipo: 'GTIN-14' },
+]
 
 function procesarImportacion(articulos) {
   const exitosos = []
@@ -32,13 +42,26 @@ function procesarImportacion(articulos) {
       errores.push({ codigo: fila.sku, motivo: 'Código de barras vacío.' })
       return
     }
+    const tipo = normalizarTipoImportado(fila.tipo)
+    if (tipo === 'GS1-128') {
+      errores.push({ codigo: fila.sku, motivo: 'GS1-128 no se puede importar por este medio.' })
+      return
+    }
+    if (!tipo) {
+      errores.push({ codigo: fila.sku, motivo: 'Tipo de código no reconocido.' })
+      return
+    }
     if (existeCodigoDuplicado(articulos, texto)) {
       errores.push({ codigo: fila.sku, motivo: 'Este código ya está asignado a otro artículo.' })
       return
     }
+    if (!validarFormato(tipo, texto)) {
+      errores.push({ codigo: fila.sku, motivo: `El código no es válido para ${ETIQUETA_TIPO_ARCHIVO[tipo]}.` })
+      return
+    }
     exitosos.push({
       articuloId: articulo.id,
-      codigo: { id: `c${Date.now()}-${exitosos.length}`, tipo: detectarTipoCodigo(texto), codigo: texto, cantidad: 1 },
+      codigo: { id: `c${Date.now()}-${exitosos.length}`, tipo, codigo: texto, cantidad: 1 },
     })
   })
   return { exitosos, errores }
@@ -80,7 +103,10 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
   const descargarEjemplo = () => {
     descargarTexto(
       'ejemplo-importar-codigos.csv',
-      'Código de artículo;Código de barras\nART-001;7791234567890\nART-002;7791234500000\n',
+      'Código de artículo;Código de barras;Tipo de código\n'
+      + 'ART-001;7791234567890;GTIN-13\n'
+      + 'ART-010;10779123400017;GTIN-14\n'
+      + 'ART-030;INT-777888;CODE-128\n',
       'text/csv;charset=utf-8;'
     )
   }
@@ -147,8 +173,16 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
                   />
                 </div>
                 <p className={styles.helperText}>
-                  Se aceptan archivos Excel, TXT y CSV. Una columna debe corresponder al código de artículo y otra al código de barras.
+                  Se aceptan archivos Excel, TXT y CSV. El archivo debe tener una columna para el código de artículo, otra para el código de barras y otra para el tipo de código.
                 </p>
+              </div>
+
+              <div className={styles.formSection}>
+                <label className={styles.label}>Tipos de código admitidos</label>
+                <div className={styles.tiposBadgeRow}>
+                  {TIPOS_IMPORTABLES.map((tipo) => <TipoCodigoBadge key={tipo} tipo={tipo} />)}
+                </div>
+                <p className={styles.helperText}>Por el momento no se pueden importar códigos GS1-128.</p>
               </div>
 
               <button type="button" className={styles.exampleBtn} onClick={descargarEjemplo}>
