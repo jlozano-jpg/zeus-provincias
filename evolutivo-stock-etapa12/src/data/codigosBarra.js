@@ -29,6 +29,10 @@ export function tipoInfo(value) {
 
 export const TIPOS_CODIGO_SIN_GTIN8 = TIPOS_CODIGO.filter((t) => t.value !== 'GTIN-8')
 
+// GS1-128 depende de seleccionar un lote por artículo puntual, así que solo
+// se resuelve en la asignación individual, no en la generación masiva.
+export const TIPOS_CODIGO_MASIVA = TIPOS_CODIGO.filter((t) => t.value !== 'GTIN-8' && t.value !== 'GS1-128')
+
 export const DESCRIPCION_TIPO = {
   'GTIN-13': '13 dígitos. Identifica de forma única un artículo para venta al público.',
   'GTIN-14': '14 dígitos. Sirve para referenciar variantes de cantidad de un mismo artículo, como cajas o packs.',

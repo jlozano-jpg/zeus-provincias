@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { IconX, IconChevronLeft, IconChevronDown, IconCheck, IconUpload, IconAlertTriangle, IconAlertCircle, IconCircleCheck, IconLoader2, IconDownload } from '@tabler/icons-react'
-import { TIPOS_CODIGO_SIN_GTIN8, DESCRIPCION_TIPO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
+import { TIPOS_CODIGO_MASIVA, DESCRIPCION_TIPO, FAMILIAS, PROVEEDORES, SUCURSALES, GRUPOS, MARCAS, CATEGORIAS, MOCK_EXCEL_SKUS } from '../data/codigosBarra'
 import { generarCodigo, maxPrefijoGs1 } from '../utils/gtin'
 import { filtrosVacios } from './FiltrosCodigosBarraPanel'
 import styles from './GeneracionMasivaPanel.module.css'
 
-const TIPOS_DISPONIBLES = TIPOS_CODIGO_SIN_GTIN8
+const TIPOS_DISPONIBLES = TIPOS_CODIGO_MASIVA
 
 const LONGITUD_MANUAL_MIN = 8
 const LONGITUD_MANUAL_MAX = 48
@@ -32,8 +32,6 @@ function coincideFiltros(articulo, filtros) {
 }
 
 function construirFila(articulo, tipo) {
-  const requiereLote = tipo === 'GS1-128'
-  const sinLotes = requiereLote && !articulo.manejaLotes
   const yaExiste = articulo.codigos.some((c) => c.tipo === tipo)
   return {
     key: articulo.id,
@@ -41,10 +39,8 @@ function construirFila(articulo, tipo) {
     codigo: articulo.codigo,
     descripcion: articulo.descripcion,
     cantidad: '1',
-    loteId: requiereLote ? (articulo.lotes[0]?.id ?? '') : '',
-    lotesDisponibles: requiereLote ? articulo.lotes : [],
-    estado: sinLotes ? 'sinLotes' : (yaExiste ? 'duplicado' : 'nuevo'),
-    incluido: !sinLotes,
+    estado: yaExiste ? 'duplicado' : 'nuevo',
+    incluido: true,
   }
 }
 
@@ -56,14 +52,14 @@ function construirFilasPorExcel(articulos, tipo) {
   return MOCK_EXCEL_SKUS.map((sku) => {
     const articulo = articulos.find((a) => a.codigo === sku)
     if (!articulo) {
-      return { key: sku, articuloId: null, codigo: sku, descripcion: '—', cantidad: '1', loteId: '', lotesDisponibles: [], estado: 'error', incluido: false }
+      return { key: sku, articuloId: null, codigo: sku, descripcion: '—', cantidad: '1', estado: 'error', incluido: false }
     }
     return construirFila(articulo, tipo)
   })
 }
 
 function ejecutarGeneracion(filas, tipo, prefijo, articulos, longitud) {
-  const incluidas = filas.filter((f) => f.incluido && f.estado !== 'error' && f.estado !== 'sinLotes')
+  const incluidas = filas.filter((f) => f.incluido && f.estado !== 'error')
   const exitosos = []
   const errores = []
   incluidas.forEach((fila, index) => {
@@ -72,22 +68,10 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos, longitud) {
       errores.push({ codigo: fila.codigo, motivo: 'Conflicto detectado en el servidor durante la generación.' })
       return
     }
-    const requiereCantidad = tipo === 'GTIN-14' || tipo === 'GS1-128'
-    const cantidad = requiereCantidad ? (Number(fila.cantidad) || 1) : 1
-    let loteSeleccionado = null
-    if (tipo === 'GS1-128') {
-      const articulo = articulos.find((a) => a.id === fila.articuloId)
-      loteSeleccionado = articulo?.lotes.find((l) => l.id === fila.loteId)
-    }
+    const cantidad = tipo === 'GTIN-14' ? (Number(fila.cantidad) || 1) : 1
     exitosos.push({
       articuloId: fila.articuloId,
-      codigo: {
-        id: `c${Date.now()}-${index}`,
-        tipo,
-        codigo: generarCodigo(tipo, { prefijo, cantidad, lote: loteSeleccionado, longitud }),
-        cantidad,
-        ...(tipo === 'GS1-128' && loteSeleccionado ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
-      },
+      codigo: { id: `c${Date.now()}-${index}`, tipo, codigo: generarCodigo(tipo, { prefijo, cantidad, longitud }), cantidad },
     })
   })
   return { exitosos, errores }
@@ -145,15 +129,11 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   }
 
   const toggleFila = (key) => {
-    setFilas((prev) => prev.map((f) => (f.key === key && f.estado !== 'error' && f.estado !== 'sinLotes' ? { ...f, incluido: !f.incluido } : f)))
+    setFilas((prev) => prev.map((f) => (f.key === key && f.estado !== 'error' ? { ...f, incluido: !f.incluido } : f)))
   }
 
   const cambiarCantidadFila = (key, cantidad) => {
     setFilas((prev) => prev.map((f) => (f.key === key ? { ...f, cantidad } : f)))
-  }
-
-  const cambiarLoteFila = (key, loteId) => {
-    setFilas((prev) => prev.map((f) => (f.key === key ? { ...f, loteId } : f)))
   }
 
   const handleGenerar = () => {
@@ -189,9 +169,8 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   }
 
   const seleccionados = filas.filter((f) => f.incluido).length
-  const mostrarCantidad = tipo === 'GTIN-14' || tipo === 'GS1-128'
-  const mostrarLote = tipo === 'GS1-128'
-  const columnas = 3 + (mostrarCantidad ? 1 : 0) + (mostrarLote ? 1 : 0)
+  const mostrarCantidad = tipo === 'GTIN-14'
+  const columnas = 3 + (mostrarCantidad ? 1 : 0)
 
   const titulos = {
     1: 'Tipo de código',
@@ -451,7 +430,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     />
                   </div>
                   <p className={styles.helperText}>
-                    Se aceptan archivos Excel, TXT y CSV. Columna de SKU obligatoria. Columna de cantidad opcional (aplica si el tipo elegido es GTIN-14 o GS1-128).
+                    Se aceptan archivos Excel, TXT y CSV. Columna de SKU obligatoria. Columna de cantidad opcional (aplica si el tipo elegido es GTIN-14).
                   </p>
                 </div>
               )}
@@ -470,7 +449,6 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     <tr>
                       <th className={styles.checkboxCell} />
                       <th>Artículo</th>
-                      {mostrarLote && <th>Lote</th>}
                       {mostrarCantidad && <th>Cantidad</th>}
                       <th>Estado</th>
                     </tr>
@@ -482,7 +460,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                       </tr>
                     ) : (
                       filas.map((fila) => {
-                        const noIncluible = fila.estado === 'error' || fila.estado === 'sinLotes'
+                        const noIncluible = fila.estado === 'error'
                         return (
                           <tr key={fila.key} className={noIncluible ? styles.rowDisabled : ''}>
                             <td className={styles.checkboxCell}>
@@ -494,21 +472,6 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                                 <span className={styles.articuloDescripcion}>{fila.descripcion}</span>
                               </div>
                             </td>
-                            {mostrarLote && (
-                              <td>
-                                {fila.estado === 'sinLotes' || fila.estado === 'error' ? (
-                                  <span className={styles.articuloDescripcion}>—</span>
-                                ) : (
-                                  <select
-                                    className={styles.loteSelect}
-                                    value={fila.loteId}
-                                    onChange={(e) => cambiarLoteFila(fila.key, e.target.value)}
-                                  >
-                                    {fila.lotesDisponibles.map((l) => <option key={l.id} value={l.id}>{l.lote}</option>)}
-                                  </select>
-                                )}
-                              </td>
-                            )}
                             {mostrarCantidad && (
                               <td>
                                 <input
@@ -525,9 +488,6 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                               {fila.estado === 'nuevo' && <span className={styles.estadoNuevo}>Sin código</span>}
                               {fila.estado === 'duplicado' && (
                                 <span className={styles.estadoDuplicado}><IconAlertTriangle size={14} /> Ya tiene código</span>
-                              )}
-                              {fila.estado === 'sinLotes' && (
-                                <span className={styles.estadoSinLotes}><IconAlertCircle size={14} /> No gestiona lotes</span>
                               )}
                               {fila.estado === 'error' && (
                                 <span className={styles.estadoError}><IconAlertCircle size={14} /> SKU no encontrado</span>
