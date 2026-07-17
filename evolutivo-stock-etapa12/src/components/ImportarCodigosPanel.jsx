@@ -18,14 +18,15 @@ function normalizarTipoImportado(valor) {
 }
 
 const MOCK_FILAS_IMPORTACION = [
-  { sku: 'ART-002', codigo: '7791234500000', tipo: 'GTIN-13' },
-  { sku: 'ART-030', codigo: '10779123400017', tipo: 'GTIN-14' },
-  { sku: 'ART-030', codigo: 'INT-777888', tipo: 'CODE-128' },
-  { sku: 'SKU-999', codigo: '1234567890128', tipo: 'GTIN-13' },
-  { sku: 'ART-002', codigo: '7791234567890', tipo: 'GTIN-13' },
-  { sku: 'ART-020', codigo: '', tipo: 'GTIN-13' },
-  { sku: 'ART-020', codigo: '00177912345679999', tipo: 'GS1-128' },
-  { sku: 'ART-010', codigo: '999', tipo: 'GTIN-14' },
+  { sku: 'ART-002', codigo: '7791234500000', tipo: 'GTIN-13', cantidad: '5' },
+  { sku: 'ART-030', codigo: '10779123400017', tipo: 'GTIN-14', cantidad: '50' },
+  { sku: 'ART-030', codigo: 'INT-777888', tipo: 'CODE-128', cantidad: '24' },
+  { sku: 'SKU-999', codigo: '1234567890128', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'ART-002', codigo: '7791234567890', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'ART-020', codigo: '', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'ART-020', codigo: '00177912345679999', tipo: 'GS1-128', cantidad: '1' },
+  { sku: 'ART-010', codigo: '999', tipo: 'GTIN-14', cantidad: '10' },
+  { sku: 'ART-001', codigo: '10779123499999', tipo: 'GTIN-14', cantidad: '' },
 ]
 
 function procesarImportacion(articulos) {
@@ -51,6 +52,11 @@ function procesarImportacion(articulos) {
       errores.push({ codigo: fila.sku, motivo: 'Tipo de código no reconocido.' })
       return
     }
+    const cantidadTexto = (fila.cantidad ?? '').toString().trim()
+    if (tipo !== 'GTIN-13' && !cantidadTexto) {
+      errores.push({ codigo: fila.sku, motivo: 'Cantidad no informada.' })
+      return
+    }
     if (existeCodigoDuplicado(articulos, texto)) {
       errores.push({ codigo: fila.sku, motivo: 'Este código ya está asignado a otro artículo.' })
       return
@@ -59,9 +65,10 @@ function procesarImportacion(articulos) {
       errores.push({ codigo: fila.sku, motivo: `El código no es válido para ${ETIQUETA_TIPO_ARCHIVO[tipo]}.` })
       return
     }
+    const cantidad = tipo === 'GTIN-13' ? 1 : Number(cantidadTexto)
     exitosos.push({
       articuloId: articulo.id,
-      codigo: { id: `c${Date.now()}-${exitosos.length}`, tipo, codigo: texto, cantidad: 1 },
+      codigo: { id: `c${Date.now()}-${exitosos.length}`, tipo, codigo: texto, cantidad },
     })
   })
   return { exitosos, errores }
@@ -103,10 +110,10 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
   const descargarEjemplo = () => {
     descargarTexto(
       'ejemplo-importar-codigos.csv',
-      'Código de artículo;Código de barras;Tipo de código\n'
-      + 'ART-001;7791234567890;GTIN-13\n'
-      + 'ART-010;10779123400017;GTIN-14\n'
-      + 'ART-030;INT-777888;CODE-128\n',
+      'Código de artículo;Código de barras;Tipo de código;Cantidad\n'
+      + 'ART-001;7791234567890;GTIN-13;1\n'
+      + 'ART-010;10779123400017;GTIN-14;50\n'
+      + 'ART-030;INT-777888;CODE-128;24\n',
       'text/csv;charset=utf-8;'
     )
   }
@@ -173,7 +180,10 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
                   />
                 </div>
                 <p className={styles.helperText}>
-                  Se aceptan archivos Excel, TXT y CSV. El archivo debe tener una columna para el código de artículo, otra para el código de barras y otra para el tipo de código.
+                  Se aceptan archivos Excel, TXT y CSV. El archivo debe tener una columna para el código de artículo, otra para el código de barras, otra para el tipo de código y otra para la cantidad.
+                </p>
+                <p className={styles.helperText}>
+                  La columna Cantidad es obligatoria para códigos GTIN-14 y Code-128. Para GTIN-13, la cantidad será siempre 1.
                 </p>
               </div>
 
