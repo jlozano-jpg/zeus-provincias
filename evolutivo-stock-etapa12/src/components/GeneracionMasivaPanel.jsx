@@ -31,34 +31,58 @@ function coincideFiltros(articulo, filtros) {
   return true
 }
 
-function construirFila(articulo, tipo) {
-  const requiereLote = tipo === 'GS1-128'
-  const sinLotes = requiereLote && !articulo.manejaLotes
+function construirFilasArticulo(articulo, tipo) {
+  if (tipo === 'GS1-128') {
+    if (!articulo.manejaLotes || articulo.lotes.length === 0) {
+      return [{
+        key: articulo.id,
+        articuloId: articulo.id,
+        codigo: articulo.codigo,
+        descripcion: articulo.descripcion,
+        cantidad: '1',
+        loteId: '',
+        estado: 'sinLotes',
+        incluido: false,
+      }]
+    }
+    return articulo.lotes.map((lote) => {
+      const yaExiste = articulo.codigos.some((c) => c.tipo === tipo && (c.loteId === lote.id || c.loteId === lote.lote))
+      return {
+        key: `${articulo.id}__${lote.id}`,
+        articuloId: articulo.id,
+        codigo: articulo.codigo,
+        descripcion: `${articulo.descripcion} — Lote ${lote.lote}`,
+        cantidad: '1',
+        loteId: lote.id,
+        estado: yaExiste ? 'duplicado' : 'nuevo',
+        incluido: true,
+      }
+    })
+  }
+
   const yaExiste = articulo.codigos.some((c) => c.tipo === tipo)
-  return {
+  return [{
     key: articulo.id,
     articuloId: articulo.id,
     codigo: articulo.codigo,
     descripcion: articulo.descripcion,
     cantidad: '1',
-    loteId: requiereLote ? (articulo.lotes[0]?.id ?? '') : '',
-    lotesDisponibles: requiereLote ? articulo.lotes : [],
-    estado: sinLotes ? 'sinLotes' : (yaExiste ? 'duplicado' : 'nuevo'),
-    incluido: !sinLotes,
-  }
+    estado: yaExiste ? 'duplicado' : 'nuevo',
+    incluido: true,
+  }]
 }
 
 function construirFilasPorFiltros(articulos, tipo, filtros) {
-  return articulos.filter((a) => coincideFiltros(a, filtros)).map((a) => construirFila(a, tipo))
+  return articulos.filter((a) => coincideFiltros(a, filtros)).flatMap((a) => construirFilasArticulo(a, tipo))
 }
 
 function construirFilasPorExcel(articulos, tipo) {
-  return MOCK_EXCEL_SKUS.map((sku) => {
+  return MOCK_EXCEL_SKUS.flatMap((sku) => {
     const articulo = articulos.find((a) => a.codigo === sku)
     if (!articulo) {
-      return { key: sku, articuloId: null, codigo: sku, descripcion: '—', cantidad: '1', loteId: '', lotesDisponibles: [], estado: 'error', incluido: false }
+      return [{ key: sku, articuloId: null, codigo: sku, descripcion: '—', cantidad: '1', estado: 'error', incluido: false }]
     }
-    return construirFila(articulo, tipo)
+    return construirFilasArticulo(articulo, tipo)
   })
 }
 
@@ -150,10 +174,6 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
     setFilas((prev) => prev.map((f) => (f.key === key ? { ...f, cantidad } : f)))
   }
 
-  const cambiarLoteFila = (key, loteId) => {
-    setFilas((prev) => prev.map((f) => (f.key === key ? { ...f, loteId } : f)))
-  }
-
   const handleGenerar = () => {
     setGenerando(true)
     setTimeout(() => {
@@ -188,8 +208,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
   const seleccionados = filas.filter((f) => f.incluido).length
   const mostrarCantidad = tipo === 'GTIN-14' || tipo === 'GS1-128'
-  const mostrarLote = tipo === 'GS1-128'
-  const columnas = 3 + (mostrarCantidad ? 1 : 0) + (mostrarLote ? 1 : 0)
+  const columnas = 3 + (mostrarCantidad ? 1 : 0)
 
   const titulos = {
     1: 'Tipo de código',
@@ -446,7 +465,6 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                     <tr>
                       <th className={styles.checkboxCell} />
                       <th>Artículo</th>
-                      {mostrarLote && <th>Lote</th>}
                       {mostrarCantidad && <th>Cantidad</th>}
                       <th>Estado</th>
                     </tr>
@@ -470,21 +488,6 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                                 <span className={styles.articuloDescripcion}>{fila.descripcion}</span>
                               </div>
                             </td>
-                            {mostrarLote && (
-                              <td>
-                                {fila.estado === 'sinLotes' || fila.estado === 'error' ? (
-                                  <span className={styles.articuloDescripcion}>—</span>
-                                ) : (
-                                  <select
-                                    className={styles.loteSelect}
-                                    value={fila.loteId}
-                                    onChange={(e) => cambiarLoteFila(fila.key, e.target.value)}
-                                  >
-                                    {fila.lotesDisponibles.map((l) => <option key={l.id} value={l.id}>{l.lote}</option>)}
-                                  </select>
-                                )}
-                              </td>
-                            )}
                             {mostrarCantidad && (
                               <td>
                                 <input
