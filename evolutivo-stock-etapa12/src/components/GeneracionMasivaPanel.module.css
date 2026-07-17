@@ -425,6 +425,15 @@
   background: #ffffff;
 }
 
+.loteSelect {
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #dde3ee;
+  border-radius: 8px;
+  color: #172033;
+  background: #ffffff;
+}
+
 .estadoNuevo {
   color: #64748b;
   font-size: 12px;
@@ -436,6 +445,15 @@
   align-items: center;
   gap: 5px;
   color: #b8860b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.estadoSinLotes {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #64748b;
   font-size: 12px;
   font-weight: 600;
 }
