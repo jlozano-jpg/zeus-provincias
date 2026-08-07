@@ -5,23 +5,18 @@ import { generarCodigo, validarFormato, mensajeFormatoInvalido, existeCodigoDupl
 import TipoCodigoBadge from './TipoCodigoBadge'
 import styles from './CodigoBarraPanel.module.css'
 
-function defaultForm(articulo) {
+const TIPOS_INGRESABLES = TIPOS_CODIGO_SIN_GTIN8.filter((t) => t.value !== 'GS1-128')
+
+function defaultForm() {
   return {
-    origen: 'nuevo',
     tipo: 'GTIN-13',
     cantidad: '1',
-    loteId: articulo.lotes[0]?.id ?? '',
     codigoTexto: '',
+    modoSugerido: false,
     prefijoGs1: '',
+    codigoSugerido: '',
     error: '',
   }
-}
-
-function descripcionTipo(tipo) {
-  if (tipo === 'GS1-128') {
-    return 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento.'
-  }
-  return DESCRIPCION_TIPO[tipo]
 }
 
 function extraInfo(codigo) {
@@ -33,7 +28,7 @@ function extraInfo(codigo) {
 
 export default function CodigoBarraPanel({ articulo, articulos, initialLayer, soloLectura = false, onClose, onAddCodigo, onDeleteCodigo }) {
   const [layer, setLayer] = useState(initialLayer)
-  const [form, setForm] = useState(() => defaultForm(articulo))
+  const [form, setForm] = useState(() => defaultForm())
 
   useEffect(() => {
     const handler = (event) => {
@@ -50,13 +45,43 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
     updateForm({
       tipo,
       cantidad: info.cantidadFija ? String(info.cantidadFija) : '1',
-      loteId: tipo === 'GS1-128' ? (articulo.lotes[0]?.id ?? '') : '',
-      prefijoGs1: form.prefijoGs1.slice(0, maxPrefijoGs1(tipo)),
+      codigoTexto: '',
+      modoSugerido: false,
+      prefijoGs1: '',
+      codigoSugerido: '',
     })
   }
 
+  const handleCodigoTextoChange = (value) => {
+    let texto = value
+    if (form.tipo !== 'MANUAL') {
+      const max = tipoInfo(form.tipo).digits
+      texto = texto.replace(/\D/g, '')
+      if (max) texto = texto.slice(0, max)
+    }
+    updateForm({ codigoTexto: texto })
+  }
+
+  const handlePrefijoChange = (value) => {
+    const max = maxPrefijoGs1(form.tipo)
+    const prefijo = value.replace(/\D/g, '').slice(0, max)
+    const info = tipoInfo(form.tipo)
+    const cantidad = info.cantidadFija ?? (Number(form.cantidad) || 1)
+    const codigoSugerido = prefijo.length > 0 ? generarCodigo(form.tipo, { prefijo, cantidad }) : ''
+    updateForm({ prefijoGs1: prefijo, codigoSugerido })
+  }
+
+  const activarSugerido = () => {
+    if (form.tipo === 'MANUAL') {
+      const codigoSugerido = generarCodigo('MANUAL', { longitud: 10 })
+      updateForm({ modoSugerido: true, codigoSugerido, codigoTexto: '' })
+    } else {
+      updateForm({ modoSugerido: true, prefijoGs1: '', codigoSugerido: '', codigoTexto: '' })
+    }
+  }
+
   const irAAgregar = () => {
-    setForm(defaultForm(articulo))
+    setForm(defaultForm())
     setLayer('agregar')
   }
 
@@ -64,12 +89,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
 
   const handleSubmit = () => {
     const info = tipoInfo(form.tipo)
-    const loteSeleccionado = form.tipo === 'GS1-128' ? articulo.lotes.find((l) => l.id === form.loteId) : null
 
-    if (form.tipo === 'GS1-128' && !loteSeleccionado) {
-      updateForm({ error: 'Seleccioná un lote.' })
-      return
-    }
     if (!info.cantidadFija) {
       const cantidadNum = Number(form.cantidad)
       if (!Number.isInteger(cantidadNum) || cantidadNum <= 0) {
@@ -79,7 +99,16 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
     }
 
     let codigoFinal
-    if (form.origen === 'existente') {
+    if (form.modoSugerido) {
+      if (form.tipo !== 'MANUAL') {
+        const max = maxPrefijoGs1(form.tipo)
+        if (!/^\d+$/.test(form.prefijoGs1) || form.prefijoGs1.length === 0 || form.prefijoGs1.length > max) {
+          setForm((prev) => ({ ...prev, error: `Ingresá un prefijo GS1 numérico de hasta ${max} dígitos.` }))
+          return
+        }
+      }
+      codigoFinal = form.codigoSugerido
+    } else {
       const texto = form.codigoTexto.trim()
       if (!validarFormato(form.tipo, texto)) {
         setForm((prev) => ({ ...prev, error: mensajeFormatoInvalido(form.tipo) }))
@@ -90,19 +119,6 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
         return
       }
       codigoFinal = texto
-    } else {
-      if (form.tipo !== 'MANUAL') {
-        const max = maxPrefijoGs1(form.tipo)
-        if (!/^\d+$/.test(form.prefijoGs1) || form.prefijoGs1.length === 0 || form.prefijoGs1.length > max) {
-          setForm((prev) => ({ ...prev, error: `Ingresá un prefijo GS1 numérico de hasta ${max} dígitos.` }))
-          return
-        }
-      }
-      codigoFinal = generarCodigo(form.tipo, {
-        lote: loteSeleccionado,
-        prefijo: form.tipo !== 'MANUAL' ? form.prefijoGs1 : undefined,
-        cantidad: info.cantidadFija ?? Number(form.cantidad),
-      })
     }
 
     onAddCodigo(articulo.id, {
@@ -110,7 +126,6 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       tipo: form.tipo,
       codigo: codigoFinal,
       cantidad: info.cantidadFija ?? Number(form.cantidad),
-      ...(form.tipo === 'GS1-128' ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
     })
     setLayer('detalle')
   }
@@ -188,7 +203,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 </button>
                 <div>
                   <p className={styles.eyebrow}>{articulo.codigo}</p>
-                  <h2 className={styles.title}>Agregar código</h2>
+                  <h2 className={styles.title}>Ingresar código</h2>
                 </div>
               </div>
               <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar panel" title="Cerrar (Esc)">
@@ -198,95 +213,19 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
 
             <div className={styles.content}>
               <div className={styles.formSection}>
-                <label className={styles.label}>Origen del código</label>
-                <div className={styles.segmented}>
-                  <button
-                    type="button"
-                    className={`${styles.segmentedBtn} ${form.origen === 'nuevo' ? styles.segmentedBtnActive : ''}`}
-                    onClick={() => updateForm({ origen: 'nuevo', codigoTexto: '' })}
-                  >
-                    Generar nuevo
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.segmentedBtn} ${form.origen === 'existente' ? styles.segmentedBtnActive : ''}`}
-                    onClick={() => updateForm({ origen: 'existente' })}
-                  >
-                    Ingresar existente
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.formSection}>
                 <label className={styles.label}>Tipo de código</label>
                 <select className={styles.select} value={form.tipo} onChange={(e) => handleTipoChange(e.target.value)}>
-                  {TIPOS_CODIGO_SIN_GTIN8.map((t) => (
-                    <option key={t.value} value={t.value} disabled={t.requiereLotes && !articulo.manejaLotes}>
-                      {t.label}
-                    </option>
+                  {TIPOS_INGRESABLES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
-                {descripcionTipo(form.tipo) && (
-                  <p className={styles.helperText}>{descripcionTipo(form.tipo)}</p>
-                )}
-                {!articulo.manejaLotes && (
-                  <p className={styles.helperText}>GS1-128 no disponible: este artículo no gestiona lotes.</p>
+                {DESCRIPCION_TIPO[form.tipo] && (
+                  <p className={styles.helperText}>{DESCRIPCION_TIPO[form.tipo]}</p>
                 )}
               </div>
-
-              {form.origen === 'nuevo' && form.tipo !== 'MANUAL' && (
-                <div className={styles.formSection}>
-                  <label className={styles.label}>Prefijo GS1</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className={`${styles.input} ${styles.mono}`}
-                    value={form.prefijoGs1}
-                    onChange={(e) => updateForm({ prefijoGs1: e.target.value.replace(/\D/g, '').slice(0, maxPrefijoGs1(form.tipo)) })}
-                    placeholder="Ej: 779"
-                  />
-                  <p className={styles.helperText}>
-                    Prefijo de empresa suministrado por GS1: se incluirá en el código generado. Hasta {maxPrefijoGs1(form.tipo)} dígitos para {tipoInfo(form.tipo).label}.
-                  </p>
-                </div>
-              )}
 
               {info.cantidadFija ? (
                 <p className={styles.staticInfo}>Cantidad que representa este código: {info.cantidadFija} (fija)</p>
-              ) : form.tipo === 'GS1-128' ? (
-                <>
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Lote</label>
-                    <select className={styles.select} value={form.loteId} onChange={(e) => updateForm({ loteId: e.target.value })}>
-                      <option value="">Seleccionar lote...</option>
-                      {articulo.lotes.map((l) => (
-                        <option key={l.id} value={l.id}>{l.lote}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={styles.formRow}>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Vencimiento</label>
-                      <input
-                        type="text"
-                        className={styles.input}
-                        value={articulo.lotes.find((l) => l.id === form.loteId)?.vencimiento ?? ''}
-                        disabled
-                        readOnly
-                      />
-                    </div>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Cantidad</label>
-                      <input
-                        type="number"
-                        min="1"
-                        className={styles.input}
-                        value={form.cantidad}
-                        onChange={(e) => updateForm({ cantidad: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </>
               ) : (
                 <div className={styles.formSection}>
                   <label className={styles.label}>Cantidad que representa este código</label>
@@ -300,18 +239,50 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 </div>
               )}
 
-              {form.origen === 'existente' && (
-                <div className={styles.formSection}>
-                  <label className={styles.label}>Código</label>
+              <div className={styles.formSection}>
+                <label className={styles.label}>
+                  {form.modoSugerido && form.tipo !== 'MANUAL' ? 'Prefijo GS1' : 'Código'}
+                </label>
+
+                {!form.modoSugerido ? (
                   <input
                     type="text"
                     className={`${styles.input} ${styles.mono}`}
                     value={form.codigoTexto}
-                    onChange={(e) => updateForm({ codigoTexto: e.target.value })}
-                    placeholder={form.tipo === 'MANUAL' ? 'Ej: 123456' : 'Escaneá o tipeá el código'}
+                    maxLength={info.digits || undefined}
+                    onChange={(e) => handleCodigoTextoChange(e.target.value)}
+                    placeholder={form.tipo === 'MANUAL' ? 'Ej: 123456' : `Ingresá los ${info.digits} dígitos`}
                   />
-                </div>
-              )}
+                ) : form.tipo !== 'MANUAL' ? (
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={`${styles.input} ${styles.mono}`}
+                    value={form.prefijoGs1}
+                    onChange={(e) => handlePrefijoChange(e.target.value)}
+                    placeholder="Ej: 779"
+                  />
+                ) : null}
+
+                {form.modoSugerido && form.tipo !== 'MANUAL' && (
+                  <p className={styles.helperText}>
+                    Prefijo de empresa suministrado por GS1: se incluirá en el código generado. Hasta {maxPrefijoGs1(form.tipo)} dígitos para {info.label}.
+                  </p>
+                )}
+
+                {!form.modoSugerido && (
+                  <button type="button" className={styles.secondaryBtn} onClick={activarSugerido}>
+                    Sugerir código
+                  </button>
+                )}
+
+                {form.modoSugerido && (
+                  <p className={styles.previewBox}>
+                    <span className={styles.previewLabel}>Código a generar</span>
+                    <span className={styles.previewValue}>{form.codigoSugerido || '—'}</span>
+                  </p>
+                )}
+              </div>
 
               {form.error && <p className={styles.errorText}>{form.error}</p>}
             </div>
