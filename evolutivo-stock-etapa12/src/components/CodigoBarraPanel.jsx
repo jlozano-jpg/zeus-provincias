@@ -26,7 +26,9 @@ function extraInfo(codigo) {
   return `Cantidad: ${codigo.cantidad}`
 }
 
-export default function CodigoBarraPanel({ articulo, articulos, initialLayer, soloLectura = false, onClose, onAddCodigo, onDeleteCodigo }) {
+export default function CodigoBarraPanel({ articulo, articulos, initialLayer, soloLectura = false, unidadUnica = false, entidadLabel = 'artículo', entidadFemenino = false, onClose, onAddCodigo, onDeleteCodigo }) {
+  const demostrativo = entidadFemenino ? 'Esta' : 'Este'
+  const indefinidoOtro = entidadFemenino ? 'otra' : 'otro'
   const [layer, setLayer] = useState(initialLayer)
   const [form, setForm] = useState(() => defaultForm())
 
@@ -41,10 +43,9 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
   const updateForm = (patch) => setForm((prev) => ({ ...prev, ...patch, error: '' }))
 
   const handleTipoChange = (tipo) => {
-    const info = tipoInfo(tipo)
     updateForm({
       tipo,
-      cantidad: info.cantidadFija ? String(info.cantidadFija) : '1',
+      cantidad: '1',
       codigoTexto: '',
       modoSugerido: false,
       prefijoGs1: '',
@@ -66,7 +67,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
     const max = maxPrefijoGs1(form.tipo)
     const prefijo = value.replace(/\D/g, '').slice(0, max)
     const info = tipoInfo(form.tipo)
-    const cantidad = info.cantidadFija ?? (Number(form.cantidad) || 1)
+    const cantidad = unidadUnica ? 1 : info.cantidadFija ?? (Number(form.cantidad) || 1)
     const codigoSugerido = prefijo.length > 0 ? generarCodigo(form.tipo, { prefijo, cantidad }) : ''
     updateForm({ prefijoGs1: prefijo, codigoSugerido })
   }
@@ -90,7 +91,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
   const handleSubmit = () => {
     const info = tipoInfo(form.tipo)
 
-    if (!info.cantidadFija) {
+    if (!unidadUnica && !info.cantidadFija) {
       const cantidadNum = Number(form.cantidad)
       if (!Number.isInteger(cantidadNum) || cantidadNum <= 0) {
         setForm((prev) => ({ ...prev, error: 'Ingresá una cantidad válida.' }))
@@ -115,7 +116,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
         return
       }
       if (existeCodigoDuplicado(articulos, texto)) {
-        setForm((prev) => ({ ...prev, error: 'Este código ya está asignado a otro artículo.' }))
+        setForm((prev) => ({ ...prev, error: `Este código ya está asignado a ${indefinidoOtro} ${entidadLabel}.` }))
         return
       }
       codigoFinal = texto
@@ -125,7 +126,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       id: `c${Date.now()}`,
       tipo: form.tipo,
       codigo: codigoFinal,
-      cantidad: info.cantidadFija ?? Number(form.cantidad),
+      cantidad: unidadUnica ? 1 : info.cantidadFija ?? Number(form.cantidad),
     })
     setLayer('detalle')
   }
@@ -152,7 +153,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
               {articulo.codigos.length === 0 ? (
                 <div className={styles.emptyState}>
                   <IconBarcodeOff size={32} className={styles.emptyIcon} />
-                  <p className={styles.emptyText}>Este artículo todavía no tiene códigos asignados.</p>
+                  <p className={styles.emptyText}>{demostrativo} {entidadLabel} todavía no tiene códigos asignados.</p>
                   {!soloLectura && (
                     <button className={styles.primaryBtn} onClick={irAAgregar}>
                       <IconPlus size={16} />
@@ -224,7 +225,9 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 )}
               </div>
 
-              {info.cantidadFija ? (
+              {unidadUnica ? (
+                <p className={styles.staticInfo}>Cantidad que representa este código: 1 (fija — siempre referido a una unidad)</p>
+              ) : info.cantidadFija ? (
                 <p className={styles.staticInfo}>Cantidad que representa este código: {info.cantidadFija} (fija)</p>
               ) : (
                 <div className={styles.formSection}>

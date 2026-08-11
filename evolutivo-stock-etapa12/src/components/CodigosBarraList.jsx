@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter } from '@tabler/icons-react'
-import { ARTICULOS_INICIALES } from '../data/codigosBarra'
+import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter, IconChevronRight, IconChevronDown } from '@tabler/icons-react'
+import { ARTICULOS_INICIALES, FORMULAS_INICIALES } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
 import FiltrosCodigosBarraPanel, { filtrosVacios, hayFiltrosActivos } from './FiltrosCodigosBarraPanel'
@@ -48,20 +48,52 @@ function RowMenu({ articulo, openMenuId, setOpenMenuId, onVisualizar, onEditar, 
   )
 }
 
+const ENTIDADES = {
+  articulo: { label: 'artículo', labelPlural: 'artículos', tabLabel: 'Artículos', femenino: false },
+  formula: { label: 'fórmula', labelPlural: 'fórmulas', tabLabel: 'Fórmulas', femenino: true },
+}
+
+const ENTIDAD_VARIANTE = { label: 'variante', femenino: true }
+
 export default function CodigosBarraList() {
+  const [entidadTipo, setEntidadTipo] = useState('articulo')
   const [articulos, setArticulos] = useState(ARTICULOS_INICIALES)
+  const [formulas, setFormulas] = useState(FORMULAS_INICIALES)
   const [searchTerm, setSearchTerm] = useState('')
   const [filtros, setFiltros] = useState(filtrosVacios)
   const [showFiltros, setShowFiltros] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [panelState, setPanelState] = useState(null)
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [showGeneracionMasiva, setShowGeneracionMasiva] = useState(false)
   const [showImportarCodigos, setShowImportarCodigos] = useState(false)
 
+  const esFormula = entidadTipo === 'formula'
+  const items = esFormula ? formulas : articulos
+  const entidad = ENTIDADES[entidadTipo]
+
+  const cambiarEntidadTipo = (tipo) => {
+    setEntidadTipo(tipo)
+    setSearchTerm('')
+    setFiltros(filtrosVacios())
+    setOpenMenuId(null)
+    setExpandedIds(new Set())
+  }
+
+  const toggleExpand = (id) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const filtrados = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    return articulos.filter((a) => {
+    return items.filter((a) => {
       if (term && !`${a.codigo} ${a.descripcion}`.toLowerCase().includes(term)) return false
+      if (esFormula) return true
       if (filtros.sucursal && a.sucursal !== filtros.sucursal) return false
       if (filtros.familia && a.familia !== filtros.familia) return false
       if (filtros.proveedor && a.proveedor !== filtros.proveedor) return false
@@ -72,19 +104,43 @@ export default function CodigosBarraList() {
       if (filtros.soloSinCodigo && a.codigos.length > 0) return false
       return true
     })
-  }, [articulos, searchTerm, filtros])
+  }, [items, searchTerm, filtros, esFormula])
 
-  const abrirVisualizar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'detalle', soloLectura: true })
-  const abrirEditar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'detalle', soloLectura: false })
-  const abrirAgregar = (articulo) => setPanelState({ articuloId: articulo.id, layer: 'agregar', soloLectura: false })
+  const abrirVisualizar = (item, parentId = null) => setPanelState({ entidadTipo, itemId: item.id, parentId, layer: 'detalle', soloLectura: true })
+  const abrirEditar = (item, parentId = null) => setPanelState({ entidadTipo, itemId: item.id, parentId, layer: 'detalle', soloLectura: false })
+  const abrirAgregar = (item, parentId = null) => setPanelState({ entidadTipo, itemId: item.id, parentId, layer: 'agregar', soloLectura: false })
   const cerrarPanel = () => setPanelState(null)
 
-  const agregarCodigo = (articuloId, codigo) => {
-    setArticulos((prev) => prev.map((a) => (a.id === articuloId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
+  const agregarCodigo = (itemId, codigo) => {
+    if (panelState.entidadTipo === 'formula') {
+      setFormulas((prev) => prev.map((f) => (f.id === itemId ? { ...f, codigos: [...f.codigos, codigo] } : f)))
+      return
+    }
+    if (panelState.parentId) {
+      setArticulos((prev) => prev.map((a) => (
+        a.id === panelState.parentId
+          ? { ...a, variantes: a.variantes.map((v) => (v.id === itemId ? { ...v, codigos: [...v.codigos, codigo] } : v)) }
+          : a
+      )))
+      return
+    }
+    setArticulos((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
   }
 
-  const eliminarCodigo = (articuloId, codigoId) => {
-    setArticulos((prev) => prev.map((a) => (a.id === articuloId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
+  const eliminarCodigo = (itemId, codigoId) => {
+    if (panelState.entidadTipo === 'formula') {
+      setFormulas((prev) => prev.map((f) => (f.id === itemId ? { ...f, codigos: f.codigos.filter((c) => c.id !== codigoId) } : f)))
+      return
+    }
+    if (panelState.parentId) {
+      setArticulos((prev) => prev.map((a) => (
+        a.id === panelState.parentId
+          ? { ...a, variantes: a.variantes.map((v) => (v.id === itemId ? { ...v, codigos: v.codigos.filter((c) => c.id !== codigoId) } : v)) }
+          : a
+      )))
+      return
+    }
+    setArticulos((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
   }
 
   const agregarCodigosMasivo = (resultados) => {
@@ -94,15 +150,38 @@ export default function CodigosBarraList() {
     }))
   }
 
-  const articuloPanel = panelState ? articulos.find((a) => a.id === panelState.articuloId) : null
+  const itemPanel = (() => {
+    if (!panelState) return null
+    if (panelState.entidadTipo === 'formula') return formulas.find((f) => f.id === panelState.itemId) ?? null
+    if (panelState.parentId) {
+      const base = articulos.find((a) => a.id === panelState.parentId)
+      return base?.variantes.find((v) => v.id === panelState.itemId) ?? null
+    }
+    return articulos.find((a) => a.id === panelState.itemId) ?? null
+  })()
+
+  const entidadPanel = panelState?.parentId ? ENTIDAD_VARIANTE : ENTIDADES[panelState?.entidadTipo ?? 'articulo']
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.headerCard}>
         <div>
           <h1 className={styles.title}>Gestión de códigos de barra</h1>
-          <p className={styles.subtitle}>Configurá los estándares de código y asignalos a los artículos.</p>
+          <p className={styles.subtitle}>Configurá los estándares de código y asignalos a los artículos o a las fórmulas de pintura.</p>
         </div>
+      </div>
+
+      <div className={styles.segmented}>
+        {Object.entries(ENTIDADES).map(([tipo, cfg]) => (
+          <button
+            key={tipo}
+            type="button"
+            className={`${styles.segmentedBtn} ${entidadTipo === tipo ? styles.segmentedBtnActive : ''}`}
+            onClick={() => cambiarEntidadTipo(tipo)}
+          >
+            {cfg.tabLabel}
+          </button>
+        ))}
       </div>
 
       <div className={styles.toolbar}>
@@ -114,30 +193,34 @@ export default function CodigosBarraList() {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por código o descripción"
             className={styles.searchInput}
-            aria-label="Buscar artículo"
+            aria-label={`Buscar ${entidad.label}`}
           />
         </label>
 
-        <button
-          type="button"
-          className={`${styles.filterBtn} ${hayFiltrosActivos(filtros) ? styles.filterBtnActive : ''}`}
-          onClick={() => setShowFiltros(true)}
-          title="Filtros"
-          aria-label="Filtros"
-        >
-          <IconFilter size={18} />
-          {hayFiltrosActivos(filtros) && <span className={styles.filterDot} />}
-        </button>
-
-        <div className={styles.toolbarActions}>
-          <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
-            Importar Códigos
+        {!esFormula && (
+          <button
+            type="button"
+            className={`${styles.filterBtn} ${hayFiltrosActivos(filtros) ? styles.filterBtnActive : ''}`}
+            onClick={() => setShowFiltros(true)}
+            title="Filtros"
+            aria-label="Filtros"
+          >
+            <IconFilter size={18} />
+            {hayFiltrosActivos(filtros) && <span className={styles.filterDot} />}
           </button>
+        )}
 
-          <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
-            Generación masiva
-          </button>
-        </div>
+        {!esFormula && (
+          <div className={styles.toolbarActions}>
+            <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
+              Importar Códigos
+            </button>
+
+            <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
+              Generación masiva
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={styles.tableContainer}>
@@ -153,54 +236,123 @@ export default function CodigosBarraList() {
           <tbody>
             {filtrados.length === 0 ? (
               <tr>
-                <td colSpan={4} className={styles.empty}>No se encontraron artículos</td>
+                <td colSpan={4} className={styles.empty}>No se encontraron {entidad.labelPlural}</td>
               </tr>
             ) : (
-              filtrados.map((articulo) => (
-                <tr key={articulo.id} className={styles.clickableRow} onClick={() => abrirEditar(articulo)}>
-                  <td className={styles.codigoCell}>{articulo.codigo}</td>
-                  <td>{articulo.descripcion}</td>
-                  <td>
-                    <div className={styles.badgeRow}>
-                      {tiposAsignados(articulo).length === 0 ? (
-                        <span className={styles.sinCodigo}>Sin código</span>
-                      ) : (
-                        tiposAsignados(articulo).map(([tipo, count]) => (
-                          <TipoCodigoBadge key={tipo} tipo={tipo} count={count} />
-                        ))
+              filtrados.flatMap((item) => {
+                const tieneVariantes = !esFormula && item.variantes?.length > 0
+                const expandido = expandedIds.has(item.id)
+
+                const filaBase = (
+                  <tr
+                    key={item.id}
+                    className={styles.clickableRow}
+                    onClick={() => (tieneVariantes ? toggleExpand(item.id) : abrirEditar(item))}
+                  >
+                    <td className={styles.codigoCell}>
+                      {tieneVariantes && (
+                        <button
+                          type="button"
+                          className={styles.expandBtn}
+                          onClick={(e) => { e.stopPropagation(); toggleExpand(item.id) }}
+                          aria-label={expandido ? 'Contraer variantes' : 'Desplegar variantes'}
+                          aria-expanded={expandido}
+                        >
+                          {expandido ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                        </button>
                       )}
-                    </div>
-                  </td>
-                  <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
-                    <RowMenu
-                      articulo={articulo}
-                      openMenuId={openMenuId}
-                      setOpenMenuId={setOpenMenuId}
-                      onVisualizar={abrirVisualizar}
-                      onEditar={abrirEditar}
-                      onAgregar={abrirAgregar}
-                    />
-                  </td>
-                </tr>
-              ))
+                      {item.codigo}
+                    </td>
+                    <td>{item.descripcion}</td>
+                    <td>
+                      {tieneVariantes ? (
+                        <span className={styles.sinCodigo}>{item.variantes.length} variantes</span>
+                      ) : (
+                        <div className={styles.badgeRow}>
+                          {tiposAsignados(item).length === 0 ? (
+                            <span className={styles.sinCodigo}>Sin código</span>
+                          ) : (
+                            tiposAsignados(item).map(([tipo, count]) => (
+                              <TipoCodigoBadge key={tipo} tipo={tipo} count={count} />
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
+                      {!tieneVariantes && (
+                        <RowMenu
+                          articulo={item}
+                          openMenuId={openMenuId}
+                          setOpenMenuId={setOpenMenuId}
+                          onVisualizar={abrirVisualizar}
+                          onEditar={abrirEditar}
+                          onAgregar={abrirAgregar}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                )
+
+                if (!tieneVariantes || !expandido) return [filaBase]
+
+                const filasVariantes = item.variantes.map((variante) => (
+                  <tr
+                    key={variante.id}
+                    className={`${styles.clickableRow} ${styles.variantRow}`}
+                    onClick={() => abrirEditar(variante, item.id)}
+                  >
+                    <td className={styles.codigoCell}>
+                      <span className={styles.variantIndent}>{variante.codigo}</span>
+                    </td>
+                    <td>{variante.descripcion}</td>
+                    <td>
+                      <div className={styles.badgeRow}>
+                        {tiposAsignados(variante).length === 0 ? (
+                          <span className={styles.sinCodigo}>Sin código</span>
+                        ) : (
+                          tiposAsignados(variante).map(([tipo, count]) => (
+                            <TipoCodigoBadge key={tipo} tipo={tipo} count={count} />
+                          ))
+                        )}
+                      </div>
+                    </td>
+                    <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
+                      <RowMenu
+                        articulo={variante}
+                        openMenuId={openMenuId}
+                        setOpenMenuId={setOpenMenuId}
+                        onVisualizar={(v) => abrirVisualizar(v, item.id)}
+                        onEditar={(v) => abrirEditar(v, item.id)}
+                        onAgregar={(v) => abrirAgregar(v, item.id)}
+                      />
+                    </td>
+                  </tr>
+                ))
+
+                return [filaBase, ...filasVariantes]
+              })
             )}
           </tbody>
         </table>
       </div>
 
-      {articuloPanel && (
+      {itemPanel && (
         <CodigoBarraPanel
-          articulo={articuloPanel}
-          articulos={articulos}
+          articulo={itemPanel}
+          articulos={[...articulos.flatMap((a) => [a, ...(a.variantes || [])]), ...formulas]}
           initialLayer={panelState.layer}
           soloLectura={panelState.soloLectura}
+          unidadUnica={panelState.entidadTipo === 'formula'}
+          entidadLabel={entidadPanel.label}
+          entidadFemenino={entidadPanel.femenino}
           onClose={cerrarPanel}
           onAddCodigo={agregarCodigo}
           onDeleteCodigo={eliminarCodigo}
         />
       )}
 
-      {showFiltros && (
+      {showFiltros && !esFormula && (
         <FiltrosCodigosBarraPanel
           filtros={filtros}
           onApply={setFiltros}

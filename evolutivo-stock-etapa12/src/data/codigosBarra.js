@@ -1,4 +1,4 @@
-export const FAMILIAS = ['Ferretería', 'Eléctrico', 'Farmacia', 'EPP']
+export const FAMILIAS = ['Ferretería', 'Eléctrico', 'Farmacia', 'EPP', 'Indumentaria']
 
 export const PROVEEDORES = [
   'Retroboros SA',
@@ -35,6 +35,37 @@ export const DESCRIPCION_TIPO = {
   'GS1-128': 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento. Los artículos sin lotes quedan excluidos automáticamente.',
   MANUAL: 'Código interno generado por Zeus; no sigue un estándar GS1.',
 }
+
+export const FORMULAS_INICIALES = [
+  {
+    id: 'FOR-1001',
+    codigo: 'FOR-1001',
+    descripcion: 'Blanco Nieve Satinado',
+    codigos: [
+      { id: 'f1', tipo: 'GTIN-13', codigo: '7791234501001', cantidad: 1 },
+    ],
+  },
+  {
+    id: 'FOR-1002',
+    codigo: 'FOR-1002',
+    descripcion: 'Azul Marino Mate',
+    codigos: [],
+  },
+  {
+    id: 'FOR-1003',
+    codigo: 'FOR-1003',
+    descripcion: 'Gris Perla Semimate',
+    codigos: [
+      { id: 'f2', tipo: 'MANUAL', codigo: 'INT-00789', cantidad: 1 },
+    ],
+  },
+  {
+    id: 'FOR-1004',
+    codigo: 'FOR-1004',
+    descripcion: 'Verde Bosque Brillante',
+    codigos: [],
+  },
+]
 
 export const MOCK_EXCEL_SKUS = ['ART-001', 'ART-030', 'SKU-999']
 
@@ -126,6 +157,32 @@ export const ARTICULOS_INICIALES = [
     lotes: [],
     codigos: [
       { id: 'c7', tipo: 'MANUAL', codigo: 'INT-00456', cantidad: 12 },
+    ],
+  },
+  {
+    id: 'ART-100',
+    codigo: 'ART-100',
+    descripcion: 'Remera Blanca Básica Hombre',
+    familia: 'Indumentaria',
+    proveedor: 'Distribuidora del Sur SA',
+    sucursal: 'Sucursal Central',
+    grupo: 'Consumo',
+    marca: 'Marca B',
+    categoria: 'Categoría 2',
+    codigoFabricante: 'FAB-5100',
+    manejaLotes: false,
+    lotes: [],
+    codigos: [],
+    variantes: [
+      { id: 'ART-100-S-BCO', codigo: 'ART-100-S-BCO', descripcion: 'Talle S · Color Blanco', codigos: [] },
+      {
+        id: 'ART-100-M-BCO',
+        codigo: 'ART-100-M-BCO',
+        descripcion: 'Talle M · Color Blanco',
+        codigos: [{ id: 'v1', tipo: 'GTIN-13', codigo: '7791234509001', cantidad: 1 }],
+      },
+      { id: 'ART-100-S-ROJ', codigo: 'ART-100-S-ROJ', descripcion: 'Talle S · Color Rojo', codigos: [] },
+      { id: 'ART-100-M-ROJ', codigo: 'ART-100-M-ROJ', descripcion: 'Talle M · Color Rojo', codigos: [] },
     ],
   },
 ]
