@@ -1,4 +1,4 @@
-export const FAMILIAS = ['Ferretería', 'Eléctrico', 'Farmacia', 'EPP', 'Indumentaria']
+export const FAMILIAS = ['Ferretería', 'Eléctrico', 'Farmacia', 'EPP']
 
 export const PROVEEDORES = [
   'Retroboros SA',
@@ -157,32 +157,6 @@ export const ARTICULOS_INICIALES = [
     lotes: [],
     codigos: [
       { id: 'c7', tipo: 'MANUAL', codigo: 'INT-00456', cantidad: 12 },
-    ],
-  },
-  {
-    id: 'ART-100',
-    codigo: 'ART-100',
-    descripcion: 'Remera Blanca Básica Hombre',
-    familia: 'Indumentaria',
-    proveedor: 'Distribuidora del Sur SA',
-    sucursal: 'Sucursal Central',
-    grupo: 'Consumo',
-    marca: 'Marca B',
-    categoria: 'Categoría 2',
-    codigoFabricante: 'FAB-5100',
-    manejaLotes: false,
-    lotes: [],
-    codigos: [],
-    variantes: [
-      { id: 'ART-100-S-BCO', codigo: 'ART-100-S-BCO', descripcion: 'Talle S · Color Blanco', codigos: [] },
-      {
-        id: 'ART-100-M-BCO',
-        codigo: 'ART-100-M-BCO',
-        descripcion: 'Talle M · Color Blanco',
-        codigos: [{ id: 'v1', tipo: 'GTIN-13', codigo: '7791234509001', cantidad: 1 }],
-      },
-      { id: 'ART-100-S-ROJ', codigo: 'ART-100-S-ROJ', descripcion: 'Talle S · Color Rojo', codigos: [] },
-      { id: 'ART-100-M-ROJ', codigo: 'ART-100-M-ROJ', descripcion: 'Talle M · Color Rojo', codigos: [] },
     ],
   },
 ]

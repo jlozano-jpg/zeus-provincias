@@ -254,42 +254,6 @@
   white-space: nowrap;
 }
 
-.expandBtn {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #64748b;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-
-.expandBtn:hover {
-  background: #f0ecff;
-  color: #7f72ba;
-}
-
-.variantRow {
-  background: #fbfaff;
-}
-
-.variantRow:hover {
-  background: #f5f3fb;
-}
-
-.variantIndent {
-  display: inline-block;
-  padding-left: 28px;
-  font-weight: 600;
-  color: #344055;
-}
-
 .badgeRow {
   display: flex;
   flex-wrap: wrap;

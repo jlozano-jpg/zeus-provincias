@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter, IconChevronRight, IconChevronDown } from '@tabler/icons-react'
+import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter } from '@tabler/icons-react'
 import { ARTICULOS_INICIALES, FORMULAS_INICIALES } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
@@ -53,8 +53,6 @@ const ENTIDADES = {
   formula: { label: 'fórmula', labelPlural: 'fórmulas', tabLabel: 'Fórmulas', femenino: true },
 }
 
-const ENTIDAD_VARIANTE = { label: 'variante', femenino: true }
-
 export default function CodigosBarraList() {
   const [entidadTipo, setEntidadTipo] = useState('articulo')
   const [articulos, setArticulos] = useState(ARTICULOS_INICIALES)
@@ -64,7 +62,6 @@ export default function CodigosBarraList() {
   const [showFiltros, setShowFiltros] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [panelState, setPanelState] = useState(null)
-  const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [showGeneracionMasiva, setShowGeneracionMasiva] = useState(false)
   const [showImportarCodigos, setShowImportarCodigos] = useState(false)
 
@@ -77,16 +74,6 @@ export default function CodigosBarraList() {
     setSearchTerm('')
     setFiltros(filtrosVacios())
     setOpenMenuId(null)
-    setExpandedIds(new Set())
-  }
-
-  const toggleExpand = (id) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
   }
 
   const filtrados = useMemo(() => {
@@ -106,41 +93,19 @@ export default function CodigosBarraList() {
     })
   }, [items, searchTerm, filtros, esFormula])
 
-  const abrirVisualizar = (item, parentId = null) => setPanelState({ entidadTipo, itemId: item.id, parentId, layer: 'detalle', soloLectura: true })
-  const abrirEditar = (item, parentId = null) => setPanelState({ entidadTipo, itemId: item.id, parentId, layer: 'detalle', soloLectura: false })
-  const abrirAgregar = (item, parentId = null) => setPanelState({ entidadTipo, itemId: item.id, parentId, layer: 'agregar', soloLectura: false })
+  const abrirVisualizar = (item) => setPanelState({ entidadTipo, itemId: item.id, layer: 'detalle', soloLectura: true })
+  const abrirEditar = (item) => setPanelState({ entidadTipo, itemId: item.id, layer: 'detalle', soloLectura: false })
+  const abrirAgregar = (item) => setPanelState({ entidadTipo, itemId: item.id, layer: 'agregar', soloLectura: false })
   const cerrarPanel = () => setPanelState(null)
 
+  const setterPara = (tipo) => (tipo === 'formula' ? setFormulas : setArticulos)
+
   const agregarCodigo = (itemId, codigo) => {
-    if (panelState.entidadTipo === 'formula') {
-      setFormulas((prev) => prev.map((f) => (f.id === itemId ? { ...f, codigos: [...f.codigos, codigo] } : f)))
-      return
-    }
-    if (panelState.parentId) {
-      setArticulos((prev) => prev.map((a) => (
-        a.id === panelState.parentId
-          ? { ...a, variantes: a.variantes.map((v) => (v.id === itemId ? { ...v, codigos: [...v.codigos, codigo] } : v)) }
-          : a
-      )))
-      return
-    }
-    setArticulos((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
+    setterPara(panelState.entidadTipo)((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
   }
 
   const eliminarCodigo = (itemId, codigoId) => {
-    if (panelState.entidadTipo === 'formula') {
-      setFormulas((prev) => prev.map((f) => (f.id === itemId ? { ...f, codigos: f.codigos.filter((c) => c.id !== codigoId) } : f)))
-      return
-    }
-    if (panelState.parentId) {
-      setArticulos((prev) => prev.map((a) => (
-        a.id === panelState.parentId
-          ? { ...a, variantes: a.variantes.map((v) => (v.id === itemId ? { ...v, codigos: v.codigos.filter((c) => c.id !== codigoId) } : v)) }
-          : a
-      )))
-      return
-    }
-    setArticulos((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
+    setterPara(panelState.entidadTipo)((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
   }
 
   const agregarCodigosMasivo = (resultados) => {
@@ -150,17 +115,9 @@ export default function CodigosBarraList() {
     }))
   }
 
-  const itemPanel = (() => {
-    if (!panelState) return null
-    if (panelState.entidadTipo === 'formula') return formulas.find((f) => f.id === panelState.itemId) ?? null
-    if (panelState.parentId) {
-      const base = articulos.find((a) => a.id === panelState.parentId)
-      return base?.variantes.find((v) => v.id === panelState.itemId) ?? null
-    }
-    return articulos.find((a) => a.id === panelState.itemId) ?? null
-  })()
-
-  const entidadPanel = panelState?.parentId ? ENTIDAD_VARIANTE : ENTIDADES[panelState?.entidadTipo ?? 'articulo']
+  const itemPanel = panelState
+    ? (panelState.entidadTipo === 'formula' ? formulas : articulos).find((a) => a.id === panelState.itemId)
+    : null
 
   return (
     <div className={styles.wrapper}>
@@ -239,99 +196,33 @@ export default function CodigosBarraList() {
                 <td colSpan={4} className={styles.empty}>No se encontraron {entidad.labelPlural}</td>
               </tr>
             ) : (
-              filtrados.flatMap((item) => {
-                const tieneVariantes = !esFormula && item.variantes?.length > 0
-                const expandido = expandedIds.has(item.id)
-
-                const filaBase = (
-                  <tr
-                    key={item.id}
-                    className={styles.clickableRow}
-                    onClick={() => (tieneVariantes ? toggleExpand(item.id) : abrirEditar(item))}
-                  >
-                    <td className={styles.codigoCell}>
-                      {tieneVariantes && (
-                        <button
-                          type="button"
-                          className={styles.expandBtn}
-                          onClick={(e) => { e.stopPropagation(); toggleExpand(item.id) }}
-                          aria-label={expandido ? 'Contraer variantes' : 'Desplegar variantes'}
-                          aria-expanded={expandido}
-                        >
-                          {expandido ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
-                        </button>
-                      )}
-                      {item.codigo}
-                    </td>
-                    <td>{item.descripcion}</td>
-                    <td>
-                      {tieneVariantes ? (
-                        <span className={styles.sinCodigo}>{item.variantes.length} variantes</span>
+              filtrados.map((item) => (
+                <tr key={item.id} className={styles.clickableRow} onClick={() => abrirEditar(item)}>
+                  <td className={styles.codigoCell}>{item.codigo}</td>
+                  <td>{item.descripcion}</td>
+                  <td>
+                    <div className={styles.badgeRow}>
+                      {tiposAsignados(item).length === 0 ? (
+                        <span className={styles.sinCodigo}>Sin código</span>
                       ) : (
-                        <div className={styles.badgeRow}>
-                          {tiposAsignados(item).length === 0 ? (
-                            <span className={styles.sinCodigo}>Sin código</span>
-                          ) : (
-                            tiposAsignados(item).map(([tipo, count]) => (
-                              <TipoCodigoBadge key={tipo} tipo={tipo} count={count} />
-                            ))
-                          )}
-                        </div>
+                        tiposAsignados(item).map(([tipo, count]) => (
+                          <TipoCodigoBadge key={tipo} tipo={tipo} count={count} />
+                        ))
                       )}
-                    </td>
-                    <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
-                      {!tieneVariantes && (
-                        <RowMenu
-                          articulo={item}
-                          openMenuId={openMenuId}
-                          setOpenMenuId={setOpenMenuId}
-                          onVisualizar={abrirVisualizar}
-                          onEditar={abrirEditar}
-                          onAgregar={abrirAgregar}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                )
-
-                if (!tieneVariantes || !expandido) return [filaBase]
-
-                const filasVariantes = item.variantes.map((variante) => (
-                  <tr
-                    key={variante.id}
-                    className={`${styles.clickableRow} ${styles.variantRow}`}
-                    onClick={() => abrirEditar(variante, item.id)}
-                  >
-                    <td className={styles.codigoCell}>
-                      <span className={styles.variantIndent}>{variante.codigo}</span>
-                    </td>
-                    <td>{variante.descripcion}</td>
-                    <td>
-                      <div className={styles.badgeRow}>
-                        {tiposAsignados(variante).length === 0 ? (
-                          <span className={styles.sinCodigo}>Sin código</span>
-                        ) : (
-                          tiposAsignados(variante).map(([tipo, count]) => (
-                            <TipoCodigoBadge key={tipo} tipo={tipo} count={count} />
-                          ))
-                        )}
-                      </div>
-                    </td>
-                    <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
-                      <RowMenu
-                        articulo={variante}
-                        openMenuId={openMenuId}
-                        setOpenMenuId={setOpenMenuId}
-                        onVisualizar={(v) => abrirVisualizar(v, item.id)}
-                        onEditar={(v) => abrirEditar(v, item.id)}
-                        onAgregar={(v) => abrirAgregar(v, item.id)}
-                      />
-                    </td>
-                  </tr>
-                ))
-
-                return [filaBase, ...filasVariantes]
-              })
+                    </div>
+                  </td>
+                  <td className={styles.menuCell} onClick={(e) => e.stopPropagation()}>
+                    <RowMenu
+                      articulo={item}
+                      openMenuId={openMenuId}
+                      setOpenMenuId={setOpenMenuId}
+                      onVisualizar={abrirVisualizar}
+                      onEditar={abrirEditar}
+                      onAgregar={abrirAgregar}
+                    />
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -340,12 +231,12 @@ export default function CodigosBarraList() {
       {itemPanel && (
         <CodigoBarraPanel
           articulo={itemPanel}
-          articulos={[...articulos.flatMap((a) => [a, ...(a.variantes || [])]), ...formulas]}
+          articulos={[...articulos, ...formulas]}
           initialLayer={panelState.layer}
           soloLectura={panelState.soloLectura}
           unidadUnica={panelState.entidadTipo === 'formula'}
-          entidadLabel={entidadPanel.label}
-          entidadFemenino={entidadPanel.femenino}
+          entidadLabel={ENTIDADES[panelState.entidadTipo].label}
+          entidadFemenino={ENTIDADES[panelState.entidadTipo].femenino}
           onClose={cerrarPanel}
           onAddCodigo={agregarCodigo}
           onDeleteCodigo={eliminarCodigo}
