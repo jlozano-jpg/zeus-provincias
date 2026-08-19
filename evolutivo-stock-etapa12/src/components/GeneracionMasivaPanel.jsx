@@ -76,8 +76,8 @@ function construirFilasPorFiltros(articulos, tipo, filtros) {
   return articulos.filter((a) => coincideFiltros(a, filtros)).flatMap((a) => construirFilasArticulo(a, tipo))
 }
 
-function construirFilasPorExcel(articulos, tipo) {
-  return MOCK_EXCEL_SKUS.flatMap((sku) => {
+function construirFilasPorExcel(articulos, tipo, mockSkus) {
+  return mockSkus.flatMap((sku) => {
     const articulo = articulos.find((a) => a.codigo === sku)
     if (!articulo) {
       return [{ key: sku, articuloId: null, codigo: sku, descripcion: '—', cantidad: '1', estado: 'error', incluido: false }]
@@ -117,7 +117,16 @@ function ejecutarGeneracion(filas, tipo, prefijo, articulos, longitud) {
   return { exitosos, errores }
 }
 
-export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar }) {
+export default function GeneracionMasivaPanel({
+  articulos,
+  onClose,
+  onGenerar,
+  tiposDisponibles = TIPOS_DISPONIBLES,
+  mockSkusArchivo = MOCK_EXCEL_SKUS,
+  mostrarFiltrosCategoricos = true,
+  entidadLabelPlural = 'artículos',
+  entidadFemenino = false,
+}) {
   const [layer, setLayer] = useState(1)
   const [tipo, setTipo] = useState('GTIN-13')
   const [prefijoGs1, setPrefijoGs1] = useState('')
@@ -161,7 +170,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
   const handleContinuarLayer2 = () => {
     const nuevasFilas = metodo === 'filtros'
       ? construirFilasPorFiltros(articulos, tipo, filtros)
-      : construirFilasPorExcel(articulos, tipo)
+      : construirFilasPorExcel(articulos, tipo, mockSkusArchivo)
     setFilas(nuevasFilas)
     setLayer(3)
   }
@@ -212,7 +221,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
   const titulos = {
     1: 'Tipo de código',
-    2: 'Selección de artículos',
+    2: `Selección de ${entidadLabelPlural}`,
     3: 'Previsualización',
     4: 'Resultado',
   }
@@ -272,7 +281,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
               <div className={styles.formSection}>
                 <label className={styles.label}>Tipo de código a generar</label>
                 <select className={styles.select} value={tipo} onChange={(e) => handleTipoChange(e.target.value)}>
-                  {TIPOS_DISPONIBLES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {tiposDisponibles.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
                 {DESCRIPCION_TIPO[tipo] && (
                   <p className={styles.helperText}>{DESCRIPCION_TIPO[tipo]}</p>
@@ -330,79 +339,83 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
 
               {metodo === 'filtros' ? (
                 <>
-                  <div className={styles.formRow}>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Sucursal</label>
-                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('sucursal')}>
-                        <span className={!filtros.sucursal ? styles.selectTriggerPlaceholder : undefined}>
-                          {filtros.sucursal || CONFIG_SELECTORES.sucursal.todas}
-                        </span>
-                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
-                      </button>
-                    </div>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Familia</label>
-                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('familia')}>
-                        <span className={!filtros.familia ? styles.selectTriggerPlaceholder : undefined}>
-                          {filtros.familia || CONFIG_SELECTORES.familia.todas}
-                        </span>
-                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
-                      </button>
-                    </div>
-                  </div>
+                  {mostrarFiltrosCategoricos && (
+                    <>
+                      <div className={styles.formRow}>
+                        <div className={styles.formSection}>
+                          <label className={styles.label}>Sucursal</label>
+                          <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('sucursal')}>
+                            <span className={!filtros.sucursal ? styles.selectTriggerPlaceholder : undefined}>
+                              {filtros.sucursal || CONFIG_SELECTORES.sucursal.todas}
+                            </span>
+                            <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                          </button>
+                        </div>
+                        <div className={styles.formSection}>
+                          <label className={styles.label}>Familia</label>
+                          <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('familia')}>
+                            <span className={!filtros.familia ? styles.selectTriggerPlaceholder : undefined}>
+                              {filtros.familia || CONFIG_SELECTORES.familia.todas}
+                            </span>
+                            <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                          </button>
+                        </div>
+                      </div>
 
-                  <div className={styles.formRow}>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Proveedor</label>
-                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('proveedor')}>
-                        <span className={!filtros.proveedor ? styles.selectTriggerPlaceholder : undefined}>
-                          {filtros.proveedor || CONFIG_SELECTORES.proveedor.todas}
-                        </span>
-                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
-                      </button>
-                    </div>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Código de fabricante</label>
-                      <input
-                        type="text"
-                        className={styles.input}
-                        value={filtros.codigoFabricante}
-                        onChange={(e) => updateFiltro({ codigoFabricante: e.target.value })}
-                        placeholder="Ej: FAB-1001"
-                      />
-                    </div>
-                  </div>
+                      <div className={styles.formRow}>
+                        <div className={styles.formSection}>
+                          <label className={styles.label}>Proveedor</label>
+                          <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('proveedor')}>
+                            <span className={!filtros.proveedor ? styles.selectTriggerPlaceholder : undefined}>
+                              {filtros.proveedor || CONFIG_SELECTORES.proveedor.todas}
+                            </span>
+                            <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                          </button>
+                        </div>
+                        <div className={styles.formSection}>
+                          <label className={styles.label}>Código de fabricante</label>
+                          <input
+                            type="text"
+                            className={styles.input}
+                            value={filtros.codigoFabricante}
+                            onChange={(e) => updateFiltro({ codigoFabricante: e.target.value })}
+                            placeholder="Ej: FAB-1001"
+                          />
+                        </div>
+                      </div>
 
-                  <div className={styles.formRow}>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Grupo</label>
-                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('grupo')}>
-                        <span className={!filtros.grupo ? styles.selectTriggerPlaceholder : undefined}>
-                          {filtros.grupo || CONFIG_SELECTORES.grupo.todas}
-                        </span>
-                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
-                      </button>
-                    </div>
-                    <div className={styles.formSection}>
-                      <label className={styles.label}>Marca</label>
-                      <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('marca')}>
-                        <span className={!filtros.marca ? styles.selectTriggerPlaceholder : undefined}>
-                          {filtros.marca || CONFIG_SELECTORES.marca.todas}
-                        </span>
-                        <IconChevronDown size={16} className={styles.selectTriggerIcon} />
-                      </button>
-                    </div>
-                  </div>
+                      <div className={styles.formRow}>
+                        <div className={styles.formSection}>
+                          <label className={styles.label}>Grupo</label>
+                          <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('grupo')}>
+                            <span className={!filtros.grupo ? styles.selectTriggerPlaceholder : undefined}>
+                              {filtros.grupo || CONFIG_SELECTORES.grupo.todas}
+                            </span>
+                            <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                          </button>
+                        </div>
+                        <div className={styles.formSection}>
+                          <label className={styles.label}>Marca</label>
+                          <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('marca')}>
+                            <span className={!filtros.marca ? styles.selectTriggerPlaceholder : undefined}>
+                              {filtros.marca || CONFIG_SELECTORES.marca.todas}
+                            </span>
+                            <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                          </button>
+                        </div>
+                      </div>
 
-                  <div className={styles.formSection}>
-                    <label className={styles.label}>Categoría</label>
-                    <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('categoria')}>
-                      <span className={!filtros.categoria ? styles.selectTriggerPlaceholder : undefined}>
-                        {filtros.categoria || CONFIG_SELECTORES.categoria.todas}
-                      </span>
-                      <IconChevronDown size={16} className={styles.selectTriggerIcon} />
-                    </button>
-                  </div>
+                      <div className={styles.formSection}>
+                        <label className={styles.label}>Categoría</label>
+                        <button type="button" className={styles.selectTrigger} onClick={() => setSelectorActivo('categoria')}>
+                          <span className={!filtros.categoria ? styles.selectTriggerPlaceholder : undefined}>
+                            {filtros.categoria || CONFIG_SELECTORES.categoria.todas}
+                          </span>
+                          <IconChevronDown size={16} className={styles.selectTriggerIcon} />
+                        </button>
+                      </div>
+                    </>
+                  )}
 
                   <label className={styles.toggleRow}>
                     <span className={styles.label}>Sin código de barras asignado</span>
@@ -458,13 +471,15 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
               <div className={styles.infoBar}>
                 {tipo !== 'MANUAL' ? `Prefijo GS1: ${prefijoGs1}` : 'Sin prefijo (código interno)'}
               </div>
-              <p className={styles.counter}>{seleccionados} de {filas.length} artículos seleccionados para generar</p>
+              <p className={styles.counter}>
+                {seleccionados} de {filas.length} {entidadLabelPlural} seleccionad{entidadFemenino ? 'as' : 'os'} para generar
+              </p>
               <div className={styles.tableContainer}>
                 <table className={styles.table}>
                   <thead>
                     <tr>
                       <th className={styles.checkboxCell} />
-                      <th>Artículo</th>
+                      <th>{entidadFemenino ? 'Fórmula' : 'Artículo'}</th>
                       {mostrarCantidad && <th>Cantidad</th>}
                       <th>Estado</th>
                     </tr>
@@ -472,7 +487,7 @@ export default function GeneracionMasivaPanel({ articulos, onClose, onGenerar })
                   <tbody>
                     {filas.length === 0 ? (
                       <tr>
-                        <td colSpan={columnas} className={styles.empty}>No hay artículos para esta selección</td>
+                        <td colSpan={columnas} className={styles.empty}>No hay {entidadLabelPlural} para esta selección</td>
                       </tr>
                     ) : (
                       filas.map((fila) => {

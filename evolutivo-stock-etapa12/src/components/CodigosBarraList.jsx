@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter } from '@tabler/icons-react'
-import { ARTICULOS_INICIALES, FORMULAS_INICIALES } from '../data/codigosBarra'
+import { ARTICULOS_INICIALES, FORMULAS_INICIALES, TIPOS_CODIGO_SIN_GTIN8, MOCK_EXCEL_FORMULAS } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
 import FiltrosCodigosBarraPanel, { filtrosVacios, hayFiltrosActivos } from './FiltrosCodigosBarraPanel'
 import GeneracionMasivaPanel from './GeneracionMasivaPanel'
-import ImportarCodigosPanel from './ImportarCodigosPanel'
+import ImportarCodigosPanel, { MOCK_FILAS_IMPORTACION_FORMULAS, EJEMPLO_LINEAS_FORMULAS } from './ImportarCodigosPanel'
 import styles from './CodigosBarraList.module.css'
+
+const TIPOS_MASIVA_FORMULAS = TIPOS_CODIGO_SIN_GTIN8.filter((t) => t.value !== 'GS1-128')
 
 function tiposAsignados(articulo) {
   const counts = new Map()
@@ -109,7 +111,8 @@ export default function CodigosBarraList() {
   }
 
   const agregarCodigosMasivo = (resultados) => {
-    setArticulos((prev) => prev.map((a) => {
+    const setter = esFormula ? setFormulas : setArticulos
+    setter((prev) => prev.map((a) => {
       const nuevos = resultados.filter((r) => r.articuloId === a.id).map((r) => r.codigo)
       return nuevos.length ? { ...a, codigos: [...a.codigos, ...nuevos] } : a
     }))
@@ -167,17 +170,15 @@ export default function CodigosBarraList() {
           </button>
         )}
 
-        {!esFormula && (
-          <div className={styles.toolbarActions}>
-            <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
-              Importar Códigos
-            </button>
+        <div className={styles.toolbarActions}>
+          <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
+            Importar Códigos
+          </button>
 
-            <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
-              Generación masiva
-            </button>
-          </div>
-        )}
+          <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
+            Generación masiva
+          </button>
+        </div>
       </div>
 
       <div className={styles.tableContainer}>
@@ -253,17 +254,27 @@ export default function CodigosBarraList() {
 
       {showGeneracionMasiva && (
         <GeneracionMasivaPanel
-          articulos={articulos}
+          articulos={items}
           onGenerar={agregarCodigosMasivo}
           onClose={() => setShowGeneracionMasiva(false)}
+          tiposDisponibles={esFormula ? TIPOS_MASIVA_FORMULAS : undefined}
+          mockSkusArchivo={esFormula ? MOCK_EXCEL_FORMULAS : undefined}
+          mostrarFiltrosCategoricos={!esFormula}
+          entidadLabelPlural={entidad.labelPlural}
+          entidadFemenino={entidad.femenino}
         />
       )}
 
       {showImportarCodigos && (
         <ImportarCodigosPanel
-          articulos={articulos}
+          articulos={items}
           onImportar={agregarCodigosMasivo}
           onClose={() => setShowImportarCodigos(false)}
+          mockFilas={esFormula ? MOCK_FILAS_IMPORTACION_FORMULAS : undefined}
+          entidadLabel={entidad.label}
+          entidadFemenino={entidad.femenino}
+          columnaIdLabel={esFormula ? 'Código de fórmula' : undefined}
+          ejemploLineas={esFormula ? EJEMPLO_LINEAS_FORMULAS : undefined}
         />
       )}
     </div>

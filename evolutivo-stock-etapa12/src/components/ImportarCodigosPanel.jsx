@@ -29,14 +29,35 @@ const MOCK_FILAS_IMPORTACION = [
   { sku: 'ART-001', codigo: '10779123499999', tipo: 'GTIN-14', cantidad: '' },
 ]
 
-function procesarImportacion(articulos) {
+export const MOCK_FILAS_IMPORTACION_FORMULAS = [
+  { sku: 'FOR-1002', codigo: '7791234509003', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'FOR-1004', codigo: 'INT-555000', tipo: 'CODE-128', cantidad: '24' },
+  { sku: 'SKU-999', codigo: '1234567890128', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'FOR-1002', codigo: '7791234501001', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'FOR-1003', codigo: '', tipo: 'GTIN-13', cantidad: '1' },
+  { sku: 'FOR-1003', codigo: '00177912345679999', tipo: 'GS1-128', cantidad: '1' },
+  { sku: 'FOR-1004', codigo: '999', tipo: 'GTIN-14', cantidad: '10' },
+  { sku: 'FOR-1002', codigo: '10779123400099', tipo: 'GTIN-14', cantidad: '' },
+]
+
+export const EJEMPLO_LINEAS_FORMULAS = [
+  'FOR-1001;7791234501001;GTIN-13;1',
+  'FOR-1004;10779123400505;GTIN-14;50',
+  'FOR-1002;INT-777888;CODE-128;24',
+]
+
+function capitalizar(texto) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
+function procesarImportacion(articulos, filas, entidadLabel, entidadFemenino) {
   const exitosos = []
   const errores = []
-  MOCK_FILAS_IMPORTACION.forEach((fila) => {
+  filas.forEach((fila) => {
     const texto = fila.codigo.trim()
     const articulo = articulos.find((a) => a.codigo === fila.sku)
     if (!articulo) {
-      errores.push({ codigo: fila.sku, motivo: 'Artículo no encontrado.' })
+      errores.push({ codigo: fila.sku, motivo: `${capitalizar(entidadLabel)} no encontrad${entidadFemenino ? 'a' : 'o'}.` })
       return
     }
     if (!texto) {
@@ -58,7 +79,7 @@ function procesarImportacion(articulos) {
       return
     }
     if (existeCodigoDuplicado(articulos, texto)) {
-      errores.push({ codigo: fila.sku, motivo: 'Este código ya está asignado a otro artículo.' })
+      errores.push({ codigo: fila.sku, motivo: `Este código ya está asignado a ${entidadFemenino ? 'otra' : 'otro'} ${entidadLabel}.` })
       return
     }
     if (!validarFormato(tipo, texto)) {
@@ -86,7 +107,20 @@ function descargarTexto(nombre, contenido, tipo) {
   URL.revokeObjectURL(url)
 }
 
-export default function ImportarCodigosPanel({ articulos, onImportar, onClose }) {
+export default function ImportarCodigosPanel({
+  articulos,
+  onImportar,
+  onClose,
+  mockFilas = MOCK_FILAS_IMPORTACION,
+  entidadLabel = 'artículo',
+  entidadFemenino = false,
+  columnaIdLabel = 'Código de artículo',
+  ejemploLineas = [
+    'ART-001;7791234567890;GTIN-13;1',
+    'ART-010;10779123400017;GTIN-14;50',
+    'ART-030;INT-777888;CODE-128;24',
+  ],
+}) {
   const [archivoNombre, setArchivoNombre] = useState('')
   const [arrastrando, setArrastrando] = useState(false)
   const [procesando, setProcesando] = useState(false)
@@ -110,16 +144,13 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
   const descargarEjemplo = () => {
     descargarTexto(
       'ejemplo-importar-codigos.csv',
-      'Código de artículo;Código de barras;Tipo de código;Cantidad\n'
-      + 'ART-001;7791234567890;GTIN-13;1\n'
-      + 'ART-010;10779123400017;GTIN-14;50\n'
-      + 'ART-030;INT-777888;CODE-128;24\n',
+      `${columnaIdLabel};Código de barras;Tipo de código;Cantidad\n${ejemploLineas.map((l) => `${l}\n`).join('')}`,
       'text/csv;charset=utf-8;'
     )
   }
 
   const descargarErrores = () => {
-    const encabezado = 'Código de artículo;Motivo\n'
+    const encabezado = `${columnaIdLabel};Motivo\n`
     const filasCsv = resultado.errores.map((err) => `${err.codigo};${err.motivo}`).join('\n')
     descargarTexto('errores-importacion-codigos.csv', encabezado + filasCsv, 'text/csv;charset=utf-8;')
   }
@@ -127,7 +158,7 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
   const handleContinuar = () => {
     setProcesando(true)
     setTimeout(() => {
-      const res = procesarImportacion(articulos)
+      const res = procesarImportacion(articulos, mockFilas, entidadLabel, entidadFemenino)
       onImportar(res.exitosos)
       setResultado(res)
       setProcesando(false)
@@ -180,7 +211,7 @@ export default function ImportarCodigosPanel({ articulos, onImportar, onClose })
                   />
                 </div>
                 <p className={styles.helperText}>
-                  Se aceptan archivos Excel, TXT y CSV. El archivo debe tener una columna para el código de artículo, otra para el código de barras, otra para el tipo de código y otra para la cantidad.
+                  Se aceptan archivos Excel, TXT y CSV. El archivo debe tener una columna para el código de {entidadLabel}, otra para el código de barras, otra para el tipo de código y otra para la cantidad.
                 </p>
                 <p className={styles.helperText}>
                   La columna Cantidad es obligatoria para códigos GTIN-14 y Code-128. Para GTIN-13, la cantidad será siempre 1.

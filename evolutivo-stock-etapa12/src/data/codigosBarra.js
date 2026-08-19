@@ -69,6 +69,8 @@ export const FORMULAS_INICIALES = [
 
 export const MOCK_EXCEL_SKUS = ['ART-001', 'ART-030', 'SKU-999']
 
+export const MOCK_EXCEL_FORMULAS = ['FOR-1002', 'FOR-1004', 'SKU-999']
+
 export const ARTICULOS_INICIALES = [
   {
     id: 'ART-001',
