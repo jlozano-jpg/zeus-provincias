@@ -5,18 +5,26 @@ import { generarCodigo, validarFormato, mensajeFormatoInvalido, existeCodigoDupl
 import TipoCodigoBadge from './TipoCodigoBadge'
 import styles from './CodigoBarraPanel.module.css'
 
-const TIPOS_INGRESABLES = TIPOS_CODIGO_SIN_GTIN8.filter((t) => t.value !== 'GS1-128')
+const TIPOS_INGRESABLES = TIPOS_CODIGO_SIN_GTIN8
 
-function defaultForm() {
+function defaultForm(articulo) {
   return {
     tipo: 'GTIN-13',
     cantidad: '1',
     codigoTexto: '',
     modoSugerido: false,
     prefijoGs1: '',
-    codigoSugerido: '',
+    loteId: articulo.lotes?.[0]?.id ?? '',
+    codigoSugeridoManual: '',
     error: '',
   }
+}
+
+function descripcionTipo(tipo) {
+  if (tipo === 'GS1-128') {
+    return 'Aplica solo a artículos con gestión de lotes: combina el código del artículo con el lote y su vencimiento.'
+  }
+  return DESCRIPCION_TIPO[tipo]
 }
 
 function extraInfo(codigo) {
@@ -30,7 +38,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
   const demostrativo = entidadFemenino ? 'Esta' : 'Este'
   const indefinidoOtro = entidadFemenino ? 'otra' : 'otro'
   const [layer, setLayer] = useState(initialLayer)
-  const [form, setForm] = useState(() => defaultForm())
+  const [form, setForm] = useState(() => defaultForm(articulo))
 
   useEffect(() => {
     const handler = (event) => {
@@ -49,13 +57,13 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       codigoTexto: '',
       modoSugerido: false,
       prefijoGs1: '',
-      codigoSugerido: '',
+      loteId: tipo === 'GS1-128' ? (articulo.lotes?.[0]?.id ?? '') : '',
     })
   }
 
   const handleCodigoTextoChange = (value) => {
     let texto = value
-    if (form.tipo !== 'MANUAL') {
+    if (form.tipo !== 'MANUAL' && form.tipo !== 'GS1-128') {
       const max = tipoInfo(form.tipo).digits
       texto = texto.replace(/\D/g, '')
       if (max) texto = texto.slice(0, max)
@@ -66,30 +74,45 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
   const handlePrefijoChange = (value) => {
     const max = maxPrefijoGs1(form.tipo)
     const prefijo = value.replace(/\D/g, '').slice(0, max)
-    const info = tipoInfo(form.tipo)
-    const cantidad = unidadUnica ? 1 : info.cantidadFija ?? (Number(form.cantidad) || 1)
-    const codigoSugerido = prefijo.length > 0 ? generarCodigo(form.tipo, { prefijo, cantidad }) : ''
-    updateForm({ prefijoGs1: prefijo, codigoSugerido })
+    updateForm({ prefijoGs1: prefijo })
   }
 
   const activarSugerido = () => {
     if (form.tipo === 'MANUAL') {
-      const codigoSugerido = generarCodigo('MANUAL', { longitud: 10 })
-      updateForm({ modoSugerido: true, codigoSugerido, codigoTexto: '' })
+      const codigoSugeridoManual = generarCodigo('MANUAL', { longitud: 10 })
+      updateForm({ modoSugerido: true, codigoSugeridoManual, codigoTexto: '' })
     } else {
-      updateForm({ modoSugerido: true, prefijoGs1: '', codigoSugerido: '', codigoTexto: '' })
+      updateForm({ modoSugerido: true, prefijoGs1: '', codigoTexto: '' })
     }
   }
 
   const irAAgregar = () => {
-    setForm(defaultForm())
+    setForm(defaultForm(articulo))
     setLayer('agregar')
   }
 
   const volverADetalle = () => setLayer('detalle')
 
+  const info = tipoInfo(form.tipo)
+  const loteSeleccionado = form.tipo === 'GS1-128' ? (articulo.lotes || []).find((l) => l.id === form.loteId) : null
+
+  const codigoSugerido = (() => {
+    if (!form.modoSugerido) return ''
+    if (form.tipo === 'MANUAL') return form.codigoSugeridoManual
+    if (form.prefijoGs1.length === 0) return ''
+    if (form.tipo === 'GS1-128') {
+      if (!loteSeleccionado) return ''
+      return generarCodigo('GS1-128', { prefijo: form.prefijoGs1, cantidad: Number(form.cantidad) || 1, lote: loteSeleccionado })
+    }
+    const cantidad = unidadUnica ? 1 : info.cantidadFija ?? (Number(form.cantidad) || 1)
+    return generarCodigo(form.tipo, { prefijo: form.prefijoGs1, cantidad })
+  })()
+
   const handleSubmit = () => {
-    const info = tipoInfo(form.tipo)
+    if (form.tipo === 'GS1-128' && !loteSeleccionado) {
+      setForm((prev) => ({ ...prev, error: 'Seleccioná un lote.' }))
+      return
+    }
 
     if (!unidadUnica && !info.cantidadFija) {
       const cantidadNum = Number(form.cantidad)
@@ -108,7 +131,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
           return
         }
       }
-      codigoFinal = form.codigoSugerido
+      codigoFinal = codigoSugerido
     } else {
       const texto = form.codigoTexto.trim()
       if (!validarFormato(form.tipo, texto)) {
@@ -127,11 +150,10 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
       tipo: form.tipo,
       codigo: codigoFinal,
       cantidad: unidadUnica ? 1 : info.cantidadFija ?? Number(form.cantidad),
+      ...(form.tipo === 'GS1-128' ? { loteId: loteSeleccionado.lote, vencimiento: loteSeleccionado.vencimiento } : {}),
     })
     setLayer('detalle')
   }
-
-  const info = tipoInfo(form.tipo)
 
   return (
     <>
@@ -217,11 +239,16 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 <label className={styles.label}>Tipo de código</label>
                 <select className={styles.select} value={form.tipo} onChange={(e) => handleTipoChange(e.target.value)}>
                   {TIPOS_INGRESABLES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
+                    <option key={t.value} value={t.value} disabled={t.requiereLotes && !articulo.manejaLotes}>
+                      {t.label}
+                    </option>
                   ))}
                 </select>
-                {DESCRIPCION_TIPO[form.tipo] && (
-                  <p className={styles.helperText}>{DESCRIPCION_TIPO[form.tipo]}</p>
+                {descripcionTipo(form.tipo) && (
+                  <p className={styles.helperText}>{descripcionTipo(form.tipo)}</p>
+                )}
+                {!articulo.manejaLotes && (
+                  <p className={styles.helperText}>GS1-128 no disponible: {demostrativo.toLowerCase()} {entidadLabel} no gestiona lotes.</p>
                 )}
               </div>
 
@@ -229,6 +256,40 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 <p className={styles.staticInfo}>Cantidad que representa este código: 1 (fija — siempre referido a una unidad)</p>
               ) : info.cantidadFija ? (
                 <p className={styles.staticInfo}>Cantidad que representa este código: {info.cantidadFija} (fija)</p>
+              ) : form.tipo === 'GS1-128' ? (
+                <>
+                  <div className={styles.formSection}>
+                    <label className={styles.label}>Lote</label>
+                    <select className={styles.select} value={form.loteId} onChange={(e) => updateForm({ loteId: e.target.value })}>
+                      <option value="">Seleccionar lote...</option>
+                      {(articulo.lotes || []).map((l) => (
+                        <option key={l.id} value={l.id}>{l.lote}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.formRow}>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Vencimiento</label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        value={loteSeleccionado?.vencimiento ?? ''}
+                        disabled
+                        readOnly
+                      />
+                    </div>
+                    <div className={styles.formSection}>
+                      <label className={styles.label}>Cantidad</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className={styles.input}
+                        value={form.cantidad}
+                        onChange={(e) => updateForm({ cantidad: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className={styles.formSection}>
                   <label className={styles.label}>Cantidad que representa este código</label>
@@ -254,7 +315,11 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                     value={form.codigoTexto}
                     maxLength={info.digits || undefined}
                     onChange={(e) => handleCodigoTextoChange(e.target.value)}
-                    placeholder={form.tipo === 'MANUAL' ? 'Ej: 123456' : `Ingresá los ${info.digits} dígitos`}
+                    placeholder={
+                      form.tipo === 'MANUAL' ? 'Ej: 123456'
+                        : form.tipo === 'GS1-128' ? 'Escaneá o tipeá el código'
+                          : `Ingresá los ${info.digits} dígitos`
+                    }
                   />
                 ) : form.tipo !== 'MANUAL' ? (
                   <input
@@ -282,7 +347,7 @@ export default function CodigoBarraPanel({ articulo, articulos, initialLayer, so
                 {form.modoSugerido && (
                   <p className={styles.previewBox}>
                     <span className={styles.previewLabel}>Código a generar</span>
-                    <span className={styles.previewValue}>{form.codigoSugerido || '—'}</span>
+                    <span className={styles.previewValue}>{codigoSugerido || '—'}</span>
                   </p>
                 )}
               </div>
