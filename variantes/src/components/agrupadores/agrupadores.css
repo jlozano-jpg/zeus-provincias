@@ -111,13 +111,11 @@
 /* ============ Workspace ============ */
 .va-work {
   flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 520px;
+  position: relative;
   min-height: 0;
 }
-.va-work.is-collapsed { grid-template-columns: 1fr 0px; }
 
-.va-main { padding: 20px 24px 32px; min-width: 0; overflow-y: auto; }
+.va-main { height: 100%; padding: 20px 24px 32px; min-width: 0; overflow-y: auto; }
 
 /* ============ Buttons ============ */
 .va-btn {
@@ -299,14 +297,20 @@ table.va-grid tbody tr.is-selected td { border-bottom-color: var(--va-violet-100
 
 .va-empty-cell { text-align: center; padding: 32px !important; color: var(--va-ink-500); }
 
-/* ============ Side panel ============ */
+/* ============ Side panel (overlay, no empuja el contenido) ============ */
 .va-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 520px;
+  max-width: 100%;
+  z-index: 30;
   background: var(--va-white);
   border-left: 1px solid var(--va-ink-200);
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100%;
   box-shadow: var(--va-sh-panel);
 }
 .va-panel-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 16px; border-bottom: 1px solid var(--va-ink-200); }
@@ -568,6 +572,72 @@ table.va-grid tbody tr.is-selected td { border-bottom-color: var(--va-violet-100
 .va-confirm-title { font-size: 16px; font-weight: 650; color: var(--va-ink-900); margin-bottom: 6px; }
 .va-confirm-body { font-size: 13.5px; color: var(--va-ink-500); margin-bottom: 18px; }
 .va-confirm-actions { display: flex; gap: 8px; justify-content: center; }
+
+/* ============ Import wizard (carga masiva, panel lateral) ============ */
+.va-import-hint { font-size: 13px; color: var(--va-ink-500); margin-bottom: 14px; }
+
+.va-link-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px;
+  border: none; background: transparent; padding: 0;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--va-violet-600);
+  cursor: pointer;
+}
+.va-link-btn:hover { color: var(--va-violet-700); text-decoration: underline; }
+
+.va-import-dropzone {
+  border: 1.5px dashed var(--va-ink-200);
+  border-radius: var(--va-r-lg);
+  background: var(--va-ink-50);
+  padding: 36px 24px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: var(--va-violet-500);
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.va-import-dropzone:hover { border-color: var(--va-violet-300); background: var(--va-violet-50); }
+.va-import-dropzone .va-ttl { font-size: 13.5px; font-weight: 600; color: var(--va-ink-800); margin-top: 6px; }
+.va-import-dropzone .va-sub { font-size: 12px; color: var(--va-ink-500); }
+
+.va-mapping-list { display: flex; flex-direction: column; gap: 10px; }
+.va-mapping-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.va-mapping-label { font-size: 13px; font-weight: 600; color: var(--va-ink-700); }
+.va-mapping-label .va-req { color: var(--va-violet-600); margin-left: 2px; }
+.va-mapping-label .va-hint { font-weight: 500; color: var(--va-ink-400); margin-left: 6px; font-size: 11.5px; }
+
+.va-import-processing {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 48px 0;
+  color: var(--va-ink-500);
+}
+.va-import-processing .va-ttl { font-size: 13.5px; font-weight: 600; color: var(--va-ink-800); }
+.va-spin { color: var(--va-violet-600); animation: va-spin 0.8s linear infinite; }
+@keyframes va-spin { to { transform: rotate(360deg); } }
+
+.va-import-stat {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--va-r-md);
+  font-size: 13px;
+  border: 1px solid;
+}
+.va-import-stat.is-ready { background: var(--va-success-50); border-color: #b8ecd4; color: var(--va-success-700); }
+.va-import-stat.is-warn { background: var(--va-warn-50); border-color: #ffdca3; color: var(--va-warn-700); }
+.va-import-errors {
+  margin-top: 14px;
+  border: 1px solid var(--va-ink-200);
+  border-radius: var(--va-r-md);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.va-import-errors table.va-grid thead th { position: sticky; top: 0; }
+.va-import-errors table.va-grid tbody td { font-size: 12.5px; }
 
 /* ============ Color picker ============ */
 .va-cp-overlay {

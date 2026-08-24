@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { IconAlertTriangle, IconX } from '@tabler/icons-react'
+import { IconAlertTriangle, IconLock, IconX } from '@tabler/icons-react'
 import AgrupadoresGrid from './agrupadores/AgrupadoresGrid'
 import AgrupadorPanel from './agrupadores/AgrupadorPanel'
 import AgrupadorViewPanel from './agrupadores/AgrupadorViewPanel'
+import ImportWizard from './agrupadores/ImportWizard'
 import './agrupadores/agrupadores.css'
 
 const INITIAL_ROWS = [
@@ -39,6 +40,7 @@ const INITIAL_ROWS = [
       { code: 'AZU', name: 'Azul', swatch: '#2970ff' },
       { code: 'ROJ', name: 'Rojo', swatch: '#f04438' },
     ],
+    productsCount: 6,
   },
   {
     id: 'COL-002',
@@ -126,6 +128,11 @@ export default function AgrupadoresABM({ onNavigateHome }) {
     setPanelMode('edit')
   }
 
+  function openImport() {
+    setSelectedId(null)
+    setPanelMode('import')
+  }
+
   function closePanel() {
     setPanelMode(null)
     setSelectedId(null)
@@ -141,6 +148,7 @@ export default function AgrupadoresABM({ onNavigateHome }) {
   }
 
   function confirmDelete() {
+    if (deletingRow.productsCount > 0) return
     setRows((rs) => rs.filter((r) => r.id !== deletingRow.id))
     if (selectedId === deletingRow.id) closePanel()
     setDeletingRow(null)
@@ -160,7 +168,7 @@ export default function AgrupadoresABM({ onNavigateHome }) {
         </button>
       </div>
 
-      <div className={`va-work ${panelMode ? '' : 'is-collapsed'}`}>
+      <div className="va-work">
         <AgrupadoresGrid
           rows={rows}
           query={query}
@@ -168,6 +176,7 @@ export default function AgrupadoresABM({ onNavigateHome }) {
           searchInputRef={searchInputRef}
           selectedId={selectedId}
           onNewClick={openCreate}
+          onImportClick={openImport}
           onRowClick={openView}
           onEdit={openEdit}
           onDelete={setDeletingRow}
@@ -184,18 +193,41 @@ export default function AgrupadoresABM({ onNavigateHome }) {
             onSubmit={handleSubmit}
           />
         ) : null}
+        {panelMode === 'import' ? (
+          <ImportWizard
+            existingRows={rows}
+            onClose={closePanel}
+            onImportComplete={(newRows) => setRows((rs) => [...newRows, ...rs])}
+          />
+        ) : null}
       </div>
 
       {deletingRow ? (
         <div className="va-confirm-overlay" onClick={() => setDeletingRow(null)}>
           <div className="va-confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="va-confirm-icon va-danger"><IconAlertTriangle size={22} stroke={1.6} /></div>
-            <div className="va-confirm-title">¿Eliminar "{deletingRow.name}"?</div>
-            <div className="va-confirm-body">Esta acción no se puede deshacer. Los productos que usen este agrupador podrían verse afectados.</div>
-            <div className="va-confirm-actions">
-              <button type="button" className="va-btn va-btn-secondary" onClick={() => setDeletingRow(null)}>Cancelar</button>
-              <button type="button" className="va-btn va-btn-danger" onClick={confirmDelete}>Sí, eliminar</button>
-            </div>
+            {deletingRow.productsCount > 0 ? (
+              <>
+                <div className="va-confirm-icon va-danger"><IconLock size={22} stroke={1.6} /></div>
+                <div className="va-confirm-title">No se puede eliminar "{deletingRow.name}"</div>
+                <div className="va-confirm-body">
+                  Está asignado a {deletingRow.productsCount} artículo{deletingRow.productsCount === 1 ? '' : 's'}.
+                  Quitalo de {deletingRow.productsCount === 1 ? 'ese artículo' : 'esos artículos'} antes de eliminarlo.
+                </div>
+                <div className="va-confirm-actions">
+                  <button type="button" className="va-btn va-btn-primary" onClick={() => setDeletingRow(null)}>Entendido</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="va-confirm-icon va-danger"><IconAlertTriangle size={22} stroke={1.6} /></div>
+                <div className="va-confirm-title">¿Eliminar "{deletingRow.name}"?</div>
+                <div className="va-confirm-body">Esta acción no se puede deshacer.</div>
+                <div className="va-confirm-actions">
+                  <button type="button" className="va-btn va-btn-secondary" onClick={() => setDeletingRow(null)}>Cancelar</button>
+                  <button type="button" className="va-btn va-btn-danger" onClick={confirmDelete}>Sí, eliminar</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : null}

@@ -12,7 +12,7 @@ const SORTERS = {
 
 export default function AgrupadoresGrid({
   rows, query, setQuery, searchInputRef,
-  onNewClick, onRowClick, onEdit, onDelete, selectedId,
+  onNewClick, onImportClick, onRowClick, onEdit, onDelete, selectedId,
 }) {
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
 
@@ -55,7 +55,7 @@ export default function AgrupadoresGrid({
           />
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button type="button" className="va-btn va-btn-secondary">
+          <button type="button" className="va-btn va-btn-secondary" onClick={onImportClick}>
             <IconFileImport size={16} stroke={1.6} /> Importar
           </button>
           <button type="button" className="va-btn va-btn-primary" onClick={onNewClick}>
