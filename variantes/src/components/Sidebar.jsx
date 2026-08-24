@@ -12,7 +12,14 @@ import styles from './Sidebar.module.css'
 const NAV = [
   { id: 'inicio', label: 'Inicio', icon: IconHome },
   { id: 'tableros', label: 'Tableros', icon: IconChartLine },
-  { id: 'ventas', label: 'Ventas', icon: IconShoppingCart, children: [] },
+  {
+    id: 'ventas',
+    label: 'Ventas',
+    icon: IconShoppingCart,
+    children: [
+      { id: 'gestion-productos', label: 'Gestión de Productos', badge: 'Nuevo' },
+    ],
+  },
   { id: 'crm', label: 'CRM', icon: IconUsers, children: [] },
   { id: 'tesoreria', label: 'Tesorería', icon: IconBuildingBank, children: [] },
   {

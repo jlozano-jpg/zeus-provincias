@@ -1,0 +1,217 @@
+/* Reutiliza los tokens y componentes de agrupadores.css (va-app, va-btn, va-input,
+   va-card, tabla, etc.) — este archivo sólo agrega lo específico del ABM de Productos:
+   el editor ancho con navegación lateral y los widgets de la solapa Variantes. */
+
+.pr-cell-strong { font-weight: 600; color: var(--va-ink-900); }
+.pr-cell-muted { color: var(--va-ink-500); }
+
+.pr-view-toggle {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: var(--va-ink-100);
+  border-radius: var(--va-r-md);
+  padding: 3px;
+  flex-shrink: 0;
+}
+.pr-view-btn {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; border-radius: 6px;
+  color: var(--va-ink-500);
+  cursor: pointer;
+}
+.pr-view-btn:hover { color: var(--va-ink-800); }
+.pr-view-btn.is-active { background: var(--va-white); color: var(--va-violet-700); box-shadow: var(--va-sh-xs); }
+
+/* ============ Editor de producto (panel ancho con navegación) ============ */
+.pr-editor {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: min(1040px, 82vw);
+  z-index: 30;
+  background: var(--va-white);
+  border-left: 1px solid var(--va-ink-200);
+  box-shadow: var(--va-sh-panel);
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-editor-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--va-ink-200);
+  flex-shrink: 0;
+}
+.pr-editor-head .pr-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14.5px; color: var(--va-ink-600);
+  min-width: 0;
+}
+.pr-editor-head .pr-title-ico {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  background: var(--va-violet-50); color: var(--va-violet-700);
+  display: flex; align-items: center; justify-content: center;
+}
+.pr-editor-head .pr-title strong { color: var(--va-ink-900); font-weight: 700; }
+.pr-editor-head .pr-subtitle {
+  color: var(--va-ink-500); font-size: 12.5px; margin-left: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pr-editor-head .pr-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+.pr-editor-body { flex: 1; display: grid; grid-template-columns: 210px 1fr; min-height: 0; }
+
+.pr-nav {
+  border-right: 1px solid var(--va-ink-200);
+  padding: 12px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto;
+  background: var(--va-ink-50);
+}
+.pr-nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px;
+  border-radius: var(--va-r-md);
+  border: none; background: transparent;
+  color: var(--va-ink-600);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.pr-nav-item:hover { background: var(--va-white); color: var(--va-ink-800); }
+.pr-nav-item.is-active { background: var(--va-white); color: var(--va-violet-700); font-weight: 700; box-shadow: var(--va-sh-xs); }
+.pr-nav-item svg { flex-shrink: 0; }
+.pr-nav-badge {
+  margin-left: auto; flex-shrink: 0;
+  background: var(--va-violet-600); color: #fff;
+  font-size: 9.5px; font-weight: 700;
+  padding: 2px 6px; border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.pr-content { padding: 20px 26px 28px; overflow-y: auto; min-height: 0; }
+
+.pr-editor-foot {
+  border-top: 1px solid var(--va-ink-200);
+  padding: 13px 22px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  flex-shrink: 0;
+}
+.pr-foot-status { margin-right: auto; font-size: 12.5px; color: var(--va-ink-500); }
+.pr-foot-status.is-warn { color: var(--va-warn-700); }
+.pr-foot-status b { color: var(--va-violet-700); }
+
+/* ============ Solapa Principal ============ */
+.pr-section-title { font-size: 14.5px; font-weight: 700; color: var(--va-ink-900); margin-bottom: 14px; }
+.pr-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.pr-attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.pr-barcode-row { display: flex; align-items: center; gap: 8px; }
+.pr-barcode-row .va-input { flex: 1; }
+
+/* ============ Solapa Variantes ============ */
+.pr-var-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.pr-var-head h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--va-ink-900); }
+.pr-var-head p { margin: 4px 0 0; font-size: 12.5px; color: var(--va-ink-500); max-width: 56ch; }
+
+.pr-count-pill {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--va-violet-50);
+  color: var(--va-violet-700);
+  font-size: 12px; font-weight: 700;
+  text-align: center;
+}
+
+.pr-ag-list { display: flex; flex-direction: column; gap: 12px; }
+.pr-ag-card { transition: border-color .12s, background .12s; }
+.pr-ag-card.has-error { border-color: #fdcd86; background: linear-gradient(180deg, var(--va-warn-50), var(--va-white) 40%); }
+.pr-ag-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.pr-ag-num {
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  background: var(--va-violet-50); color: var(--va-violet-700);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.pr-ag-name { font-size: 13.5px; font-weight: 700; color: var(--va-ink-900); }
+.pr-ag-meta { font-size: 11.5px; color: var(--va-ink-500); }
+.pr-ag-count {
+  flex-shrink: 0;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--va-violet-50); color: var(--va-violet-700);
+}
+.pr-ag-count.is-warn { background: var(--va-warn-50); color: var(--va-warn-700); }
+
+.pr-ag-body { padding-left: 36px; }
+.pr-ag-values-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.pr-ag-values { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.pr-vchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--va-ink-200);
+  background: var(--va-white);
+  color: var(--va-ink-600);
+  font-size: 12.5px; font-weight: 550;
+  cursor: pointer;
+}
+.pr-vchip:hover { border-color: var(--va-ink-300); background: var(--va-ink-50); color: var(--va-ink-900); }
+.pr-vchip.is-on {
+  background: var(--va-violet-600); border-color: var(--va-violet-600); color: #fff;
+}
+.pr-vchip.is-on:hover { background: var(--va-violet-700); border-color: var(--va-violet-700); }
+.pr-vchip-sw { width: 11px; height: 11px; border-radius: 999px; border: 1px solid rgba(0,0,0,.12); flex-shrink: 0; }
+.pr-vchip.is-on .pr-vchip-sw { opacity: 1; }
+.pr-vchip:not(.is-on) .pr-vchip-sw { opacity: 0.6; }
+
+.pr-adicional-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.pr-adicional-row .va-input { max-width: 130px; text-align: right; }
+.pr-adicional-tag { min-width: 90px; }
+
+.pr-add-menu-wrap { position: relative; align-self: flex-start; }
+.pr-add-menu {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 280px; max-height: 320px; overflow-y: auto;
+  background: var(--va-white);
+  border: 1px solid var(--va-ink-200);
+  border-radius: var(--va-r-lg);
+  box-shadow: var(--va-sh-lg);
+  padding: 6px;
+  z-index: 20;
+}
+.pr-add-menu-h { padding: 6px 10px 8px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--va-ink-400); font-weight: 700; }
+.pr-add-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 10px;
+  border: none; background: transparent; border-radius: var(--va-r-sm);
+  text-align: left; cursor: pointer;
+}
+.pr-add-menu-item:hover { background: var(--va-violet-50); }
+
+.pr-price-options { display: flex; flex-direction: column; gap: 10px; }
+.pr-radio-card {
+  display: flex; gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--va-ink-200);
+  border-radius: var(--va-r-md);
+  background: var(--va-white);
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.pr-radio-card:hover { border-color: var(--va-ink-300); }
+.pr-radio-card.is-selected { border-color: var(--va-violet-500); background: var(--va-violet-50); }
+.pr-radio-dot {
+  width: 16px; height: 16px; border-radius: 999px; flex-shrink: 0; margin-top: 1px;
+  border: 1.5px solid var(--va-ink-300);
+  background: var(--va-white);
+  display: flex; align-items: center; justify-content: center;
+}
+.pr-radio-card.is-selected .pr-radio-dot { border-color: var(--va-violet-600); }
+.pr-radio-dot-fill { width: 8px; height: 8px; border-radius: 999px; background: var(--va-violet-600); }
+.pr-radio-title { font-size: 13px; color: var(--va-ink-900); font-weight: 700; }
+.pr-radio-desc { font-size: 12px; color: var(--va-ink-500); margin-top: 2px; }
+.pr-divider { height: 1px; background: var(--va-ink-150); margin: 20px 0; }
+
+.pr-var-footer-note { font-size: 12.5px; color: var(--va-ink-500); margin-top: 4px; }
