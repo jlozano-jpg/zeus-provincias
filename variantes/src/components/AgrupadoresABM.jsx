@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { IconSettings, IconPlus, IconAlertTriangle } from '@tabler/icons-react'
+import { IconAlertTriangle, IconX } from '@tabler/icons-react'
 import AgrupadoresGrid from './agrupadores/AgrupadoresGrid'
 import AgrupadorPanel from './agrupadores/AgrupadorPanel'
+import AgrupadorViewPanel from './agrupadores/AgrupadorViewPanel'
 import './agrupadores/agrupadores.css'
 
 const INITIAL_ROWS = [
@@ -82,12 +83,11 @@ const INITIAL_ROWS = [
   },
 ]
 
-export default function AgrupadoresABM() {
+export default function AgrupadoresABM({ onNavigateHome }) {
   const [rows, setRows] = useState(INITIAL_ROWS)
   const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState(null)
   const [panelMode, setPanelMode] = useState(null)
-  const [panelInitial, setPanelInitial] = useState(null)
   const [deletingRow, setDeletingRow] = useState(null)
   const searchInputRef = useRef(null)
 
@@ -102,39 +102,32 @@ export default function AgrupadoresABM() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  const activeRow = selectedId ? rows.find((r) => r.id === selectedId) ?? null : null
+  const panelInitial = activeRow ? {
+    code: activeRow.id,
+    name: activeRow.name,
+    desc: activeRow.desc,
+    values: activeRow.values,
+    isColorGroup: activeRow.values.some((v) => v.swatch),
+  } : null
+
   function openCreate() {
     setSelectedId(null)
-    setPanelInitial(null)
     setPanelMode('create')
+  }
+
+  function openView(row) {
+    setSelectedId(row.id)
+    setPanelMode('view')
   }
 
   function openEdit(row) {
     setSelectedId(row.id)
-    setPanelInitial({
-      code: row.id,
-      name: row.name,
-      desc: row.desc,
-      values: row.values,
-      isColorGroup: row.values.some((v) => v.swatch),
-    })
     setPanelMode('edit')
-  }
-
-  function openDuplicate(row) {
-    setSelectedId(null)
-    setPanelInitial({
-      code: '',
-      name: `${row.name} (copia)`,
-      desc: row.desc,
-      values: row.values,
-      isColorGroup: row.values.some((v) => v.swatch),
-    })
-    setPanelMode('create')
   }
 
   function closePanel() {
     setPanelMode(null)
-    setPanelInitial(null)
     setSelectedId(null)
   }
 
@@ -155,10 +148,15 @@ export default function AgrupadoresABM() {
 
   return (
     <div className="va-app">
-      <div className="va-topbar">
-        <span className="va-topbar-crumb">Configuración / Productos / Agrupadores</span>
-        <button type="button" className="va-topbar-btn" aria-label="Configuración" title="Configuración">
-          <IconSettings size={16} stroke={1.75} />
+      <div className="va-tabbar">
+        <button type="button" className="va-tab" onClick={onNavigateHome}>
+          <span className="va-dot" /> Inicio
+        </button>
+        <button type="button" className="va-tab is-active" onClick={onNavigateHome}>
+          <span className="va-dot" /> Agrupadores de Variantes
+          <span className="va-tab-close" onClick={(e) => { e.stopPropagation(); onNavigateHome?.() }}>
+            <IconX size={11} stroke={2} />
+          </span>
         </button>
       </div>
 
@@ -170,12 +168,14 @@ export default function AgrupadoresABM() {
           searchInputRef={searchInputRef}
           selectedId={selectedId}
           onNewClick={openCreate}
-          onRowClick={openEdit}
+          onRowClick={openView}
           onEdit={openEdit}
-          onDuplicate={openDuplicate}
           onDelete={setDeletingRow}
         />
-        {panelMode ? (
+        {panelMode === 'view' && activeRow ? (
+          <AgrupadorViewPanel row={activeRow} onClose={closePanel} onEdit={() => setPanelMode('edit')} />
+        ) : null}
+        {(panelMode === 'create' || panelMode === 'edit') ? (
           <AgrupadorPanel
             key={panelMode === 'edit' ? selectedId : 'create'}
             mode={panelMode}
@@ -185,12 +185,6 @@ export default function AgrupadoresABM() {
           />
         ) : null}
       </div>
-
-      {!panelMode ? (
-        <button type="button" className="va-btn va-btn-primary va-fab" onClick={openCreate}>
-          <IconPlus size={16} stroke={1.6} /> Nuevo agrupador
-        </button>
-      ) : null}
 
       {deletingRow ? (
         <div className="va-confirm-overlay" onClick={() => setDeletingRow(null)}>

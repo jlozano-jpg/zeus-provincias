@@ -15,7 +15,7 @@ export default function App() {
   return (
     <div className={styles.app}>
       <Sidebar activeId={activeId} onSelect={setActiveId} />
-      <Vista />
+      <Vista onNavigateHome={() => setActiveId('inicio')} />
     </div>
   )
 }

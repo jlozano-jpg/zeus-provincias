@@ -1,39 +1,50 @@
-/* ============ Design tokens (scoped, no colisiona con theme.css) ============ */
+/* ============ Design tokens — paleta oficial Zeus Suite (Manual de Identidad) ============ */
 .va-app {
-  --va-violet-50:  #f6f3ff;
-  --va-violet-100: #ece5ff;
-  --va-violet-200: #d8cbff;
-  --va-violet-300: #bba6ff;
-  --va-violet-400: #9b7eff;
-  --va-violet-500: #7c54ff;
-  --va-violet-600: #6938ef;
-  --va-violet-700: #5a25e0;
-  --va-violet-800: #4a1cb8;
+  /* Violeta #6A00A7 (action/primary) — tintes calculados sobre blanco/negro */
+  --va-violet-50:  #f6f0fa;
+  --va-violet-100: #ede0f4;
+  --va-violet-200: #dec7ec;
+  --va-violet-300: #c399dc;
+  --va-violet-400: #9e59c6;
+  --va-violet-500: #8026b4;
+  --va-violet-600: var(--color-action-primary, #6a00a7);
+  --va-violet-700: #5a008e;
+  --va-violet-800: #4a0075;
 
-  --va-ink-900: #0f1020;
-  --va-ink-800: #1d1f33;
-  --va-ink-700: #2c2e47;
-  --va-ink-600: #4a4d6b;
-  --va-ink-500: #6b6e8a;
-  --va-ink-400: #9295ad;
-  --va-ink-300: #c4c6d4;
-  --va-ink-200: #e3e4ec;
-  --va-ink-150: #ecedf3;
-  --va-ink-100: #f3f4f8;
-  --va-ink-50:  #f8f9fc;
-  --va-white:   #ffffff;
+  /* Cian #00CDCD (accent/functional) */
+  --va-cyan-50:  #ebfbfb;
+  --va-cyan-100: #d1f6f6;
+  --va-cyan-500: var(--color-accent-functional, #00cdcd);
 
-  --va-success-50: #ecfdf3;
-  --va-success-500:#12b76a;
-  --va-success-700:#067647;
-  --va-warn-50:    #fffaeb;
-  --va-warn-500:   #f79009;
-  --va-warn-700:   #b54708;
-  --va-danger-50:  #fef3f2;
-  --va-danger-500: #f04438;
-  --va-danger-700: #b42318;
-  --va-info-50:    #eff8ff;
-  --va-info-500:   #2e90fa;
+  /* Azul #2652B7 (accent/secondary) */
+  --va-blue-500: var(--color-accent-secondary, #2652b7);
+
+  /* Neutros de marca: Marino (texto), Gris Oscuro, Azul Niebla, Blanco */
+  --va-ink-900: var(--color-text-primary, #002955);
+  --va-ink-800: var(--color-text-secondary, #10181f);
+  --va-ink-700: #26496e;
+  --va-ink-600: #4a5b76;
+  --va-ink-500: var(--color-text-muted, #62708a);
+  --va-ink-400: #8a97ab;
+  --va-ink-300: #c0c8d6;
+  --va-ink-200: var(--color-border, #dde3ee);
+  --va-ink-150: #e8ecf3;
+  --va-ink-100: var(--color-surface-default, #f7f7f7);
+  --va-ink-50:  #fbfbfc;
+  --va-white:   var(--color-bg-base, #ffffff);
+
+  /* Semánticos oficiales (feedback) */
+  --va-success-50: #e9f9f1;
+  --va-success-500: var(--color-success, #21c77e);
+  --va-success-700: #148a58;
+  --va-warn-50:    #fff6e6;
+  --va-warn-500:   var(--color-warning, #ffb224);
+  --va-warn-700:   #a15f00;
+  --va-danger-50:  #ffeced;
+  --va-danger-500: var(--color-error, #ff5a65);
+  --va-danger-700: #c81824;
+  --va-info-50:    #ebfbfb;
+  --va-info-500:   var(--color-accent-functional, #00cdcd);
 
   --va-r-xs: 4px;
   --va-r-sm: 6px;
@@ -41,56 +52,61 @@
   --va-r-lg: 12px;
   --va-r-xl: 16px;
 
-  --va-sh-xs: 0 1px 2px rgba(15,16,32,.05);
-  --va-sh-sm: 0 1px 3px rgba(15,16,32,.06), 0 1px 2px rgba(15,16,32,.04);
-  --va-sh-md: 0 4px 8px -2px rgba(15,16,32,.08), 0 2px 4px -2px rgba(15,16,32,.05);
-  --va-sh-lg: 0 12px 24px -8px rgba(15,16,32,.14), 0 4px 8px -4px rgba(15,16,32,.06);
-  --va-sh-panel: -16px 0 40px -12px rgba(15,16,32,.14);
+  --va-sh-xs: 0 1px 2px rgba(0,41,85,.05);
+  --va-sh-sm: 0 1px 3px rgba(0,41,85,.06), 0 1px 2px rgba(0,41,85,.04);
+  --va-sh-md: 0 4px 8px -2px rgba(0,41,85,.08), 0 2px 4px -2px rgba(0,41,85,.05);
+  --va-sh-lg: 0 12px 24px -8px rgba(0,41,85,.14), 0 4px 8px -4px rgba(0,41,85,.06);
+  --va-sh-panel: -16px 0 40px -12px rgba(0,41,85,.14);
 
-  --va-ring: 0 0 0 4px rgba(124,84,255,.16);
+  --va-ring: 0 0 0 4px rgba(106,0,167,.16);
 
   flex: 1;
   min-width: 0;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--va-ink-50);
+  background: var(--va-ink-100);
   color: var(--va-ink-800);
+  font-family: var(--font-primary, 'Ubuntu', sans-serif);
   font-size: 14px;
   line-height: 1.45;
 }
 
 .va-app button { font-family: inherit; }
 
-/* ============ Top bar (breadcrumb del shell, coherente con el resto de la app) ============ */
-.va-topbar {
+/* ============ Barra de solapas (como el resto de las pantallas de Zeus) ============ */
+.va-tabbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 28px;
-  flex-shrink: 0;
+  align-items: stretch;
   background: var(--va-white);
+  border-bottom: 1px solid var(--va-ink-200);
+  padding: 0 16px;
+  height: 40px;
+  gap: 2px;
+  flex-shrink: 0;
 }
-
-.va-topbar-crumb {
-  font-size: 13px;
-  font-weight: 700;
-  color: #002955;
-}
-
-.va-topbar-btn {
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 50%;
-  background: var(--va-ink-100);
-  color: var(--va-ink-500);
-  display: flex;
+.va-tab {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: all 150ms ease;
+  gap: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--va-ink-500);
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
 }
-.va-topbar-btn:hover { color: var(--va-violet-700); background: var(--va-violet-50); }
+.va-tab .va-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--va-ink-300); flex-shrink: 0; }
+.va-tab.is-active { color: var(--va-ink-900); border-bottom-color: var(--va-violet-600); font-weight: 600; }
+.va-tab.is-active .va-dot { background: var(--va-violet-600); }
+.va-tab-close {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: none; background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--va-ink-400); font-size: 12px;
+}
+.va-tab-close:hover { background: var(--va-ink-150); color: var(--va-ink-700); }
 
 /* ============ Workspace ============ */
 .va-work {
@@ -102,36 +118,6 @@
 .va-work.is-collapsed { grid-template-columns: 1fr 0px; }
 
 .va-main { padding: 20px 24px 32px; min-width: 0; overflow-y: auto; }
-
-/* ============ Page header ============ */
-.va-crumbs {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12.5px; color: var(--va-ink-500);
-  margin-bottom: 10px;
-}
-.va-crumbs .va-sep { color: var(--va-ink-300); }
-.va-crumbs .va-crumb-current { color: var(--va-ink-700); font-weight: 500; }
-
-.va-page-head {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 18px;
-}
-.va-page-title-wrap { display:flex; gap:14px; align-items:flex-start; min-width:0; }
-.va-page-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--va-violet-100), var(--va-violet-50));
-  color: var(--va-violet-700);
-  display:inline-flex; align-items:center; justify-content:center;
-  flex-shrink: 0;
-  border: 1px solid var(--va-violet-200);
-}
-.va-page-title {
-  font-size: 22px; font-weight: 650; letter-spacing: -0.01em;
-  color: var(--va-ink-900);
-  margin: 0;
-}
-.va-page-sub { margin-top: 4px; font-size: 13px; color: var(--va-ink-500); max-width: 720px; }
 
 /* ============ Buttons ============ */
 .va-btn {
@@ -176,15 +162,11 @@
 
 /* ============ Toolbar ============ */
 .va-toolbar {
-  display:flex; align-items:center; gap: 10px;
-  background: var(--va-white);
-  border: 1px solid var(--va-ink-200);
-  border-radius: var(--va-r-lg);
-  padding: 10px;
+  display:flex; align-items:center; gap: 8px;
+  justify-content: space-between;
   margin-bottom: 12px;
-  box-shadow: var(--va-sh-xs);
 }
-.va-search { position: relative; flex: 1; min-width: 0; display:flex; align-items:center; }
+.va-search { position: relative; width: 380px; flex: 0 0 auto; display:flex; align-items:center; }
 .va-search input {
   flex: 1;
   height: 36px;
@@ -200,15 +182,6 @@
 .va-search input:hover { background: var(--va-white); }
 .va-search input:focus { outline: none; border-color: var(--va-violet-400); background: var(--va-white); box-shadow: var(--va-ring); }
 .va-search .va-ico { position:absolute; left:12px; color: var(--va-ink-400); pointer-events:none; }
-.va-search kbd {
-  position:absolute; right:10px;
-  font-size: 11px;
-  color: var(--va-ink-500);
-  background: var(--va-white);
-  border: 1px solid var(--va-ink-200);
-  border-radius: 4px;
-  padding: 1px 6px;
-}
 
 /* ============ Grid / table ============ */
 .va-card {
@@ -218,6 +191,8 @@
   box-shadow: var(--va-sh-xs);
   overflow: hidden;
 }
+.va-card-scroll { overflow-x: auto; }
+table.va-grid { min-width: 760px; }
 
 table.va-grid { width: 100%; border-collapse: separate; border-spacing: 0; }
 table.va-grid thead th {
@@ -231,6 +206,21 @@ table.va-grid thead th {
   padding: 10px 16px;
   border-bottom: 1px solid var(--va-ink-200);
 }
+.va-sort-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  width: 100%;
+  border: none; background: transparent; padding: 0;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.va-sort-btn svg { color: var(--va-ink-300); flex-shrink: 0; }
+.va-sort-btn:hover { color: var(--va-ink-700); }
+.va-sort-btn:hover svg { color: var(--va-ink-500); }
+.va-sort-btn.is-active { color: var(--va-violet-600); }
+.va-sort-btn.is-active svg { color: var(--va-violet-600); }
 table.va-grid tbody td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--va-ink-150);
@@ -244,22 +234,8 @@ table.va-grid tbody tr:hover { background: var(--va-ink-50); }
 table.va-grid tbody tr.is-selected { background: var(--va-violet-50); }
 table.va-grid tbody tr.is-selected td { border-bottom-color: var(--va-violet-100); }
 
-.va-col-code { width: 110px; }
-.va-col-count { width: 90px; text-align: right; }
-.va-col-actions { width: 104px; text-align: right; }
-
-.va-code-pill {
-  display: inline-flex; align-items: center;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--va-ink-700);
-  background: var(--va-ink-100);
-  border: 1px solid var(--va-ink-200);
-  border-radius: var(--va-r-sm);
-  padding: 3px 8px;
-}
+.va-col-code { width: 110px; white-space: nowrap; }
+.va-col-actions { width: 56px; text-align: center; }
 
 .va-name-cell .va-name { font-weight: 600; color: var(--va-ink-900); font-size: 13.5px; letter-spacing: -0.005em; }
 .va-name-cell .va-desc {
@@ -289,40 +265,37 @@ table.va-grid tbody tr.is-selected td { border-bottom-color: var(--va-violet-100
 .va-v-chip .va-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(0,0,0,.08); }
 .va-v-chip.va-more { color: var(--va-ink-500); background: var(--va-ink-50); border-color: var(--va-ink-200); }
 
-.va-row-actions { display: inline-flex; gap: 2px; opacity: 0; transition: opacity .12s ease; }
-tr:hover .va-row-actions { opacity: 1; }
-
-.va-grid-footer {
-  display:flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px;
-  border-top: 1px solid var(--va-ink-200);
-  background: var(--va-ink-50);
-  font-size: 12.5px;
-  color: var(--va-ink-600);
-}
-.va-pager { display:flex; align-items: center; gap: 6px; }
-.va-pager .va-pg {
-  width: 28px; height: 28px;
-  display:inline-flex; align-items:center; justify-content:center;
-  border-radius: var(--va-r-sm);
-  color: var(--va-ink-700); cursor: pointer;
-  font-size: 12.5px; font-weight: 550;
-  border: 1px solid transparent;
-  background: transparent;
-}
-.va-pager .va-pg:hover { background: var(--va-white); border-color: var(--va-ink-200); }
-.va-pager .va-pg.is-active { background: var(--va-violet-600); color: white; border-color: var(--va-violet-600); }
-.va-pager .va-pg:disabled { color: var(--va-ink-300); cursor:not-allowed; background: transparent; border-color: transparent; }
-
-.va-select-mini {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 28px; padding: 0 8px 0 10px;
+.va-row-menu-wrap { position: relative; display: inline-flex; }
+.va-row-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 150px;
   background: var(--va-white);
   border: 1px solid var(--va-ink-200);
-  border-radius: var(--va-r-sm);
-  font-size: 12.5px;
-  color: var(--va-ink-700);
+  border-radius: var(--va-r-md);
+  box-shadow: var(--va-sh-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
+.va-row-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border: none; background: transparent;
+  border-radius: var(--va-r-sm);
+  font-size: 13px;
+  color: var(--va-ink-700);
+  text-align: left;
+  cursor: pointer;
+}
+.va-row-menu-item:hover { background: var(--va-ink-50); }
+.va-row-menu-item.va-danger { color: var(--va-danger-700); }
+.va-row-menu-item.va-danger:hover { background: var(--va-danger-50); }
+
+.va-header-gear { display: inline-flex; }
 
 .va-empty-cell { text-align: center; padding: 32px !important; color: var(--va-ink-500); }
 
@@ -380,7 +353,6 @@ tr:hover .va-row-actions { opacity: 1; }
 .va-input::placeholder, .va-textarea::placeholder { color: var(--va-ink-400); }
 .va-input:hover, .va-textarea:hover { border-color: var(--va-ink-300); }
 .va-input:focus, .va-textarea:focus { outline: none; border-color: var(--va-violet-400); box-shadow: var(--va-ring); }
-.va-input.is-mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; letter-spacing: 0.02em; }
 .va-input.is-readonly { background: var(--va-ink-50); color: var(--va-ink-500); cursor: not-allowed; }
 .va-textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
 
@@ -536,6 +508,26 @@ tr:hover .va-row-actions { opacity: 1; }
 .va-values-counter { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--va-ink-500); }
 .va-values-counter b { color: var(--va-ink-800); background: var(--va-ink-100); border-radius: 4px; padding: 1px 6px; font-weight: 650; }
 
+/* Panel de vista (solo lectura) */
+.va-view-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--va-ink-150);
+}
+.va-view-row:first-child { padding-top: 0; }
+.va-view-label { font-size: 12px; font-weight: 600; color: var(--va-ink-500); }
+.va-view-value { font-size: 13.5px; color: var(--va-ink-900); }
+.va-view-values { display: flex; flex-wrap: wrap; gap: 8px; }
+.va-view-chip-code {
+  margin-left: 2px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--va-ink-400);
+}
+
 /* Footer */
 .va-panel-foot {
   border-top: 1px solid var(--va-ink-200);
@@ -554,7 +546,7 @@ tr:hover .va-row-actions { opacity: 1; }
 
 /* Inline alert */
 .va-alert { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--va-r-md); border: 1px solid; font-size: 12.5px; }
-.va-alert.info { background: var(--va-info-50); border-color: #b9e3fe; color: #175cd3; }
+.va-alert.info { background: var(--va-cyan-50); border-color: var(--va-cyan-100); color: var(--va-blue-500); }
 .va-alert .va-ico { flex-shrink: 0; margin-top: 1px; }
 
 /* Confirm dialog (cancelar / eliminar) */
@@ -636,6 +628,3 @@ tr:hover .va-row-actions { opacity: 1; }
 .va-cp-hex-value { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; font-weight: 650; color: var(--va-ink-900); letter-spacing: 0.02em; }
 .va-cp-swatch { width: 60px; border-radius: var(--va-r-md); border: 1px solid rgba(0,0,0,.1); }
 .va-cp-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-/* Floating reopen button */
-.va-fab { position: fixed; right: 24px; bottom: 24px; box-shadow: var(--va-sh-lg); z-index: 40; }

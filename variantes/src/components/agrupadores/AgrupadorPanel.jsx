@@ -127,7 +127,7 @@ export default function AgrupadorPanel({ mode, initial, onClose, onSubmit }) {
             <div className="va-field">
               <label>Código <span className="va-req">*</span></label>
               <input
-                className={`va-input is-mono ${codeReadOnly ? 'is-readonly' : ''}`}
+                className={`va-input ${codeReadOnly ? 'is-readonly' : ''}`}
                 placeholder="Ej. VOL"
                 value={code}
                 maxLength={12}

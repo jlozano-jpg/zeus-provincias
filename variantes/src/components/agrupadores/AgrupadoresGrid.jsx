@@ -1,40 +1,58 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  IconChevronRight, IconSearch, IconFileImport, IconPlus, IconCategory2,
-  IconPencil, IconCopy, IconTrash, IconChevronLeft, IconChevronDown,
+  IconSearch, IconFileImport, IconPlus,
+  IconPencil, IconTrash, IconArrowsSort,
+  IconArrowUp, IconArrowDown, IconDotsVertical, IconSettings,
 } from '@tabler/icons-react'
+
+const SORTERS = {
+  code: (r) => r.id,
+  name: (r) => r.name,
+}
 
 export default function AgrupadoresGrid({
   rows, query, setQuery, searchInputRef,
-  onNewClick, onRowClick, onEdit, onDuplicate, onDelete, selectedId,
+  onNewClick, onRowClick, onEdit, onDelete, selectedId,
 }) {
+  const [sort, setSort] = useState({ key: null, dir: 'asc' })
+
+  function toggleSort(key) {
+    setSort((prev) => {
+      if (prev.key !== key) return { key, dir: 'asc' }
+      return { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+    })
+  }
+
   const filtered = useMemo(() => {
-    if (!query.trim()) return rows
-    const q = query.toLowerCase()
-    return rows.filter((x) =>
+    const q = query.trim().toLowerCase()
+    const base = !q ? rows : rows.filter((x) =>
       x.id.toLowerCase().includes(q) ||
       x.name.toLowerCase().includes(q) ||
       x.desc.toLowerCase().includes(q)
     )
-  }, [rows, query])
+    if (!sort.key) return base
+    const getValue = SORTERS[sort.key]
+    const sorted = [...base].sort((a, b) => {
+      const va = getValue(a)
+      const vb = getValue(b)
+      if (va < vb) return -1
+      if (va > vb) return 1
+      return 0
+    })
+    return sort.dir === 'desc' ? sorted.reverse() : sorted
+  }, [rows, query, sort])
 
   return (
     <div className="va-main">
-      <div className="va-crumbs">
-        <span>Tablas de Producto</span>
-        <IconChevronRight size={12} stroke={1.6} className="va-sep" />
-        <span className="va-crumb-current">Agrupadores de Variantes</span>
-      </div>
-
-      <div className="va-page-head">
-        <div className="va-page-title-wrap">
-          <div className="va-page-icon"><IconCategory2 size={20} stroke={1.6} /></div>
-          <div>
-            <h1 className="va-page-title">Agrupadores de Variantes</h1>
-            <p className="va-page-sub">
-              Definí los atributos que utilizarás para la generación de variantes de tus productos.
-            </p>
-          </div>
+      <div className="va-toolbar">
+        <div className="va-search">
+          <IconSearch size={16} stroke={1.6} className="va-ico" />
+          <input
+            ref={searchInputRef}
+            placeholder="Buscar por nombre, código o descripción"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <button type="button" className="va-btn va-btn-secondary">
@@ -46,94 +64,105 @@ export default function AgrupadoresGrid({
         </div>
       </div>
 
-      <div className="va-toolbar">
-        <div className="va-search">
-          <IconSearch size={16} stroke={1.6} className="va-ico" />
-          <input
-            ref={searchInputRef}
-            placeholder="Buscar por nombre, código o descripción"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <kbd>⌘K</kbd>
-        </div>
-      </div>
-
       <div className="va-card">
-        <table className="va-grid">
-          <thead>
-            <tr>
-              <th className="va-col-code">Código</th>
-              <th>Nombre y descripción</th>
-              <th className="va-col-count">Cantidad</th>
-              <th>Valores</th>
-              <th className="va-col-actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <Row
-                key={r.id}
-                row={r}
-                selected={r.id === selectedId}
-                onClick={() => onRowClick(r)}
-                onEdit={() => onEdit(r)}
-                onDuplicate={() => onDuplicate(r)}
-                onDelete={() => onDelete(r)}
-              />
-            ))}
-            {filtered.length === 0 && (
+        <div className="va-card-scroll">
+          <table className="va-grid">
+            <thead>
               <tr>
-                <td colSpan={5} className="va-empty-cell">No se encontraron agrupadores</td>
+                <th className="va-col-code"><SortHeader label="Código" sortKey="code" sort={sort} onSort={toggleSort} /></th>
+                <th><SortHeader label="Nombre y descripción" sortKey="name" sort={sort} onSort={toggleSort} /></th>
+                <th>Valores</th>
+                <th className="va-col-actions">
+                  <button type="button" className="va-btn-icon va-header-gear" title="Configurar columnas" aria-label="Configurar columnas">
+                    <IconSettings size={15} stroke={1.6} />
+                  </button>
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
-
-        <div className="va-grid-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span>
-              Mostrando <b style={{ color: 'var(--va-ink-800)' }}>{filtered.length}</b> de{' '}
-              <b style={{ color: 'var(--va-ink-800)' }}>{rows.length}</b> agrupadores
-            </span>
-            <button type="button" className="va-select-mini">15 por página <IconChevronDown size={12} stroke={1.6} /></button>
-          </div>
-          <div className="va-pager">
-            <button type="button" className="va-pg" disabled><IconChevronLeft size={14} stroke={1.6} /></button>
-            <button type="button" className="va-pg is-active">1</button>
-            <button type="button" className="va-pg" disabled><IconChevronRight size={14} stroke={1.6} /></button>
-          </div>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <Row
+                  key={r.id}
+                  row={r}
+                  selected={r.id === selectedId}
+                  onClick={() => onRowClick(r)}
+                  onEdit={() => onEdit(r)}
+                  onDelete={() => onDelete(r)}
+                />
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="va-empty-cell">No se encontraron agrupadores</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   )
 }
 
-function Row({ row, onClick, onEdit, onDuplicate, onDelete, selected }) {
+function SortHeader({ label, sortKey, sort, onSort, align }) {
+  const isActive = sort.key === sortKey
+  const Icon = isActive ? (sort.dir === 'asc' ? IconArrowUp : IconArrowDown) : IconArrowsSort
+  return (
+    <button
+      type="button"
+      className={`va-sort-btn ${isActive ? 'is-active' : ''}`}
+      style={align === 'right' ? { justifyContent: 'flex-end' } : undefined}
+      onClick={() => onSort(sortKey)}
+    >
+      {label}
+      <Icon size={12} stroke={1.8} />
+    </button>
+  )
+}
+
+function Row({ row, onClick, onEdit, onDelete, selected }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [menuOpen])
+
   return (
     <tr onClick={onClick} className={selected ? 'is-selected' : ''} style={{ cursor: 'pointer' }}>
-      <td className="va-col-code"><span className="va-code-pill">{row.id}</span></td>
+      <td className="va-col-code">{row.id}</td>
       <td className="va-name-cell">
         <div className="va-name">{row.name}</div>
         <div className="va-desc">{row.desc}</div>
-      </td>
-      <td className="va-col-count">
-        <span className="va-count-num">{row.values.length}<span className="va-lbl">val.</span></span>
       </td>
       <td>
         <ValuesPreview values={row.values} />
       </td>
       <td className="va-col-actions">
-        <div className="va-row-actions" onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="va-btn-icon" title="Editar" onClick={onEdit}>
-            <IconPencil size={15} stroke={1.6} />
+        <div className="va-row-menu-wrap" ref={menuRef} onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="va-btn-icon"
+            title="Más acciones"
+            aria-label="Más acciones"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <IconDotsVertical size={16} stroke={1.6} />
           </button>
-          <button type="button" className="va-btn-icon" title="Duplicar" onClick={onDuplicate}>
-            <IconCopy size={15} stroke={1.6} />
-          </button>
-          <button type="button" className="va-btn-icon va-danger" title="Eliminar" onClick={onDelete}>
-            <IconTrash size={15} stroke={1.6} />
-          </button>
+          {menuOpen && (
+            <div className="va-row-menu">
+              <button type="button" className="va-row-menu-item" onClick={() => { setMenuOpen(false); onEdit() }}>
+                <IconPencil size={14} stroke={1.6} /> Editar
+              </button>
+              <button type="button" className="va-row-menu-item va-danger" onClick={() => { setMenuOpen(false); onDelete() }}>
+                <IconTrash size={14} stroke={1.6} /> Eliminar
+              </button>
+            </div>
+          )}
         </div>
       </td>
     </tr>
