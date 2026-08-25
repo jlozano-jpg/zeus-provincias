@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
-  IconSparkles, IconTrash, IconPlus, IconChevronDown, IconInfoCircle,
+  IconSparkles, IconTrash, IconPlus,
   IconAlertTriangle, IconVersions, IconCheck,
 } from '@tabler/icons-react'
+import AgrupadorSelectorPanel from './AgrupadorSelectorPanel'
 
 function getAgrupador(agrupadores, id) {
   return agrupadores.find((a) => a.id === id)
@@ -10,6 +11,7 @@ function getAgrupador(agrupadores, id) {
 
 export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [selectorOpen, setSelectorOpen] = useState(false)
 
   const { seleccion, priceMode } = variantes
   const hasEmpty = seleccion.some((s) => s.valuesSelected.length === 0)
@@ -24,6 +26,11 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
   function addAgrupador(agrupadorId) {
     const master = getAgrupador(agrupadores, agrupadorId)
     patch((v) => ({ seleccion: [...v.seleccion, { agrupadorId, valuesSelected: master.values.map((val) => val.code) }] }))
+  }
+
+  function addAgrupadores(ids) {
+    ids.forEach(addAgrupador)
+    setSelectorOpen(false)
   }
 
   function toggleValor(agrupadorId, code) {
@@ -59,15 +66,6 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
     patch(() => ({ priceMode: mode }))
   }
 
-  function setAdicional(agrupadorId, code, value) {
-    patch((v) => ({
-      adicionales: {
-        ...v.adicionales,
-        [agrupadorId]: { ...(v.adicionales[agrupadorId] || {}), [code]: value },
-      },
-    }))
-  }
-
   return (
     <div>
       <div className="pr-var-head">
@@ -91,9 +89,9 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
             <div className="va-glyph"><IconVersions size={20} stroke={1.6} /></div>
             <div className="va-ttl">Este producto no tiene variantes todavía</div>
             <div className="va-sub">Agregá un agrupador del maestro (Color, Talle…) y elegí qué valores aplican a este producto.</div>
-            <div style={{ marginTop: 12 }}>
-              <AddAgrupadorMenu available={available} onPick={addAgrupador} />
-            </div>
+            <button type="button" className="va-btn va-btn-secondary" style={{ marginTop: 12 }} onClick={() => setSelectorOpen(true)}>
+              <IconPlus size={15} stroke={1.8} /> Agregar agrupador
+            </button>
           </div>
         ) : (
           seleccion.map((sel, idx) => (
@@ -102,19 +100,18 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
               sel={sel}
               idx={idx}
               master={getAgrupador(agrupadores, sel.agrupadorId)}
-              priceMode={priceMode}
-              adicionalValues={variantes.adicionales[sel.agrupadorId] || {}}
               onToggleValor={(code) => toggleValor(sel.agrupadorId, code)}
               onSelectAll={() => selectAll(sel.agrupadorId)}
               onClearAll={() => clearAll(sel.agrupadorId)}
               onDelete={() => setConfirmDelete(sel)}
-              onSetAdicional={(code, value) => setAdicional(sel.agrupadorId, code, value)}
             />
           ))
         )}
 
         {seleccion.length > 0 && (
-          <AddAgrupadorMenu available={available} onPick={addAgrupador} />
+          <button type="button" className="va-btn va-btn-secondary" style={{ alignSelf: 'flex-start' }} onClick={() => setSelectorOpen(true)}>
+            <IconPlus size={15} stroke={1.8} /> Agregar agrupador
+          </button>
         )}
       </div>
 
@@ -143,15 +140,6 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
               </div>
             </div>
           </div>
-          {priceMode === 'adicional' && (
-            <div className="va-alert info" style={{ marginTop: 12 }}>
-              <IconInfoCircle size={14} stroke={1.6} className="va-ico" />
-              <div>
-                Configurá el importe adicional de cada valor debajo de su agrupador (arriba). El precio final será:{' '}
-                <strong>precio del producto base + suma de los adicionales de los valores de cada variante</strong>.
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -172,11 +160,19 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
           </div>
         </div>
       ) : null}
+
+      {selectorOpen ? (
+        <AgrupadorSelectorPanel
+          available={available}
+          onConfirm={addAgrupadores}
+          onClose={() => setSelectorOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }
 
-function AgrupadorCard({ sel, idx, master, priceMode, adicionalValues, onToggleValor, onSelectAll, onClearAll, onDelete, onSetAdicional }) {
+function AgrupadorCard({ sel, idx, master, onToggleValor, onSelectAll, onClearAll, onDelete }) {
   if (!master) return null
   const selectedCount = sel.valuesSelected.length
   const total = master.values.length
@@ -216,31 +212,6 @@ function AgrupadorCard({ sel, idx, master, priceMode, adicionalValues, onToggleV
             <IconAlertTriangle size={12} stroke={1.6} /> Seleccioná al menos un valor para incluir este agrupador
           </div>
         )}
-
-        {priceMode === 'adicional' && selectedCount > 0 && (
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed var(--va-ink-200)' }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--va-ink-700)', marginBottom: 8 }}>
-              Importe adicional por valor <span style={{ fontWeight: 500, color: 'var(--va-ink-400)', fontSize: 11.5 }}>se suma al precio del producto base</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {master.values.filter((v) => sel.valuesSelected.includes(v.code)).map((val) => (
-                <div key={val.code} className="pr-adicional-row">
-                  <span className="pr-ag-count pr-adicional-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'flex-start' }}>
-                    {val.swatch ? <span className="va-swatch" style={{ background: val.swatch, width: 8, height: 8 }} /> : null}
-                    {val.name}
-                  </span>
-                  <span style={{ fontSize: 12, color: 'var(--va-ink-500)' }}>+ $</span>
-                  <input
-                    className="va-input"
-                    placeholder="0,00"
-                    value={adicionalValues[val.code] ?? ''}
-                    onChange={(e) => onSetAdicional(val.code, e.target.value)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -253,49 +224,5 @@ function ValueChip({ valor, selected, onToggle }) {
       <span>{valor.name}</span>
       {selected ? <IconCheck size={12} stroke={2.2} /> : <span style={{ width: 10, height: 10, borderRadius: 999, border: '1.5px solid currentColor', display: 'inline-block', opacity: 0.4 }} />}
     </button>
-  )
-}
-
-function AddAgrupadorMenu({ available, onPick }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    if (!open) return
-    function onDoc(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
-
-  if (available.length === 0) {
-    return (
-      <div className="va-sub" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--va-ink-500)' }}>
-        <IconInfoCircle size={14} stroke={1.6} /> No hay más agrupadores disponibles en el maestro
-      </div>
-    )
-  }
-
-  return (
-    <div className="pr-add-menu-wrap" ref={ref}>
-      <button type="button" className="va-btn va-btn-secondary" onClick={() => setOpen((o) => !o)}>
-        <IconPlus size={15} stroke={1.8} /> Agregar agrupador <IconChevronDown size={14} stroke={1.8} />
-      </button>
-      {open && (
-        <div className="pr-add-menu">
-          <div className="pr-add-menu-h">Elegí un agrupador del maestro</div>
-          {available.map((m) => (
-            <button key={m.id} type="button" className="pr-add-menu-item" onClick={() => { onPick(m.id); setOpen(false) }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
-                <strong style={{ fontSize: 13 }}>{m.name}</strong>
-                <span className="va-sub" style={{ fontSize: 11.5, color: 'var(--va-ink-500)' }}>
-                  {m.values.slice(0, 4).map((v) => v.name).join(', ')}{m.values.length > 4 ? `, +${m.values.length - 4}` : ''}
-                </span>
-              </div>
-              <span className="pr-ag-count" style={{ marginLeft: 'auto' }}>{m.values.length}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   )
 }

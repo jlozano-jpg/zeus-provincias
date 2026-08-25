@@ -5,6 +5,33 @@
 .pr-cell-strong { font-weight: 600; color: var(--va-ink-900); }
 .pr-cell-muted { color: var(--va-ink-500); }
 
+/* ============ Panel selector de agrupadores (multi-selección) ============ */
+.pr-selector-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(600px, 92vw);
+  z-index: 60;
+  background: var(--va-white);
+  border-left: 1px solid var(--va-ink-200);
+  box-shadow: var(--va-sh-panel);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.pr-selector-search { padding: 0 22px 14px; flex-shrink: 0; }
+.pr-selector-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 22px 22px; min-height: 0; }
+
+/* Tabla del selector: ancho fijo por columna para que nunca necesite scroll horizontal */
+table.pr-selector-table { min-width: 0; table-layout: fixed; width: 100%; }
+table.pr-selector-table tbody tr { cursor: pointer; }
+.pr-col-codigo { width: 96px; }
+.pr-col-nombre { width: 42%; }
+.pr-valores-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .pr-view-toggle {
   display: inline-flex; align-items: center; gap: 2px;
   background: var(--va-ink-100);
@@ -165,30 +192,6 @@
 .pr-vchip-sw { width: 11px; height: 11px; border-radius: 999px; border: 1px solid rgba(0,0,0,.12); flex-shrink: 0; }
 .pr-vchip.is-on .pr-vchip-sw { opacity: 1; }
 .pr-vchip:not(.is-on) .pr-vchip-sw { opacity: 0.6; }
-
-.pr-adicional-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.pr-adicional-row .va-input { max-width: 130px; text-align: right; }
-.pr-adicional-tag { min-width: 90px; }
-
-.pr-add-menu-wrap { position: relative; align-self: flex-start; }
-.pr-add-menu {
-  position: absolute; top: calc(100% + 6px); left: 0;
-  min-width: 280px; max-height: 320px; overflow-y: auto;
-  background: var(--va-white);
-  border: 1px solid var(--va-ink-200);
-  border-radius: var(--va-r-lg);
-  box-shadow: var(--va-sh-lg);
-  padding: 6px;
-  z-index: 20;
-}
-.pr-add-menu-h { padding: 6px 10px 8px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--va-ink-400); font-weight: 700; }
-.pr-add-menu-item {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 8px 10px;
-  border: none; background: transparent; border-radius: var(--va-r-sm);
-  text-align: left; cursor: pointer;
-}
-.pr-add-menu-item:hover { background: var(--va-violet-50); }
 
 .pr-price-options { display: flex; flex-direction: column; gap: 10px; }
 .pr-radio-card {
