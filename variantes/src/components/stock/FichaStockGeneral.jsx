@@ -1,14 +1,42 @@
 import { useMemo, useState } from 'react'
 import {
-  IconX, IconBox, IconChevronsLeft, IconCalendar, IconFilter,
-  IconRefresh, IconDownload, IconChevronDown, IconSearch,
+  IconX, IconBox, IconChevronsLeft, IconCalendar, IconBuildingWarehouse,
+  IconMapPin, IconReceipt2, IconRefresh, IconChevronDown, IconSearch,
 } from '@tabler/icons-react'
 import { buildStockLedger } from '../../data/stockSeed'
+import FiltroSelectorPanel from './FiltroSelectorPanel'
 import '../agrupadores/agrupadores.css'
 import './stock.css'
 
+const DEPOSITOS = [
+  { id: 1, codigo: '1', nombre: 'Casa Central', meta: 'Av. Principal 1234, CABA' },
+  { id: 2, codigo: '2', nombre: 'Depósito Sur', meta: 'Ruta 5 Km 12, Quilmes' },
+]
+
+const SUCURSAL_OPTIONS = [
+  { id: 'Suc 1', codigo: '1', nombre: 'Suc 1' },
+  { id: 'Suc 2', codigo: '2', nombre: 'Suc 2' },
+]
+
+const TIPOS_COMPROBANTE = [
+  { id: 'FC-VENTA', nombre: 'VENTAS' },
+  { id: 'FC-COMPRA', nombre: 'COMPRAS' },
+  { id: 'REMITO-VENTAS', nombre: 'Remito-VENTAS' },
+  { id: 'REMITO-COMPRAS', nombre: 'Remito-COMPRAS' },
+  { id: 'REMITO-DEVOLUCION', nombre: 'Remito-DEVOLUCION' },
+  { id: 'AJUSTE', nombre: 'AJUSTES' },
+  { id: 'TRANSF', nombre: 'TRANSFERENCIAS' },
+  { id: 'PRODUCCION', nombre: 'PRODUCCION' },
+  { id: 'COMP-ANULADOS', nombre: 'COMP-ANULADOS' },
+]
+
 function fmt(n) {
   return (n ?? 0).toFixed(2).replace('.', ',')
+}
+
+function parseFechaDMY(str) {
+  const [d, m, y] = str.split('/').map(Number)
+  return new Date(y, m - 1, d)
 }
 
 function dims(producto, agrupadores) {
@@ -27,6 +55,14 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
   const [showVariantes, setShowVariantes] = useState(false)
   const [activeTab, setActiveTab] = useState('movimientos')
   const [filtros, setFiltros] = useState({})
+  const [desde, setDesde] = useState('2026-04-19')
+  const [incluirSaldoAnterior, setIncluirSaldoAnterior] = useState(true)
+  const [selectedDepositos, setSelectedDepositos] = useState([1])
+  const [depositoPanelOpen, setDepositoPanelOpen] = useState(false)
+  const [selectedSucursales, setSelectedSucursales] = useState([])
+  const [sucursalPanelOpen, setSucursalPanelOpen] = useState(false)
+  const [selectedTipos, setSelectedTipos] = useState([])
+  const [tipoPanelOpen, setTipoPanelOpen] = useState(false)
 
   const producto = productos.find((p) => p.codigo === selectedCodigo) ?? productos[0]
   const ledger = useMemo(() => buildStockLedger(producto, agrupadores), [producto, agrupadores])
@@ -35,11 +71,28 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
   const usingVariantes = ledger.esBase && showVariantes
   const data = usingVariantes ? ledger.variante : ledger.base
   const rows = useMemo(() => {
-    if (!usingVariantes) return data.movimientos
-    return data.movimientos.filter((m) =>
-      productDims.every((d, i) => !filtros[d.master.id] || m.variante[i]?.code === filtros[d.master.id])
-    )
-  }, [data, usingVariantes, filtros, productDims])
+    let list = data.movimientos
+    if (usingVariantes) {
+      list = list.filter((m) =>
+        productDims.every((d, i) => !filtros[d.master.id] || m.variante[i]?.code === filtros[d.master.id])
+      )
+    }
+    if (selectedDepositos.length) list = list.filter((m) => selectedDepositos.includes(m.deposito))
+    if (selectedSucursales.length) list = list.filter((m) => selectedSucursales.includes(m.sucursal))
+    if (selectedTipos.length) list = list.filter((m) => selectedTipos.includes(m.tipo))
+    if (desde) {
+      const desdeDate = new Date(`${desde}T00:00:00`)
+      list = list.filter((m) => parseFechaDMY(m.fecha) >= desdeDate)
+    }
+    if (!incluirSaldoAnterior) {
+      let saldo = 0
+      list = list.map((m) => {
+        saldo += (m.ingreso ?? 0) - (m.egreso ?? 0)
+        return { ...m, saldo }
+      })
+    }
+    return list
+  }, [data, usingVariantes, filtros, productDims, selectedDepositos, selectedSucursales, selectedTipos, desde, incluirSaldoAnterior])
 
   function setFiltro(agrupadorId, code) {
     setFiltros((f) => ({ ...f, [agrupadorId]: code }))
@@ -69,6 +122,16 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
     setActiveTab(tab.id)
     if (tab.id === 'variante') setShowVariantes(true)
   }
+
+  function selectorLabel(selectedIds, options, allLabel, plural) {
+    if (selectedIds.length === 0) return allLabel
+    if (selectedIds.length === 1) return options.find((o) => o.id === selectedIds[0])?.nombre ?? allLabel
+    return `${selectedIds.length} ${plural}`
+  }
+
+  const depositoBtnLabel = selectorLabel(selectedDepositos, DEPOSITOS, 'Todos los depósitos', 'depósitos')
+  const sucursalBtnLabel = selectorLabel(selectedSucursales, SUCURSAL_OPTIONS, 'Todas las sucursales', 'sucursales')
+  const tipoBtnLabel = selectorLabel(selectedTipos, TIPOS_COMPROBANTE, 'Todos los tipos de comprobante', 'tipos de comprobante')
 
   return (
     <div className="va-app">
@@ -208,13 +271,42 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
         </div>
 
         <div className="st-filter-row">
-          <button type="button" className="st-filter-btn"><IconCalendar size={14} stroke={1.6} /> Desde 19/04/2026 <IconChevronDown size={12} stroke={1.8} /></button>
-          <button type="button" className="st-filter-btn"><IconFilter size={14} stroke={1.6} /> 1 · Casa Central <IconChevronDown size={12} stroke={1.8} /></button>
-          <button type="button" className="st-filter-btn">Más filtros</button>
+          <label className="st-filter-date">
+            <IconCalendar size={14} stroke={1.6} />
+            <span className="st-filter-date-label">Desde</span>
+            <input
+              type="date"
+              className="st-filter-date-input"
+              value={desde}
+              onChange={(e) => setDesde(e.target.value)}
+            />
+          </label>
+          <button type="button" className="st-filter-btn" onClick={() => setDepositoPanelOpen(true)}>
+            <IconBuildingWarehouse size={14} stroke={1.6} />
+            {depositoBtnLabel}
+            <IconChevronDown size={12} stroke={1.8} />
+          </button>
+          <button type="button" className="st-filter-btn" onClick={() => setSucursalPanelOpen(true)}>
+            <IconMapPin size={14} stroke={1.6} />
+            {sucursalBtnLabel}
+            <IconChevronDown size={12} stroke={1.8} />
+          </button>
+          <button type="button" className="st-filter-btn" onClick={() => setTipoPanelOpen(true)}>
+            <IconReceipt2 size={14} stroke={1.6} />
+            {tipoBtnLabel}
+            <IconChevronDown size={12} stroke={1.8} />
+          </button>
           <div className="st-filter-spacer" />
-          <button type="button" className="st-filter-link">Saldo anterior</button>
+          <label className="va-toggle st-saldo-toggle">
+            <input
+              type="checkbox"
+              checked={incluirSaldoAnterior}
+              onChange={(e) => setIncluirSaldoAnterior(e.target.checked)}
+            />
+            <span className="va-track" />
+            <span>Incluir saldo anterior</span>
+          </label>
           <button type="button" className="va-btn-icon" title="Actualizar" aria-label="Actualizar"><IconRefresh size={15} stroke={1.6} /></button>
-          <button type="button" className="va-btn-icon" title="Descargar" aria-label="Descargar"><IconDownload size={15} stroke={1.6} /></button>
         </div>
 
         <div className="st-tabs">
@@ -291,6 +383,54 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
           </div>
         </div>
       </div>
+
+      {depositoPanelOpen && (
+        <FiltroSelectorPanel
+          icon={<IconBuildingWarehouse size={18} stroke={1.6} />}
+          eyebrow="Filtrar por"
+          title="Depósito"
+          columns={[
+            { key: 'codigo', label: 'Código', width: 70 },
+            { key: 'nombre', label: 'Nombre' },
+            { key: 'meta', label: 'Dirección' },
+          ]}
+          rows={DEPOSITOS}
+          selectedIds={selectedDepositos}
+          onApply={setSelectedDepositos}
+          onClose={() => setDepositoPanelOpen(false)}
+        />
+      )}
+
+      {sucursalPanelOpen && (
+        <FiltroSelectorPanel
+          icon={<IconMapPin size={18} stroke={1.6} />}
+          eyebrow="Filtrar por"
+          title="Sucursal"
+          columns={[
+            { key: 'codigo', label: 'Código', width: 70 },
+            { key: 'nombre', label: 'Sucursal' },
+          ]}
+          rows={SUCURSAL_OPTIONS}
+          selectedIds={selectedSucursales}
+          onApply={setSelectedSucursales}
+          onClose={() => setSucursalPanelOpen(false)}
+        />
+      )}
+
+      {tipoPanelOpen && (
+        <FiltroSelectorPanel
+          icon={<IconReceipt2 size={18} stroke={1.6} />}
+          eyebrow="Filtrar por"
+          title="Tipos de comprobante"
+          columns={[
+            { key: 'nombre', label: 'Tipo de comprobante' },
+          ]}
+          rows={TIPOS_COMPROBANTE}
+          selectedIds={selectedTipos}
+          onApply={setSelectedTipos}
+          onClose={() => setTipoPanelOpen(false)}
+        />
+      )}
     </div>
   )
 }
