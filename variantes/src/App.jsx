@@ -3,17 +3,21 @@ import Sidebar from './components/Sidebar'
 import HomeScreen from './components/HomeScreen'
 import AgrupadoresABM from './components/AgrupadoresABM'
 import ProductosABM from './components/ProductosABM'
+import FichaStockGeneral from './components/stock/FichaStockGeneral'
 import { AGRUPADORES_SEED } from './data/agrupadoresMaestro'
+import { PRODUCTOS_SEED } from './data/productosSeed'
 import styles from './App.module.css'
 
 const VISTAS = {
   agrupadores: AgrupadoresABM,
   'gestion-productos': ProductosABM,
+  'ficha-stock-general': FichaStockGeneral,
 }
 
 export default function App() {
   const [activeId, setActiveId] = useState('inicio')
   const [agrupadores, setAgrupadores] = useState(AGRUPADORES_SEED)
+  const [productos, setProductos] = useState(PRODUCTOS_SEED)
   const Vista = VISTAS[activeId] ?? HomeScreen
 
   return (
@@ -23,6 +27,8 @@ export default function App() {
         onNavigateHome={() => setActiveId('inicio')}
         agrupadores={agrupadores}
         setAgrupadores={setAgrupadores}
+        productos={productos}
+        setProductos={setProductos}
       />
     </div>
   )

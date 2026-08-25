@@ -101,9 +101,9 @@
 .navRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   width: 100%;
-  padding: 9px 16px;
+  padding: 9px 4px;
   border: none;
   background: transparent;
   color: #3d4b60;

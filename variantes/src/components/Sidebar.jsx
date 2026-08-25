@@ -28,7 +28,20 @@ const NAV = [
     icon: IconTags,
     children: [],
   },
-  { id: 'inventario', label: 'Inventario', icon: IconStack2, children: [] },
+  {
+    id: 'inventario',
+    label: 'Inventario',
+    icon: IconStack2,
+    children: [
+      {
+        id: 'fichas-stock',
+        label: 'Fichas de Stock',
+        children: [
+          { id: 'ficha-stock-general', label: 'General' },
+        ],
+      },
+    ],
+  },
   { id: 'wms', label: 'WMS', icon: IconBuildingWarehouse, children: [] },
   { id: 'compras', label: 'Compras', icon: IconShoppingBag, children: [] },
   { id: 'proveedores', label: 'Proveedores', icon: IconTruck, children: [] },

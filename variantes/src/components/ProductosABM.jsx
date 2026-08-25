@@ -2,12 +2,10 @@ import { useState } from 'react'
 import { IconAlertTriangle, IconX } from '@tabler/icons-react'
 import ProductosGrid from './productos/ProductosGrid'
 import ProductoPanel from './productos/ProductoPanel'
-import { PRODUCTOS_SEED } from '../data/productosSeed'
 import './agrupadores/agrupadores.css'
 import './productos/productos.css'
 
-export default function ProductosABM({ onNavigateHome, agrupadores }) {
-  const [productos, setProductos] = useState(PRODUCTOS_SEED)
+export default function ProductosABM({ onNavigateHome, agrupadores, productos, setProductos }) {
   const [query, setQuery] = useState('')
   const [selectedCodigo, setSelectedCodigo] = useState(null)
   const [panelMode, setPanelMode] = useState(null)
