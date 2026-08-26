@@ -1,0 +1,225 @@
+/* Gestión de Variantes: reutiliza va-*, pr-* y st-* de agrupadores.css,
+   productos.css y stock.css. Este archivo agrega sólo lo específico de esta
+   pantalla (header de artículo, selector de depósito, panel de detalle,
+   solapa Generar y solapa Distribuir stock). */
+
+.vg-mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11.5px; }
+
+.vg-header-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--va-white);
+  border: 1px solid var(--va-ink-200);
+  border-radius: var(--va-r-lg);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--va-sh-xs);
+}
+.vg-header-ico {
+  width: 44px; height: 44px; border-radius: var(--va-r-md); flex-shrink: 0;
+  background: var(--va-violet-50); color: var(--va-violet-700);
+  display: flex; align-items: center; justify-content: center;
+}
+.vg-header-info { flex: 1; min-width: 0; }
+.vg-header-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--va-ink-500); }
+.vg-header-row { display: flex; align-items: center; gap: 10px; margin-top: 2px; flex-wrap: wrap; }
+.vg-header-codigo {
+  font-family: ui-monospace, monospace; font-size: 11.5px; font-weight: 700;
+  color: var(--va-violet-700); background: var(--va-violet-50);
+  padding: 3px 8px; border-radius: var(--va-r-sm);
+}
+.vg-header-nombre { font-size: 15px; font-weight: 700; color: var(--va-ink-900); }
+.vg-header-meta { font-size: 12px; color: var(--va-ink-500); margin-top: 3px; }
+.vg-header-meta b { color: var(--va-ink-900); }
+.vg-accent { color: var(--va-violet-700) !important; }
+
+.vg-clear-link {
+  margin-left: auto; border: none; background: transparent;
+  color: var(--va-violet-700); font-size: 11.5px; font-weight: 600; cursor: pointer;
+  padding: 4px 8px; border-radius: var(--va-r-sm);
+}
+.vg-clear-link:hover { background: var(--va-violet-50); }
+
+.vg-static-chip { cursor: default; }
+.vg-static-chip:hover { border-color: var(--va-violet-600); background: var(--va-violet-600); color: #fff; }
+
+/* ============ Selector de depósito (panel lateral) ============ */
+.vg-side-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(340px, 92vw);
+  z-index: 62;
+  background: var(--va-white);
+  border-left: 1px solid var(--va-ink-200);
+  box-shadow: var(--va-sh-panel);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.vg-dep-row {
+  display: block; width: 100%; text-align: left;
+  border: 1.5px solid var(--va-ink-200); background: var(--va-white);
+  padding: 10px 12px; border-radius: var(--va-r-md);
+  font-size: 12.5px; font-weight: 600; color: var(--va-ink-700); cursor: pointer;
+}
+.vg-dep-row:hover { border-color: var(--va-violet-300); }
+.vg-dep-row.is-selected { border-color: var(--va-violet-600); background: var(--va-violet-50); color: var(--va-violet-700); }
+
+.vg-count {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 10px;
+  border-radius: var(--va-r-md);
+  font-size: 12px; font-weight: 600;
+}
+.vg-count-ok { background: var(--va-success-50); color: var(--va-success-700); }
+.vg-count-warn { background: var(--va-warn-50); color: var(--va-warn-700); }
+
+/* ============ Panel de detalle de variante ============ */
+.vg-detail-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(400px, 92vw);
+  z-index: 60;
+  background: var(--va-white);
+  border-left: 1px solid var(--va-ink-200);
+  box-shadow: var(--va-sh-panel);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.vg-detail-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--va-ink-500); margin-bottom: 10px; }
+.vg-detail-vals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vg-detail-val { background: var(--va-ink-50); border-radius: var(--va-r-md); padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
+.vg-detail-val-label { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--va-ink-500); }
+.vg-detail-val-value { font-size: 12.5px; font-weight: 700; color: var(--va-ink-900); display: inline-flex; align-items: center; gap: 6px; }
+
+.vg-dep-stock-list { border: 1px solid var(--va-ink-200); border-radius: var(--va-r-md); overflow: hidden; }
+.vg-dep-stock-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; font-size: 12.5px; color: var(--va-ink-700);
+  border-bottom: 1px solid var(--va-ink-150);
+}
+.vg-dep-stock-row:last-child { border-bottom: none; }
+.vg-dep-stock-total { background: var(--va-ink-50); font-weight: 700; color: var(--va-ink-900); }
+
+.vg-price-box { background: var(--va-ink-50); border-radius: var(--va-r-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.vg-price-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--va-ink-700); }
+.vg-price-total { padding-top: 8px; border-top: 1px solid var(--va-ink-200); color: var(--va-violet-700); font-size: 14px; font-weight: 700; }
+
+.vg-barcode-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.vg-barcode-code {
+  flex: 1; font-family: ui-monospace, monospace; font-size: 11.5px;
+  padding: 5px 8px; border: 1px solid var(--va-ink-200); border-radius: var(--va-r-sm); color: var(--va-ink-700);
+}
+.vg-barcode-badge { font-size: 10px; font-weight: 700; background: var(--va-violet-50); color: var(--va-violet-700); padding: 2px 7px; border-radius: var(--va-r-sm); }
+
+/* ============ Solapa Generar ============ */
+.vg-gen-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.vg-gen-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; background: transparent;
+  padding: 6px 12px; border-radius: 7px;
+  font-size: 12.5px; font-weight: 500; color: var(--va-ink-600);
+  cursor: pointer;
+}
+.vg-gen-tab.is-active { background: var(--va-white); color: var(--va-violet-700); font-weight: 700; box-shadow: var(--va-sh-xs); }
+.vg-gen-tab-count {
+  font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 999px;
+  background: var(--va-ink-150); color: var(--va-ink-600);
+}
+.vg-gen-tab.is-active .vg-gen-tab-count { background: var(--va-violet-100); color: var(--va-violet-700); }
+
+.vg-checkbox {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 5px;
+  border: 1.5px solid var(--va-ink-300);
+  color: #fff;
+}
+.vg-checkbox.is-checked { background: var(--va-violet-600); border-color: var(--va-violet-600); }
+.vg-checkbox.is-disabled { opacity: 0.35; border-color: var(--va-success-500); background: var(--va-success-50); }
+
+.vg-estado-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.vg-estado-pill .vg-estado-dot { width: 5px; height: 5px; border-radius: 999px; }
+.vg-estado-pill.is-no { background: var(--va-warn-50); color: var(--va-warn-700); }
+.vg-estado-pill.is-no .vg-estado-dot { background: var(--va-warn-500); }
+.vg-estado-pill.is-gen { background: var(--va-success-50); color: var(--va-success-700); }
+.vg-estado-pill.is-gen .vg-estado-dot { background: var(--va-success-500); }
+
+/* ============ Precio adicional editable (grilla) ============ */
+.vg-precio-input-wrap {
+  display: inline-flex; align-items: center; gap: 3px;
+  border: 1px solid var(--va-ink-200); border-radius: var(--va-r-sm);
+  padding: 0 6px; background: var(--va-white);
+}
+.vg-precio-input-wrap:focus-within { border-color: var(--va-violet-500); }
+.vg-precio-sign { font-size: 11.5px; color: var(--va-ink-400); }
+.vg-precio-input {
+  width: 74px; height: 28px; border: none; background: transparent;
+  font-family: ui-monospace, monospace; font-size: 12.5px; font-weight: 600;
+  color: var(--va-ink-900); text-align: right; outline: none;
+}
+/* Ocultar spinners nativos del input number */
+.vg-precio-input::-webkit-outer-spin-button,
+.vg-precio-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.vg-precio-input { -moz-appearance: textfield; }
+
+/* ============ Paneles de flujo: Generar variantes / Distribuir stock ============ */
+.vg-flow-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(780px, 94vw);
+  z-index: 58;
+  background: var(--va-white);
+  border-left: 1px solid var(--va-ink-200);
+  box-shadow: var(--va-sh-panel);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.vg-flow-panel .vg-gen-toolbar { padding: 14px 22px 0; margin-bottom: 0; }
+.vg-flow-body { flex: 1; overflow-y: auto; padding: 14px 22px 22px; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+
+/* ============ Solapa Distribuir stock ============ */
+.vg-stepper { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.vg-stepper-btn {
+  width: 26px; height: 26px; border-radius: 7px;
+  border: 1px solid var(--va-ink-200); background: var(--va-white);
+  color: var(--va-ink-700); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.vg-stepper-btn:hover { background: var(--va-ink-50); }
+.vg-stepper-input {
+  width: 60px; height: 26px; text-align: center;
+  border: 1px solid var(--va-ink-200); border-radius: 7px;
+  font-family: ui-monospace, monospace; font-size: 12.5px; font-weight: 600; color: var(--va-ink-900);
+  outline: none;
+}
+.vg-stepper-input:focus { border-color: var(--va-violet-500); }
+
+.vg-alert {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: var(--va-r-md);
+  font-size: 12.5px; margin-bottom: 12px;
+}
+.vg-alert-danger { background: var(--va-danger-50); color: var(--va-danger-700); border: 1px solid var(--va-danger-500); }
+.vg-alert-warn { background: var(--va-warn-50); color: var(--va-warn-700); border: 1px solid var(--va-warn-500); }
+
+/* ============ Toast de confirmación ============ */
+.vg-flash {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, var(--va-violet-700), var(--va-violet-600));
+  color: #fff; border-radius: var(--va-r-md);
+  box-shadow: 0 8px 22px rgba(109, 40, 217, 0.28);
+  font-size: 12.5px; z-index: 70;
+}
+.vg-flash-close {
+  margin-left: 6px; background: rgba(255,255,255,0.16); border: none; color: #fff;
+  width: 20px; height: 20px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}

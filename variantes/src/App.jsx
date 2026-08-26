@@ -4,6 +4,7 @@ import HomeScreen from './components/HomeScreen'
 import AgrupadoresABM from './components/AgrupadoresABM'
 import ProductosABM from './components/ProductosABM'
 import FichaStockGeneral from './components/stock/FichaStockGeneral'
+import GestionVariantes from './components/variantes/GestionVariantes'
 import { AGRUPADORES_SEED } from './data/agrupadoresMaestro'
 import { PRODUCTOS_SEED } from './data/productosSeed'
 import styles from './App.module.css'
@@ -12,6 +13,7 @@ const VISTAS = {
   agrupadores: AgrupadoresABM,
   'gestion-productos': ProductosABM,
   'ficha-stock-general': FichaStockGeneral,
+  'gestion-variantes': GestionVariantes,
 }
 
 export default function App() {

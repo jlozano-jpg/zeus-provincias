@@ -12,21 +12,17 @@ import styles from './Sidebar.module.css'
 const NAV = [
   { id: 'inicio', label: 'Inicio', icon: IconHome },
   { id: 'tableros', label: 'Tableros', icon: IconChartLine },
-  {
-    id: 'ventas',
-    label: 'Ventas',
-    icon: IconShoppingCart,
-    children: [
-      { id: 'gestion-productos', label: 'Gestión de Productos', badge: 'Nuevo' },
-    ],
-  },
+  { id: 'ventas', label: 'Ventas', icon: IconShoppingCart, children: [] },
   { id: 'crm', label: 'CRM', icon: IconUsers, children: [] },
   { id: 'tesoreria', label: 'Tesorería', icon: IconBuildingBank, children: [] },
   {
     id: 'productos',
     label: 'Productos',
     icon: IconTags,
-    children: [],
+    children: [
+      { id: 'gestion-productos', label: 'Gestión de Productos', badge: 'Nuevo' },
+      { id: 'gestion-variantes', label: 'Gestión de Variantes', badge: 'Nuevo' },
+    ],
   },
   {
     id: 'inventario',
