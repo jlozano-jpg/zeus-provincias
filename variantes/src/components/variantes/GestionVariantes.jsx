@@ -4,11 +4,11 @@ import {
   IconArrowRight, IconSparkles, IconCheck, IconVersions, IconUpload, IconPlus,
 } from '@tabler/icons-react'
 import { buildVariantesArticulo } from '../../data/variantesGeneratorData'
+import { usePersistentState } from '../../hooks/usePersistentState'
 import { fmt, money } from './format'
 import VariantChips from './VariantChips'
 import DepositoPanel from './DepositoPanel'
 import GenerarVariantesPanel from './GenerarVariantesPanel'
-import DistribuirStockPanel from './DistribuirStockPanel'
 import '../agrupadores/agrupadores.css'
 import '../productos/productos.css'
 import '../stock/stock.css'
@@ -36,7 +36,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   )
 
   const [articuloId, setArticuloId] = useState(articulos[0]?.codigo ?? '')
-  const [overrides, setOverrides] = useState({})
+  const [overrides, setOverrides] = usePersistentState('zeus-variantes:variantes-overrides', {})
   const [filtros, setFiltros] = useState({})
   const [q, setQ] = useState('')
   const [depId, setDepId] = useState('todos')
@@ -45,9 +45,6 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const [genFiltro, setGenFiltro] = useState('no')
   const [genSel, setGenSel] = useState([])
   const [generarOpen, setGenerarOpen] = useState(false)
-  const [distFiltros, setDistFiltros] = useState({})
-  const [distAsig, setDistAsig] = useState({})
-  const [distribuirOpen, setDistribuirOpen] = useState(false)
   const [confirmDeleteVar, setConfirmDeleteVar] = useState(null)
   const [flash, setFlash] = useState(null)
 
@@ -72,9 +69,6 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setGenFiltro('no')
     setGenSel([])
     setGenerarOpen(false)
-    setDistFiltros({})
-    setDistAsig({})
-    setDistribuirOpen(false)
   }
 
   if (!art) {
@@ -115,12 +109,12 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     })
   }
 
-  function toggleDistFiltro(agrupadorId, code) {
-    setDistFiltros((f) => {
-      const cur = f[agrupadorId] || []
-      const next = cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code]
-      return { ...f, [agrupadorId]: next }
-    })
+  function abrirDistribuirEnNuevaVentana() {
+    const url = new URL(window.location.href)
+    url.search = ''
+    url.searchParams.set('view', 'distribuir-stock')
+    url.searchParams.set('articulo', art.codigo)
+    window.open(url.toString(), `distribuir-${art.codigo}`, 'noopener,noreferrer,width=1180,height=860')
   }
 
   const hasFiltros = Object.values(filtros).some((v) => v.length > 0)
@@ -174,37 +168,6 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setGenerarOpen(false)
   }
 
-  const distRows = art.variants.filter((v) => v.status === 'gen' && art.groupers.every((g) => {
-    const sel = distFiltros[g.id] || []
-    return sel.length === 0 || sel.includes(v.vals[g.id].code)
-  }))
-  const distTotal = distRows.reduce((s, v) => s + Number(distAsig[v.id] || 0), 0)
-  const distRestante = art.stockBase - distTotal
-  const distOver = distRestante < 0
-
-  function setAsig(v, n) {
-    const val = Math.max(0, Math.round(Number(n) || 0))
-    setDistAsig((prev) => ({ ...prev, [v.id]: val }))
-  }
-
-  function confirmarDistribucion() {
-    if (distTotal <= 0 || distOver) return
-    setOverrides((prev) => {
-      const cur = prev[art.id] ?? {}
-      const variants = { ...(cur.variants || {}) }
-      Object.entries(distAsig).forEach(([id, n]) => {
-        const num = Number(n || 0)
-        if (num <= 0) return
-        const current = art.variants.find((v) => v.id === id)
-        variants[id] = { ...(variants[id] || {}), stock: (current?.stock ?? 0) + num }
-      })
-      return { ...prev, [art.id]: { ...cur, variants, stockBase: art.stockBase - distTotal } }
-    })
-    setFlash(`Se distribuyeron ${fmt(distTotal)} unidades de ${art.codigo} entre sus variantes.`)
-    setDistAsig({})
-    setDistribuirOpen(false)
-  }
-
   return (
     <div className="va-app">
       <div className="va-tabbar">
@@ -249,7 +212,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
               <b className="vg-accent">{fmt(art.stockBase)} u.</b>
             </div>
           </div>
-          <button type="button" className="va-btn va-btn-secondary" onClick={() => setDistribuirOpen(true)}>
+          <button type="button" className="va-btn va-btn-secondary" onClick={abrirDistribuirEnNuevaVentana}>
             <IconArrowRight size={15} stroke={1.8} /> Distribuir stock
           </button>
         </div>
@@ -474,23 +437,6 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
           setGenSel={setGenSel}
           onGenerar={generarSeleccionadas}
           onClose={() => setGenerarOpen(false)}
-        />
-      )}
-
-      {distribuirOpen && (
-        <DistribuirStockPanel
-          art={art}
-          distFiltros={distFiltros}
-          toggleDistFiltro={toggleDistFiltro}
-          clearDistFiltros={() => setDistFiltros({})}
-          distRows={distRows}
-          distAsig={distAsig}
-          setAsig={setAsig}
-          distTotal={distTotal}
-          distRestante={distRestante}
-          distOver={distOver}
-          onConfirm={confirmarDistribucion}
-          onClose={() => setDistribuirOpen(false)}
         />
       )}
 

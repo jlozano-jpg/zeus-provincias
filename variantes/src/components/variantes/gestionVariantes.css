@@ -183,6 +183,18 @@
 .vg-flow-panel .vg-gen-toolbar { padding: 14px 22px 0; margin-bottom: 0; }
 .vg-flow-body { flex: 1; overflow-y: auto; padding: 14px 22px 22px; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
 
+/* Misma pantalla, pero como página completa (ventana nueva) en vez de panel lateral */
+.vg-flow-page {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--va-ink-50);
+  display: flex;
+  flex-direction: column;
+}
+.vg-flow-page .va-panel-head { padding: 18px 32px; background: var(--va-white); }
+.vg-flow-page .vg-flow-body { padding: 20px 32px 32px; max-width: 1120px; width: 100%; margin: 0 auto; }
+.vg-flow-page .va-panel-foot { padding: 14px 32px; position: sticky; bottom: 0; }
+
 /* ============ Solapa Distribuir stock ============ */
 .vg-stepper { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .vg-stepper-btn {
