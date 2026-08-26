@@ -17,7 +17,7 @@ export default function DistribuirStockPanel({
           <div className="va-eyebrow">{art.codigo}</div>
           <div className="va-title">Distribuir stock</div>
         </div>
-        <button type="button" className="va-btn-icon va-close" onClick={onClose} aria-label={standalone ? 'Cerrar ventana' : 'Cerrar'} title={standalone ? 'Cerrar ventana' : 'Cerrar'}>
+        <button type="button" className="va-btn-icon va-close" onClick={onClose} aria-label={standalone ? 'Cerrar pestaña' : 'Cerrar'} title={standalone ? 'Cerrar pestaña' : 'Cerrar'}>
           <IconX size={18} stroke={1.6} />
         </button>
       </div>

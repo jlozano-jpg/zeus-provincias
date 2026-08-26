@@ -18,10 +18,11 @@ function applyOverrides(base, ov) {
   }
 }
 
-// Ventana independiente (window.open) para distribuir el stock base de un
-// artículo entre sus variantes. Lee el catálogo y los cambios de variantes
-// desde localStorage — la misma fuente que usa la pestaña de origen — para
-// que ambas ventanas queden sincronizadas vía el evento 'storage'.
+// Pestaña independiente (window.open, sin dimensiones de popup) para
+// distribuir el stock base de un artículo entre sus variantes. Lee el
+// catálogo y los cambios de variantes desde localStorage — la misma fuente
+// que usa la pestaña de origen — para que ambas queden sincronizadas vía
+// el evento 'storage'.
 export default function DistribuirStockWindow() {
   const [agrupadores] = usePersistentState('zeus-variantes:agrupadores', AGRUPADORES_SEED)
   const [productos] = usePersistentState('zeus-variantes:productos', PRODUCTOS_SEED)

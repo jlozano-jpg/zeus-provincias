@@ -109,12 +109,14 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     })
   }
 
-  function abrirDistribuirEnNuevaVentana() {
+  function abrirDistribuirEnNuevaPestana() {
     const url = new URL(window.location.href)
     url.search = ''
     url.searchParams.set('view', 'distribuir-stock')
     url.searchParams.set('articulo', art.codigo)
-    window.open(url.toString(), `distribuir-${art.codigo}`, 'noopener,noreferrer,width=1180,height=860')
+    // Sin dimensiones (width/height): sin esas features el navegador abre
+    // una pestaña normal dentro de la misma ventana, en vez de un popup aparte.
+    window.open(url.toString(), `distribuir-${art.codigo}`, 'noopener,noreferrer')
   }
 
   const hasFiltros = Object.values(filtros).some((v) => v.length > 0)
@@ -212,7 +214,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
               <b className="vg-accent">{fmt(art.stockBase)} u.</b>
             </div>
           </div>
-          <button type="button" className="va-btn va-btn-secondary" onClick={abrirDistribuirEnNuevaVentana}>
+          <button type="button" className="va-btn va-btn-secondary" onClick={abrirDistribuirEnNuevaPestana}>
             <IconArrowRight size={15} stroke={1.8} /> Distribuir stock
           </button>
         </div>
