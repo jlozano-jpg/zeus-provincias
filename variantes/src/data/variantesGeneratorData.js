@@ -24,6 +24,17 @@ function pad(n, len) {
   return String(n).padStart(len, '0')
 }
 
+const DEPOSITO_IDS = [1, 2]
+
+// Reparte un total entre los depósitos con una proporción variable (30%-70%)
+// para que cada artículo tenga una distribución distinta pero determinística.
+function splitPorDeposito(rnd, total) {
+  const ratio = 0.3 + rnd() * 0.4
+  const d1 = Math.round(total * ratio)
+  const d2 = total - d1
+  return { [DEPOSITO_IDS[0]]: d1, [DEPOSITO_IDS[1]]: d2 }
+}
+
 export function buildVariantesArticulo(producto, agrupadores) {
   const seed = hashCode(producto.codigo)
   const rnd = mulberry32(seed)
@@ -65,12 +76,16 @@ export function buildVariantesArticulo(producto, agrupadores) {
       })
     }
     const codBarras = noGenerada ? [] : [`779${pad(1000000 + Math.floor(rnd() * 8999999), 7)}`]
+    const stockPorDeposito = noGenerada
+      ? { [DEPOSITO_IDS[0]]: 0, [DEPOSITO_IDS[1]]: 0 }
+      : splitPorDeposito(rnd, stock)
     return {
       id: `${producto.codigo}:${key}`,
       key,
       vals,
       status: noGenerada ? 'no' : 'gen',
       stock,
+      stockPorDeposito,
       precioAdic,
       codigo,
       codBarras,
@@ -78,6 +93,7 @@ export function buildVariantesArticulo(producto, agrupadores) {
   })
 
   const stockBase = Math.floor(rnd() * 25)
+  const stockBasePorDeposito = splitPorDeposito(rnd, stockBase)
 
   return {
     id: producto.codigo,
@@ -86,6 +102,7 @@ export function buildVariantesArticulo(producto, agrupadores) {
     rubro: producto.familia || 'Sin familia',
     precioBase,
     stockBase,
+    stockBasePorDeposito,
     groupers,
     variants,
   }

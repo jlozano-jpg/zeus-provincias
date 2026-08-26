@@ -1,10 +1,11 @@
-import { IconX, IconMinus, IconPlus, IconCheck, IconAlertTriangle, IconArrowRight } from '@tabler/icons-react'
+import { IconX, IconMinus, IconPlus, IconCheck, IconAlertTriangle, IconArrowRight, IconBuildingWarehouse, IconChevronDown } from '@tabler/icons-react'
 import VariantChips from './VariantChips'
 import { fmt } from './format'
 
 export default function DistribuirStockPanel({
-  art, distFiltros, toggleDistFiltro, clearDistFiltros,
-  distRows, distAsig, setAsig, distTotal, distRestante, distOver,
+  art, dep, onOpenDepPanel, depStock,
+  distFiltros, toggleDistFiltro, clearDistFiltros,
+  distRows, distAsig, setAsig, distStockBase, distTotal, distRestante, distOver,
   onConfirm, onClose,
 }) {
   const hasDistFiltros = Object.values(distFiltros).some((v) => v.length > 0)
@@ -23,11 +24,17 @@ export default function DistribuirStockPanel({
       </div>
 
       <div className="vg-flow-body">
+        <div className="st-filter-row" style={{ marginBottom: 0 }}>
+          <button type="button" className="st-filter-btn" onClick={onOpenDepPanel}>
+            <IconBuildingWarehouse size={14} stroke={1.6} /> {dep ? dep.nombre : 'Elegir depósito'} <IconChevronDown size={12} stroke={1.8} />
+          </button>
+        </div>
+
         <div className="st-kpi-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
           <div className="st-kpi-card st-kpi-total">
             <div className="st-kpi-label">Disponible</div>
-            <div className="st-kpi-value">{fmt(art.stockBase)}</div>
-            <div className="st-kpi-sub">Stock base sin asignar</div>
+            <div className="st-kpi-value">{fmt(distStockBase)}</div>
+            <div className="st-kpi-sub">Stock base sin asignar en {dep ? dep.nombre : 'el depósito'}</div>
           </div>
           <div className="st-kpi-card st-kpi-acopiado">
             <div className="st-kpi-label">Asignado</div>
@@ -77,10 +84,10 @@ export default function DistribuirStockPanel({
             Estás asignando {fmt(Math.abs(distRestante))} unidades más que las disponibles en el artículo base. Ajustá las cantidades para confirmar.
           </div>
         )}
-        {art.stockBase === 0 && !distOver && (
+        {distStockBase === 0 && !distOver && (
           <div className="vg-alert vg-alert-warn">
             <IconAlertTriangle size={15} stroke={1.9} />
-            Este artículo base no tiene stock por asignar. Ingresá stock al artículo base o elegí otro de la lista.
+            Este artículo base no tiene stock por asignar en {dep ? dep.nombre : 'este depósito'}. Ingresá stock o elegí otro depósito.
           </div>
         )}
 
@@ -99,11 +106,12 @@ export default function DistribuirStockPanel({
               <tbody>
                 {distRows.map((v) => {
                   const a = Number(distAsig[v.id] || 0)
+                  const stockActual = depStock(v)
                   return (
                     <tr key={v.id} className={a > 0 ? 'is-selected' : ''}>
                       <td><VariantChips groupers={art.groupers} vals={v.vals} /></td>
                       <td className="pr-cell-muted vg-mono">{v.codigo}</td>
-                      <td className="st-num" style={{ textAlign: 'right' }}>{fmt(v.stock)}</td>
+                      <td className="st-num" style={{ textAlign: 'right' }}>{fmt(stockActual)}</td>
                       <td>
                         <div className="vg-stepper">
                           <button type="button" className="vg-stepper-btn" onClick={() => setAsig(v, a - 1)}>
@@ -115,7 +123,7 @@ export default function DistribuirStockPanel({
                           </button>
                         </div>
                       </td>
-                      <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(v.stock + a)}</td>
+                      <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(stockActual + a)}</td>
                     </tr>
                   )
                 })}
@@ -131,7 +139,7 @@ export default function DistribuirStockPanel({
       <div className="va-panel-foot">
         <span className="pr-foot-status">
           {distTotal > 0
-            ? `Se asignarán ${fmt(distTotal)} de ${fmt(art.stockBase)} unidades.`
+            ? `Se asignarán ${fmt(distTotal)} de ${fmt(distStockBase)} unidades en ${dep ? dep.nombre : 'el depósito seleccionado'}.`
             : 'Cargá cantidades para distribuir el stock base.'}
         </span>
         <button type="button" className="va-btn va-btn-secondary" onClick={onClose}>Cancelar</button>

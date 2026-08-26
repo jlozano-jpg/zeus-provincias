@@ -15,18 +15,32 @@ import '../stock/stock.css'
 import './gestionVariantes.css'
 
 const DEPOSITOS = [
-  { id: 'todos', nombre: 'Todos los depósitos', mult: 1 },
-  { id: 1, nombre: 'Casa Central', mult: 0.6 },
-  { id: 2, nombre: 'Depósito Sur', mult: 0.4 },
+  { id: 'todos', nombre: 'Todos los depósitos' },
+  { id: 1, nombre: 'Casa Central' },
+  { id: 2, nombre: 'Depósito Sur' },
 ]
+const DEPOSITOS_REALES = DEPOSITOS.filter((d) => d.id !== 'todos')
+
+function sumValues(obj) {
+  return Object.values(obj || {}).reduce((s, n) => s + Number(n || 0), 0)
+}
 
 function applyOverrides(base, ov) {
   if (!ov) return base
-  return {
-    ...base,
-    stockBase: ov.stockBase ?? base.stockBase,
-    variants: base.variants.map((v) => (ov.variants?.[v.id] ? { ...v, ...ov.variants[v.id] } : v)),
-  }
+  const variants = base.variants.map((v) => {
+    const vov = ov.variants?.[v.id]
+    if (!vov) return v
+    const stockPorDeposito = vov.stockPorDeposito
+      ? { ...v.stockPorDeposito, ...vov.stockPorDeposito }
+      : v.stockPorDeposito
+    const stock = vov.stockPorDeposito ? sumValues(stockPorDeposito) : (vov.stock ?? v.stock)
+    return { ...v, ...vov, stock, stockPorDeposito }
+  })
+  const stockBasePorDeposito = ov.stockBasePorDeposito
+    ? { ...base.stockBasePorDeposito, ...ov.stockBasePorDeposito }
+    : base.stockBasePorDeposito
+  const stockBase = ov.stockBasePorDeposito ? sumValues(stockBasePorDeposito) : (ov.stockBase ?? base.stockBase)
+  return { ...base, stockBase, stockBasePorDeposito, variants }
 }
 
 export default function GestionVariantes({ onNavigateHome, agrupadores, productos }) {
@@ -50,6 +64,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const [activeTab, setActiveTab] = useState('variantes')
   const [distFiltros, setDistFiltros] = useState({})
   const [distAsig, setDistAsig] = useState({})
+  const [distDepId, setDistDepId] = useState(DEPOSITOS_REALES[0]?.id ?? 'todos')
+  const [distDepPanelOpen, setDistDepPanelOpen] = useState(false)
 
   useEffect(() => {
     if (!flash) return undefined
@@ -75,6 +91,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setActiveTab('variantes')
     setDistFiltros({})
     setDistAsig({})
+    setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
   }
 
   if (!art) {
@@ -104,7 +121,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const dep = DEPOSITOS.find((d) => d.id === depId) ?? DEPOSITOS[0]
 
   function depStock(v) {
-    return depId === 'todos' ? v.stock : Math.round(v.stock * dep.mult)
+    return depId === 'todos' ? v.stock : (v.stockPorDeposito[depId] ?? 0)
   }
 
   function toggleFiltro(agrupadorId, code) {
@@ -118,6 +135,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   function abrirDistribuirTab() {
     setDistFiltros({})
     setDistAsig({})
+    setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
     setActiveTab('distribuir')
   }
 
@@ -125,6 +143,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setActiveTab('variantes')
     setDistFiltros({})
     setDistAsig({})
+    setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
   }
 
   function toggleDistFiltro(agrupadorId, code) {
@@ -135,13 +154,24 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     })
   }
 
+  function selectDistDep(id) {
+    setDistDepId(id)
+    setDistAsig({})
+  }
+
+  const distDep = DEPOSITOS_REALES.find((d) => d.id === distDepId) ?? DEPOSITOS_REALES[0]
+  const distStockBase = distDep ? (art.stockBasePorDeposito[distDep.id] ?? 0) : 0
   const distRows = gen.filter((v) => art.groupers.every((g) => {
     const sel = distFiltros[g.id] || []
     return sel.length === 0 || sel.includes(v.vals[g.id].code)
   }))
   const distTotal = distRows.reduce((s, v) => s + Number(distAsig[v.id] || 0), 0)
-  const distRestante = art.stockBase - distTotal
+  const distRestante = distStockBase - distTotal
   const distOver = distRestante < 0
+
+  function distDepStock(v) {
+    return v.stockPorDeposito[distDep.id] ?? 0
+  }
 
   function setAsig(v, n) {
     const val = Math.max(0, Math.round(Number(n) || 0))
@@ -149,7 +179,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   }
 
   function confirmarDistribucion() {
-    if (distTotal <= 0 || distOver) return
+    if (!distDep || distTotal <= 0 || distOver) return
     setOverrides((prev) => {
       const cur = prev[art.id] ?? {}
       const variants = { ...(cur.variants || {}) }
@@ -157,12 +187,25 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
         const num = Number(n || 0)
         if (num <= 0) return
         const current = art.variants.find((v) => v.id === id)
-        variants[id] = { ...(variants[id] || {}), stock: (current?.stock ?? 0) + num }
+        const curDepStock = current?.stockPorDeposito?.[distDep.id] ?? 0
+        const prevPorDeposito = variants[id]?.stockPorDeposito || {}
+        variants[id] = {
+          ...(variants[id] || {}),
+          stockPorDeposito: { ...prevPorDeposito, [distDep.id]: curDepStock + num },
+        }
       })
-      return { ...prev, [art.id]: { ...cur, variants, stockBase: art.stockBase - distTotal } }
+      const prevBasePorDeposito = cur.stockBasePorDeposito || {}
+      return {
+        ...prev,
+        [art.id]: {
+          ...cur,
+          variants,
+          stockBasePorDeposito: { ...prevBasePorDeposito, [distDep.id]: distStockBase - distTotal },
+        },
+      }
     })
     setDistAsig({})
-    setFlash(`Se distribuyeron ${fmt(distTotal)} unidades entre las variantes seleccionadas.`)
+    setFlash(`Se distribuyeron ${fmt(distTotal)} unidades en ${distDep.nombre} entre las variantes seleccionadas.`)
   }
 
   const hasFiltros = Object.values(filtros).some((v) => v.length > 0)
@@ -194,7 +237,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setOverrides((prev) => {
       const cur = prev[art.id] ?? {}
       const variants = { ...(cur.variants || {}) }
-      variants[v.id] = { status: 'no', stock: 0, precioAdic: 0, codBarras: [] }
+      variants[v.id] = { status: 'no', stock: 0, stockPorDeposito: { 1: 0, 2: 0 }, precioAdic: 0, codBarras: [] }
       return { ...prev, [art.id]: { ...cur, variants } }
     })
     if (selVarId === v.id) setSelVarId(null)
@@ -207,7 +250,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setOverrides((prev) => {
       const cur = prev[art.id] ?? {}
       const variants = { ...(cur.variants || {}) }
-      genSel.forEach((id) => { variants[id] = { status: 'gen', stock: 0 } })
+      genSel.forEach((id) => { variants[id] = { status: 'gen', stock: 0, stockPorDeposito: { 1: 0, 2: 0 } } })
       return { ...prev, [art.id]: { ...cur, variants } }
     })
     setFlash(`${genSel.length} variante${genSel.length === 1 ? '' : 's'} generada${genSel.length === 1 ? '' : 's'} con stock 0. Asignale unidades desde Distribuir stock.`)
@@ -246,18 +289,31 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
         <div className="va-main">
           <DistribuirStockPanel
             art={art}
+            dep={distDep}
+            depositos={DEPOSITOS_REALES}
+            onOpenDepPanel={() => setDistDepPanelOpen(true)}
+            depStock={distDepStock}
             distFiltros={distFiltros}
             toggleDistFiltro={toggleDistFiltro}
             clearDistFiltros={() => setDistFiltros({})}
             distRows={distRows}
             distAsig={distAsig}
             setAsig={setAsig}
+            distStockBase={distStockBase}
             distTotal={distTotal}
             distRestante={distRestante}
             distOver={distOver}
             onConfirm={confirmarDistribucion}
             onClose={cerrarDistribuirTab}
           />
+          {distDepPanelOpen && (
+            <DepositoPanel
+              depositos={DEPOSITOS_REALES}
+              selectedId={distDepId}
+              onSelect={selectDistDep}
+              onClose={() => setDistDepPanelOpen(false)}
+            />
+          )}
         </div>
       ) : (
       <div className="va-main">
@@ -446,8 +502,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
             <div className="va-section">
               <div className="vg-detail-label">Stock por depósito</div>
               <div className="vg-dep-stock-list">
-                {DEPOSITOS.filter((d) => d.id !== 'todos').map((d) => {
-                  const s = Math.round(selVar.stock * d.mult)
+                {DEPOSITOS_REALES.map((d) => {
+                  const s = selVar.stockPorDeposito[d.id] ?? 0
                   return (
                     <div className="vg-dep-stock-row" key={d.id}>
                       <span>{d.nombre}</span>
