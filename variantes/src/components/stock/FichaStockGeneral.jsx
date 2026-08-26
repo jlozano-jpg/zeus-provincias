@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   IconX, IconBox, IconChevronsLeft, IconCalendar, IconBuildingWarehouse,
   IconMapPin, IconReceipt2, IconRefresh, IconChevronDown, IconSearch,
@@ -105,22 +105,48 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
     setActiveTab('movimientos')
   }
 
-  const depositosCount = new Set(rows.map((r) => r.deposito)).size
-  const comprometidoCount = Math.max(1, Math.round(data.comprometido / 2))
-  const acopiadoCount = data.acopiado > 0 ? Math.max(1, Math.round(data.acopiado / 2)) : 0
+  useEffect(() => {
+    if (activeTab === 'variante' && !usingVariantes) setActiveTab('movimientos')
+  }, [usingVariantes, activeTab])
+
+  const depositoBreakdown = useMemo(() => {
+    const totals = new Map()
+    data.movimientos.forEach((m) => {
+      const net = (m.ingreso ?? 0) - (m.egreso ?? 0)
+      totals.set(m.deposito, (totals.get(m.deposito) ?? 0) + net)
+    })
+    return DEPOSITOS
+      .filter((d) => totals.has(d.id))
+      .map((d) => ({ ...d, stock: totals.get(d.id) }))
+  }, [data])
+
+  const varianteBreakdown = useMemo(() => {
+    if (!ledger.esBase) return []
+    return ledger.combos.map((combo) => {
+      const key = combo.map((v) => v.code).join('|')
+      const stock = (ledger.variante?.movimientos ?? [])
+        .filter((m) => m.variante && m.variante.map((v) => v.code).join('|') === key)
+        .reduce((s, m) => s + (m.ingreso ?? 0) - (m.egreso ?? 0), 0)
+      return { key, variante: combo, stock }
+    })
+  }, [ledger])
+
+  const depositosCount = depositoBreakdown.length
+  const acopiadoCount = data.acopios.length
+  const comprometidoCount = data.comprometidos.length
+  const ubicacionCount = ledger.ubicaciones.length
 
   const TABS = [
     { id: 'movimientos', label: 'Movimientos', count: rows.length },
     { id: 'deposito', label: 'Stock por depósito', count: depositosCount },
     { id: 'acopiado', label: 'Stock acopiado', count: acopiadoCount },
     { id: 'comprometido', label: 'Stock comprometido', count: comprometidoCount },
-    ...(ledger.esBase ? [{ id: 'variante', label: 'Stock por variante', count: ledger.combos.length }] : []),
-    { id: 'ubicacion', label: 'Stock por ubicación', count: depositosCount },
+    ...(usingVariantes ? [{ id: 'variante', label: 'Stock por variante', count: varianteBreakdown.length }] : []),
+    { id: 'ubicacion', label: 'Stock por ubicación', count: ubicacionCount },
   ]
 
   function handleTabClick(tab) {
     setActiveTab(tab.id)
-    if (tab.id === 'variante') setShowVariantes(true)
   }
 
   function selectorLabel(selectedIds, options, allLabel, plural) {
@@ -323,64 +349,257 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
         </div>
 
         <div className="va-card st-table-card">
-          <div className="st-table-head">
-            <span>Movimientos · <b>{rows.length}</b> registros{usingVariantes ? <span className="muted"> · todas las variantes, sin el base</span> : null}</span>
-            <span className="muted">Saldo acumulado según el alcance elegido</span>
-          </div>
-          <div className="va-card-scroll">
-            <table className="va-grid">
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Hora</th>
-                  <th>Tipo</th>
-                  <th>Suc.</th>
-                  <th>Comprobante</th>
-                  <th>Descripción</th>
-                  {usingVariantes && <th>Variante</th>}
-                  <th style={{ textAlign: 'right' }}>Ingreso</th>
-                  <th style={{ textAlign: 'right' }}>Egreso</th>
-                  <th style={{ textAlign: 'right' }}>Saldo</th>
-                  <th>Dep</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((m, i) => (
-                  <tr key={i}>
-                    <td className="st-num">{m.fecha}</td>
-                    <td className="st-num">{m.hora}</td>
-                    <td><TypePill tipo={m.tipo} /></td>
-                    <td>{m.sucursal}</td>
-                    <td className="pr-cell-muted">{m.comprobante}</td>
-                    <td className="pr-cell-muted">{m.descripcion}</td>
-                    {usingVariantes && (
-                      <td>
-                        {m.variante ? (
+          {activeTab === 'movimientos' && (
+            <>
+              <div className="st-table-head">
+                <span>Movimientos · <b>{rows.length}</b> registros{usingVariantes ? <span className="muted"> · todas las variantes, sin el base</span> : null}</span>
+                <span className="muted">Saldo acumulado según el alcance elegido</span>
+              </div>
+              <div className="va-card-scroll">
+                <table className="va-grid">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Hora</th>
+                      <th>Tipo</th>
+                      <th>Suc.</th>
+                      <th>Comprobante</th>
+                      <th>Descripción</th>
+                      {usingVariantes && <th>Variante</th>}
+                      <th style={{ textAlign: 'right' }}>Ingreso</th>
+                      <th style={{ textAlign: 'right' }}>Egreso</th>
+                      <th style={{ textAlign: 'right' }}>Saldo</th>
+                      <th>Dep</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((m, i) => (
+                      <tr key={i}>
+                        <td className="st-num">{m.fecha}</td>
+                        <td className="st-num">{m.hora}</td>
+                        <td><TypePill tipo={m.tipo} /></td>
+                        <td>{m.sucursal}</td>
+                        <td className="pr-cell-muted">{m.comprobante}</td>
+                        <td className="pr-cell-muted">{m.descripcion}</td>
+                        {usingVariantes && (
+                          <td>
+                            {m.variante ? (
+                              <span className="st-variant-cell">
+                                {m.variante.map((v) => (
+                                  <span key={v.code} className="st-variant-chip" title={v.name}>
+                                    {v.swatch ? <span className="st-vf-sw" style={{ background: v.swatch }} /> : null}
+                                    {v.name}
+                                  </span>
+                                ))}
+                              </span>
+                            ) : null}
+                          </td>
+                        )}
+                        <td className="st-num" style={{ textAlign: 'right' }}>{m.ingreso != null ? <span className="st-ingreso">+ {fmt(m.ingreso)}</span> : null}</td>
+                        <td className="st-num" style={{ textAlign: 'right' }}>{m.egreso != null ? <span className="st-egreso">- {fmt(m.egreso)}</span> : null}</td>
+                        <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(m.saldo)}</td>
+                        <td>{m.deposito}</td>
+                      </tr>
+                    ))}
+                    {rows.length === 0 && (
+                      <tr>
+                        <td colSpan={usingVariantes ? 11 : 10} className="va-empty-cell">No hay movimientos para el filtro seleccionado</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'deposito' && (
+            <>
+              <div className="st-table-head">
+                <span>Stock por depósito · <b>{depositoBreakdown.length}</b> depósitos</span>
+              </div>
+              <div className="va-card-scroll">
+                <table className="va-grid">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 90 }}>Depósito</th>
+                      <th>Nombre</th>
+                      <th style={{ textAlign: 'right' }}>Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {depositoBreakdown.map((d) => (
+                      <tr key={d.id}>
+                        <td className="st-num">{d.codigo}</td>
+                        <td className="pr-cell-strong">{d.nombre}</td>
+                        <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(d.stock)}</td>
+                      </tr>
+                    ))}
+                    {depositoBreakdown.length === 0 && (
+                      <tr><td colSpan={3} className="va-empty-cell">Sin movimientos en depósitos</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'acopiado' && (
+            <>
+              <div className="st-table-head">
+                <span>Stock acopiado · <b>{data.acopios.length}</b> registros</span>
+              </div>
+              <div className="va-card-scroll">
+                <table className="va-grid">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th style={{ width: 90 }}>Sucursal</th>
+                      <th>Factura</th>
+                      <th>Cliente</th>
+                      <th style={{ textAlign: 'right' }}>Cantidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.acopios.map((r, i) => (
+                      <tr key={i}>
+                        <td className="st-num">{r.fecha}</td>
+                        <td className="st-num">{r.sucursal}</td>
+                        <td className="pr-cell-muted">{r.comprobante}</td>
+                        <td>{r.cliente}</td>
+                        <td className="st-num" style={{ textAlign: 'right' }}>{fmt(r.cantidad)}</td>
+                      </tr>
+                    ))}
+                    {data.acopios.length === 0 && (
+                      <tr><td colSpan={5} className="va-empty-cell">No hay stock acopiado</td></tr>
+                    )}
+                  </tbody>
+                  {data.acopios.length > 0 && (
+                    <tfoot>
+                      <tr className="st-total-row">
+                        <td colSpan={4}>Total acopiado</td>
+                        <td style={{ textAlign: 'right' }}>{fmt(data.acopiado)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'comprometido' && (
+            <>
+              <div className="st-table-head">
+                <span>Stock comprometido · <b>{data.comprometidos.length}</b> registros</span>
+              </div>
+              <div className="va-card-scroll">
+                <table className="va-grid">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th style={{ width: 90 }}>Sucursal</th>
+                      <th>Comprobante</th>
+                      <th>Cliente</th>
+                      <th style={{ textAlign: 'right' }}>Cantidad</th>
+                      <th style={{ textAlign: 'right' }}>Cantidad UM</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.comprometidos.map((r, i) => (
+                      <tr key={i}>
+                        <td className="st-num">{r.fecha}</td>
+                        <td className="st-num">{r.sucursal}</td>
+                        <td className="pr-cell-muted">{r.comprobante}</td>
+                        <td>{r.cliente}</td>
+                        <td className="st-num" style={{ textAlign: 'right' }}>{fmt(r.cantidad)}</td>
+                        <td className="st-num" style={{ textAlign: 'right' }}>{fmt(r.cantidadUm)}</td>
+                      </tr>
+                    ))}
+                    {data.comprometidos.length === 0 && (
+                      <tr><td colSpan={6} className="va-empty-cell">No hay stock comprometido</td></tr>
+                    )}
+                  </tbody>
+                  {data.comprometidos.length > 0 && (
+                    <tfoot>
+                      <tr className="st-total-row">
+                        <td colSpan={4}>Total Stock Comprometido</td>
+                        <td style={{ textAlign: 'right' }}>{fmt(data.comprometido)}</td>
+                        <td style={{ textAlign: 'right' }}>{fmt(0)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'variante' && usingVariantes && (
+            <>
+              <div className="st-table-head">
+                <span>Stock por variante · <b>{varianteBreakdown.length}</b> variantes</span>
+              </div>
+              <div className="va-card-scroll">
+                <table className="va-grid">
+                  <thead>
+                    <tr>
+                      <th>Variante</th>
+                      <th style={{ textAlign: 'right' }}>Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {varianteBreakdown.map((v) => (
+                      <tr key={v.key}>
+                        <td>
                           <span className="st-variant-cell">
-                            {m.variante.map((v) => (
-                              <span key={v.code} className="st-variant-chip" title={v.name}>
-                                {v.swatch ? <span className="st-vf-sw" style={{ background: v.swatch }} /> : null}
-                                {v.name}
+                            {v.variante.map((val) => (
+                              <span key={val.code} className="st-variant-chip" title={val.name}>
+                                {val.swatch ? <span className="st-vf-sw" style={{ background: val.swatch }} /> : null}
+                                {val.name}
                               </span>
                             ))}
                           </span>
-                        ) : null}
-                      </td>
+                        </td>
+                        <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(v.stock)}</td>
+                      </tr>
+                    ))}
+                    {varianteBreakdown.length === 0 && (
+                      <tr><td colSpan={2} className="va-empty-cell">Sin variantes</td></tr>
                     )}
-                    <td className="st-num" style={{ textAlign: 'right' }}>{m.ingreso != null ? <span className="st-ingreso">+ {fmt(m.ingreso)}</span> : null}</td>
-                    <td className="st-num" style={{ textAlign: 'right' }}>{m.egreso != null ? <span className="st-egreso">- {fmt(m.egreso)}</span> : null}</td>
-                    <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(m.saldo)}</td>
-                    <td>{m.deposito}</td>
-                  </tr>
-                ))}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={usingVariantes ? 11 : 10} className="va-empty-cell">No hay movimientos para el filtro seleccionado</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'ubicacion' && (
+            <>
+              <div className="st-table-head">
+                <span>Stock por ubicación · <b>{ledger.ubicaciones.length}</b> ubicaciones</span>
+              </div>
+              <div className="va-card-scroll">
+                <table className="va-grid">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 90 }}>Depósito</th>
+                      <th>Ubicación</th>
+                      <th style={{ textAlign: 'right' }}>Stock por ubicación</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ledger.ubicaciones.map((u, i) => (
+                      <tr key={i}>
+                        <td className="st-num">{u.deposito}</td>
+                        <td className="pr-cell-strong">{u.ubicacion}</td>
+                        <td className="st-saldo" style={{ textAlign: 'right' }}>{fmt(u.stock)}</td>
+                      </tr>
+                    ))}
+                    {ledger.ubicaciones.length === 0 && (
+                      <tr><td colSpan={3} className="va-empty-cell">Sin ubicaciones con stock</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

@@ -29,6 +29,20 @@ const MOV_TEMPLATES = [
   { tipo: 'TRANSF', comprobante: 'T - 0001', desc: 'TRANSFERENCIA ENTRE DEPÓSITOS' },
 ]
 
+const CLIENTES = [
+  { codigo: '0', nombre: 'CLIENTE EVENTUAL' },
+  { codigo: '0000001', nombre: 'JAVIER LOZANO' },
+  { codigo: '00001', nombre: 'CONSUMIDOR FINAL' },
+  { codigo: '00010', nombre: 'CONSPAPA RUBEN' },
+  { codigo: '00011', nombre: 'EVILIC EZEQUIEL' },
+  { codigo: '00012', nombre: 'RÓPOLIS GERMÁN' },
+  { codigo: '00015', nombre: 'SYNTHESTRE MAXIMILIANO' },
+  { codigo: '00017', nombre: 'SPECISM LUCAS' },
+  { codigo: '00020', nombre: 'PREBIZ LEONARDO' },
+  { codigo: '00022', nombre: 'RETROBOROS SA' },
+  { codigo: '0031', nombre: 'TRAMA GABRIEL' },
+]
+
 function pad(n, len) {
   return String(n).padStart(len, '0')
 }
@@ -53,6 +67,43 @@ function variantCombos(producto, agrupadores) {
     acc.forEach((combo) => dim.forEach((v) => next.push([...combo, v])))
     return next
   }, [])
+}
+
+// Listados tipo "Stock Acopiado" / "Stock Comprometido": fecha, sucursal,
+// comprobante (factura o pedido), cliente y cantidad.
+function generateClienteListado(rnd, count, prefijo, conCantidadUm) {
+  let day = 1
+  let nro = 400 + Math.floor(rnd() * 9000)
+  const rows = []
+  for (let i = 0; i < count; i++) {
+    day += 1 + Math.floor(rnd() * 6)
+    nro += 1 + Math.floor(rnd() * 4)
+    const cliente = CLIENTES[Math.floor(rnd() * CLIENTES.length)]
+    rows.push({
+      fecha: formatFecha(day),
+      sucursal: 1 + Math.floor(rnd() * 2),
+      comprobante: `${prefijo} - 0001 - ${pad(nro, 8)}`,
+      cliente: `${cliente.codigo} - ${cliente.nombre}`,
+      cantidad: 1 + Math.floor(rnd() * 5),
+      cantidadUm: conCantidadUm ? 0 : undefined,
+    })
+  }
+  return rows
+}
+
+function generateUbicaciones(rnd, deposito1Total) {
+  const total = Math.max(0, Math.round(deposito1Total))
+  if (total === 0) return []
+  const count = 1 + Math.floor(rnd() * 2)
+  let remaining = total
+  const rows = []
+  for (let i = 0; i < count; i++) {
+    const isLast = i === count - 1
+    const qty = isLast ? remaining : Math.max(1, Math.round(remaining * (0.3 + rnd() * 0.4)))
+    remaining -= qty
+    rows.push({ deposito: 1, ubicacion: `1-${1 + Math.floor(rnd() * 200)}`, stock: qty })
+  }
+  return rows.filter((r) => r.stock > 0)
 }
 
 export function buildStockLedger(producto, agrupadores) {
@@ -95,22 +146,32 @@ export function buildStockLedger(producto, agrupadores) {
   const movimientosVariante = esBase ? generate(6 + Math.floor(rnd() * 6), true) : []
 
   const stockTotalBase = movimientosBase.length ? movimientosBase[movimientosBase.length - 1].saldo : 0
-  const comprometidoBase = 2 + Math.floor(rnd() * 8)
-  const acopiadoBase = Math.floor(rnd() * 5)
   const enTransitoBase = rnd() > 0.7 ? 1 + Math.floor(rnd() * 4) : 0
 
+  const acopiosBase = generateClienteListado(rnd, Math.floor(rnd() * 5), 'A', false)
+  const comprometidosBase = generateClienteListado(rnd, 2 + Math.floor(rnd() * 8), 'B', true)
+  const acopiadoBase = acopiosBase.reduce((s, r) => s + r.cantidad, 0)
+  const comprometidoBase = comprometidosBase.reduce((s, r) => s + r.cantidad, 0)
+
   const stockTotalVariante = movimientosVariante.length ? movimientosVariante[movimientosVariante.length - 1].saldo + stockTotalBase : stockTotalBase
-  const comprometidoVariante = comprometidoBase + Math.floor(rnd() * 12)
-  const acopiadoVariante = acopiadoBase + Math.floor(rnd() * 4)
+  const acopiosVariante = [...acopiosBase, ...generateClienteListado(rnd, Math.floor(rnd() * 4), 'A', false)]
+  const comprometidosVariante = [...comprometidosBase, ...generateClienteListado(rnd, Math.floor(rnd() * 10), 'B', true)]
+  const acopiadoVariante = acopiosVariante.reduce((s, r) => s + r.cantidad, 0)
+  const comprometidoVariante = comprometidosVariante.reduce((s, r) => s + r.cantidad, 0)
+
+  const ubicaciones = generateUbicaciones(rnd, stockTotalBase)
 
   return {
     esBase,
     combos,
+    ubicaciones,
     base: {
       movimientos: movimientosBase,
       stockTotal: stockTotalBase,
       comprometido: comprometidoBase,
+      comprometidos: comprometidosBase,
       acopiado: acopiadoBase,
+      acopios: acopiosBase,
       enTransito: enTransitoBase,
       disponible: Math.max(0, stockTotalBase - comprometidoBase - acopiadoBase),
     },
@@ -118,7 +179,9 @@ export function buildStockLedger(producto, agrupadores) {
       movimientos: movimientosVariante,
       stockTotal: stockTotalVariante,
       comprometido: comprometidoVariante,
+      comprometidos: comprometidosVariante,
       acopiado: acopiadoVariante,
+      acopios: acopiosVariante,
       enTransito: enTransitoBase,
       disponible: Math.max(0, stockTotalVariante - comprometidoVariante - acopiadoVariante),
     } : null,
