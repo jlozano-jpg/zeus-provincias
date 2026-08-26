@@ -5,19 +5,19 @@ import { fmt } from './format'
 export default function DistribuirStockPanel({
   art, distFiltros, toggleDistFiltro, clearDistFiltros,
   distRows, distAsig, setAsig, distTotal, distRestante, distOver,
-  onConfirm, onClose, standalone = false,
+  onConfirm, onClose,
 }) {
   const hasDistFiltros = Object.values(distFiltros).some((v) => v.length > 0)
 
   return (
-    <aside className={standalone ? 'vg-flow-page' : 'vg-flow-panel'}>
+    <div className="va-card vg-dist-tab">
       <div className="va-panel-head">
         <div className="va-ico"><IconArrowRight size={18} stroke={1.6} /></div>
         <div className="va-grow">
           <div className="va-eyebrow">{art.codigo}</div>
           <div className="va-title">Distribuir stock</div>
         </div>
-        <button type="button" className="va-btn-icon va-close" onClick={onClose} aria-label={standalone ? 'Cerrar pestaña' : 'Cerrar'} title={standalone ? 'Cerrar pestaña' : 'Cerrar'}>
+        <button type="button" className="va-btn-icon va-close" onClick={onClose} aria-label="Cerrar solapa" title="Cerrar solapa">
           <IconX size={18} stroke={1.6} />
         </button>
       </div>
@@ -139,6 +139,6 @@ export default function DistribuirStockPanel({
           <IconCheck size={15} stroke={2} /> Confirmar distribución {distTotal > 0 ? `(${fmt(distTotal)} u.)` : ''}
         </button>
       </div>
-    </aside>
+    </div>
   )
 }
