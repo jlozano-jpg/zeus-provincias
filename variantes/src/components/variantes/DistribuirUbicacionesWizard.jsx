@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  IconX, IconCheck, IconArrowLeft, IconMapPin, IconAlertTriangle,
+  IconX, IconCheck, IconArrowLeft, IconMapPin,
 } from '@tabler/icons-react'
 import { buildArbolConStock } from '../../data/ubicacionesData'
 import UbicacionCantidadRows, { filasIniciales, filasCompletas, sumaFilas } from './UbicacionCantidadRows'
@@ -26,8 +26,6 @@ export default function DistribuirUbicacionesWizard({
   // nada que decidir en ese paso: se descuenta de ahí sí o sí y el wizard
   // arranca directo en Destino.
   const [paso, setPaso] = useState(origenUnica ? 2 : 1)
-  const [intentoContinuar, setIntentoContinuar] = useState(false)
-  const [intentoConfirmar, setIntentoConfirmar] = useState(false)
   const [origenFilas, setOrigenFilas] = useState(() => filasIniciales(distTotal, origenInfo.sugerencias))
 
   const destinoInfo = useMemo(
@@ -44,17 +42,11 @@ export default function DistribuirUbicacionesWizard({
   const destinoValido = variantes.every((v) => filasCompletas(destinoFilas[v.id], v.cantidad))
 
   function irADestino() {
-    if (!origenValido) { setIntentoContinuar(true); return }
     setPaso(2)
   }
 
   function volverAOrigen() {
     setPaso(1)
-  }
-
-  function confirmar() {
-    if (!destinoValido) { setIntentoConfirmar(true); return }
-    onConfirm()
   }
 
   return (
@@ -105,12 +97,6 @@ export default function DistribuirUbicacionesWizard({
                 <div className={`vg-ubic-resumen ${sumaFilas(origenFilas) === distTotal ? 'is-ok' : ''}`}>
                   {fmt(distTotal)} u. a descontar · {sumaFilas(origenFilas) === distTotal ? 'completo' : `restan ${fmt(distTotal - sumaFilas(origenFilas))}`}
                 </div>
-                {intentoContinuar && !origenValido && (
-                  <div className="vg-alert vg-alert-danger">
-                    <IconAlertTriangle size={15} stroke={1.9} />
-                    Completá la ubicación y cantidad para las {fmt(distTotal)} u. a descontar antes de continuar.
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -128,7 +114,6 @@ export default function DistribuirUbicacionesWizard({
               const suma = sumaFilas(filas)
               const restante = v.cantidad - suma
               const completo = restante === 0
-              const bloqueValido = filasCompletas(filas, v.cantidad)
               return (
                 <div className="vg-dest-bloque" key={v.id}>
                   <div className="vg-dest-bloque-head">
@@ -145,12 +130,6 @@ export default function DistribuirUbicacionesWizard({
                     onChange={(next) => setDestinoFilas((prev) => ({ ...prev, [v.id]: next }))}
                     agregarLabel="Agregar otra ubicación"
                   />
-                  {intentoConfirmar && !bloqueValido && (
-                    <div className="vg-alert vg-alert-danger">
-                      <IconAlertTriangle size={15} stroke={1.9} />
-                      Completá la ubicación y cantidad para las {fmt(v.cantidad)} u. de esta variante antes de confirmar.
-                    </div>
-                  )}
                 </div>
               )
             })}
@@ -167,11 +146,11 @@ export default function DistribuirUbicacionesWizard({
           <button type="button" className="va-btn va-btn-secondary" onClick={onCancel}>Cancelar</button>
         )}
         {paso === 1 ? (
-          <button type="button" className="va-btn va-btn-primary" onClick={irADestino}>
+          <button type="button" className="va-btn va-btn-primary" disabled={!origenValido} onClick={irADestino}>
             Continuar
           </button>
         ) : (
-          <button type="button" className="va-btn va-btn-primary" onClick={confirmar}>
+          <button type="button" className="va-btn va-btn-primary" disabled={!destinoValido} onClick={onConfirm}>
             <IconCheck size={15} stroke={2} /> Confirmar distribución
           </button>
         )}
