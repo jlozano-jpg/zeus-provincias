@@ -251,7 +251,13 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
       const cur = prev[art.id] ?? {}
       const variants = { ...(cur.variants || {}) }
       variants[v.id] = { status: 'no', stock: 0, stockPorDeposito: { 1: 0, 2: 0 }, precioAdic: 0, codBarras: [] }
-      return { ...prev, [art.id]: { ...cur, variants } }
+      const stockBasePorDeposito = { ...(cur.stockBasePorDeposito || {}) }
+      Object.entries(v.stockPorDeposito || {}).forEach(([depId, cant]) => {
+        const num = Number(cant || 0)
+        if (num <= 0) return
+        stockBasePorDeposito[depId] = (art.stockBasePorDeposito[depId] ?? 0) + num
+      })
+      return { ...prev, [art.id]: { ...cur, variants, stockBasePorDeposito } }
     })
     if (selVarId === v.id) setSelVarId(null)
     setConfirmDeleteVar(null)
@@ -620,7 +626,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
             <div className="va-confirm-body">
               Esta acción no se puede deshacer. La variante vuelve a la lista de no generadas y pierde su código de barras asignado.
               {confirmDeleteVar.stock > 0 && (
-                <> También se pierden las <b>{fmt(confirmDeleteVar.stock)}</b> unidades de stock que tenía asignadas.</>
+                <> También se pierden las <b>{fmt(confirmDeleteVar.stock)}</b> unidades de stock que tenía asignadas, volviendo las mismas al producto base.</>
               )}
             </div>
             <div className="va-confirm-actions">
