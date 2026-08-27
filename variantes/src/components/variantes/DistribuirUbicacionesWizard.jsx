@@ -15,16 +15,19 @@ const PASOS = [
 export default function DistribuirUbicacionesWizard({
   art, dep, distStockBase, distTotal, variantes, groupers, onCancel, onConfirm,
 }) {
-  const [paso, setPaso] = useState(1)
-  const [intentoContinuar, setIntentoContinuar] = useState(false)
-  const [intentoConfirmar, setIntentoConfirmar] = useState(false)
-
   const origenInfo = useMemo(
     () => buildArbolConStock(art.codigo, dep.id, distStockBase),
     [art.codigo, dep.id, distStockBase]
   )
   const origenUnica = origenInfo.sugerencias.length <= 1
   const origenUbicacionUnica = origenInfo.sugerencias[0] || null
+
+  // Si el artículo base tiene stock en una única ubicación de origen, no hay
+  // nada que decidir en ese paso: se descuenta de ahí sí o sí y el wizard
+  // arranca directo en Destino.
+  const [paso, setPaso] = useState(origenUnica ? 2 : 1)
+  const [intentoContinuar, setIntentoContinuar] = useState(false)
+  const [intentoConfirmar, setIntentoConfirmar] = useState(false)
   const [origenFilas, setOrigenFilas] = useState(() => filasIniciales(distTotal, origenInfo.sugerencias))
 
   const destinoInfo = useMemo(
@@ -67,14 +70,16 @@ export default function DistribuirUbicacionesWizard({
         </button>
       </div>
 
-      <div className="vg-wizard-steps">
-        {PASOS.map((p) => (
-          <div key={p.id} className={`vg-wizard-step ${paso === p.id ? 'is-active' : ''} ${paso > p.id ? 'is-done' : ''}`}>
-            <span className="vg-wizard-step-dot">{paso > p.id ? <IconCheck size={12} stroke={2.4} /> : p.id}</span>
-            {p.label}
-          </div>
-        ))}
-      </div>
+      {!origenUnica && (
+        <div className="vg-wizard-steps">
+          {PASOS.map((p) => (
+            <div key={p.id} className={`vg-wizard-step ${paso === p.id ? 'is-active' : ''} ${paso > p.id ? 'is-done' : ''}`}>
+              <span className="vg-wizard-step-dot">{paso > p.id ? <IconCheck size={12} stroke={2.4} /> : p.id}</span>
+              {p.label}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="vg-wizard-body">
         {paso === 1 && (
@@ -113,6 +118,11 @@ export default function DistribuirUbicacionesWizard({
 
         {paso === 2 && (
           <div className="vg-wizard-content">
+            {origenUnica && (
+              <div className="vg-ubic-info">
+                Se descuentan <b>{fmt(distTotal)}</b> u. de <b>{dep.nombre} · {origenUbicacionUnica ? origenUbicacionUnica.label : 'Ubicación general'}</b>, la única ubicación donde el artículo base tiene stock.
+              </div>
+            )}
             {variantes.map((v) => {
               const filas = destinoFilas[v.id]
               const suma = sumaFilas(filas)
@@ -149,7 +159,7 @@ export default function DistribuirUbicacionesWizard({
       </div>
 
       <div className="va-panel-foot">
-        {paso === 2 ? (
+        {paso === 2 && !origenUnica ? (
           <button type="button" className="va-btn va-btn-secondary" onClick={volverAOrigen}>
             <IconArrowLeft size={14} stroke={1.8} /> Atrás
           </button>

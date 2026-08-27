@@ -144,7 +144,7 @@ export default function DistribuirStockPanel({
         </span>
         <button type="button" className="va-btn va-btn-secondary" onClick={onClose}>Cancelar</button>
         <button type="button" className="va-btn va-btn-primary" disabled={distTotal <= 0 || distOver} onClick={onConfirm}>
-          <IconCheck size={15} stroke={2} /> Confirmar distribución {distTotal > 0 ? `(${fmt(distTotal)} u.)` : ''}
+          <IconCheck size={15} stroke={2} /> Asignar ubicaciones
         </button>
       </div>
     </div>
