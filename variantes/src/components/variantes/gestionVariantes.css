@@ -231,3 +231,127 @@
   width: 20px; height: 20px; border-radius: 6px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
+
+/* ============ Wizard de ubicaciones (Origen / Destino, panel lateral) ============ */
+.vg-wizard-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(560px, 94vw);
+  z-index: 64;
+  background: var(--va-white);
+  border-left: 1px solid var(--va-ink-200);
+  box-shadow: var(--va-sh-panel);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.vg-wizard-steps {
+  display: flex; gap: 20px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--va-ink-200);
+}
+.vg-wizard-step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--va-ink-400);
+}
+.vg-wizard-step-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--va-ink-150); color: var(--va-ink-500);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.vg-wizard-step.is-active { color: var(--va-violet-700); }
+.vg-wizard-step.is-active .vg-wizard-step-dot { background: var(--va-violet-600); color: #fff; }
+.vg-wizard-step.is-done { color: var(--va-success-700); }
+.vg-wizard-step.is-done .vg-wizard-step-dot { background: var(--va-success-500); color: #fff; }
+
+.vg-wizard-body { flex: 1; overflow-y: auto; padding: 18px 22px; min-height: 0; }
+.vg-wizard-content { display: flex; flex-direction: column; gap: 14px; }
+.vg-wizard-content-intro { font-size: 13px; color: var(--va-ink-600); }
+
+.vg-ubic-info {
+  padding: 12px 14px; border-radius: var(--va-r-md);
+  background: var(--va-cyan-50); border: 1px solid var(--va-cyan-100);
+  color: var(--va-ink-700); font-size: 13px;
+}
+
+.vg-ubic-resumen {
+  font-size: 12px; font-weight: 600; color: var(--va-warn-700);
+}
+.vg-ubic-resumen.is-ok { color: var(--va-success-700); }
+
+/* Bloques de destino (uno por variante) */
+.vg-dest-bloque {
+  border: 1px solid var(--va-ink-200); border-radius: var(--va-r-md);
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.vg-dest-bloque-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.vg-dest-bloque-total { font-size: 12px; font-weight: 600; color: var(--va-warn-700); white-space: nowrap; }
+.vg-dest-bloque-total.is-ok { color: var(--va-success-700); }
+
+/* Renglones ubicación + cantidad (compartido Origen/Destino) */
+.vg-ubic-rows { display: flex; flex-direction: column; gap: 8px; }
+.vg-ubic-row { display: flex; flex-direction: column; gap: 0; }
+.vg-ubic-row-main { display: flex; align-items: center; gap: 8px; }
+.vg-ubic-field {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 10px;
+  border: 1px solid var(--va-ink-200); border-radius: var(--va-r-md);
+  background: var(--va-white); color: var(--va-ink-900);
+  font-size: 12.5px; text-align: left; cursor: pointer;
+}
+.vg-ubic-field:hover { border-color: var(--va-violet-300); }
+.vg-ubic-field-placeholder { color: var(--va-ink-400); }
+.vg-ubic-cant {
+  width: 84px; height: 34px; text-align: center;
+  border: 1px solid var(--va-ink-200); border-radius: var(--va-r-md);
+  font-family: ui-monospace, monospace; font-size: 12.5px; font-weight: 600; color: var(--va-ink-900);
+  outline: none;
+}
+.vg-ubic-cant:focus { border-color: var(--va-violet-500); }
+.vg-ubic-cant::-webkit-outer-spin-button,
+.vg-ubic-cant::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.vg-ubic-cant { -moz-appearance: textfield; }
+.vg-ubic-add {
+  align-self: flex-start;
+  background: none; border: none; color: var(--va-violet-600);
+  font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 0;
+}
+.vg-ubic-add:hover { text-decoration: underline; }
+
+/* Árbol de ubicaciones (Depósito ya elegido → Pasillo → Estante) */
+.vg-ubic-tree {
+  margin-top: 6px;
+  border: 1px solid var(--va-ink-200); border-radius: var(--va-r-md);
+  background: var(--va-ink-50);
+  overflow: hidden;
+}
+.vg-ubic-tree-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-bottom: 1px solid var(--va-ink-200);
+  background: var(--va-white); color: var(--va-ink-400);
+}
+.vg-ubic-tree-search input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 12.5px; color: var(--va-ink-900);
+}
+.vg-ubic-tree-body { max-height: 220px; overflow-y: auto; padding: 6px; }
+.vg-ubic-pasillo-head {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 6px 6px; border-radius: var(--va-r-sm);
+  font-size: 12.5px; font-weight: 600; color: var(--va-ink-700);
+}
+.vg-ubic-pasillo-head:hover { background: var(--va-ink-150); }
+.vg-ubic-chevron { transition: transform .12s ease; }
+.vg-ubic-chevron.is-open { transform: rotate(90deg); }
+.vg-ubic-estantes { display: flex; flex-direction: column; padding-left: 22px; }
+.vg-ubic-hoja {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; text-align: left;
+  padding: 6px 8px; border-radius: var(--va-r-sm);
+  font-size: 12.5px; color: var(--va-ink-700);
+}
+.vg-ubic-hoja:hover { background: var(--va-violet-50); color: var(--va-violet-700); }
+.vg-ubic-hoja.is-suggested { background: var(--va-violet-50); color: var(--va-violet-700); font-weight: 600; }
+.vg-ubic-hoja-stock { margin-left: auto; font-size: 11px; color: var(--va-ink-400); }

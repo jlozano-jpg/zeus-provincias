@@ -9,6 +9,7 @@ import VariantChips from './VariantChips'
 import DepositoPanel from './DepositoPanel'
 import GenerarVariantesPanel from './GenerarVariantesPanel'
 import DistribuirStockPanel from './DistribuirStockPanel'
+import DistribuirUbicacionesWizard from './DistribuirUbicacionesWizard'
 import '../agrupadores/agrupadores.css'
 import '../productos/productos.css'
 import '../stock/stock.css'
@@ -66,6 +67,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const [distAsig, setDistAsig] = useState({})
   const [distDepId, setDistDepId] = useState(DEPOSITOS_REALES[0]?.id ?? 'todos')
   const [distDepPanelOpen, setDistDepPanelOpen] = useState(false)
+  const [ubicacionesWizardOpen, setUbicacionesWizardOpen] = useState(false)
 
   useEffect(() => {
     if (!flash) return undefined
@@ -92,6 +94,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setDistFiltros({})
     setDistAsig({})
     setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
+    setUbicacionesWizardOpen(false)
   }
 
   if (!art) {
@@ -144,6 +147,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setDistFiltros({})
     setDistAsig({})
     setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
+    setUbicacionesWizardOpen(false)
   }
 
   function toggleDistFiltro(agrupadorId, code) {
@@ -168,6 +172,15 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const distTotal = distRows.reduce((s, v) => s + Number(distAsig[v.id] || 0), 0)
   const distRestante = distStockBase - distTotal
   const distOver = distRestante < 0
+  const variantesAAsignar = distRows
+    .filter((v) => Number(distAsig[v.id] || 0) > 0)
+    .map((v) => ({
+      id: v.id,
+      codigo: v.codigo,
+      vals: v.vals,
+      cantidad: Number(distAsig[v.id]),
+      stockEnDeposito: distDep ? (v.stockPorDeposito[distDep.id] ?? 0) : 0,
+    }))
 
   function distDepStock(v) {
     return v.stockPorDeposito[distDep.id] ?? 0
@@ -303,7 +316,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
             distTotal={distTotal}
             distRestante={distRestante}
             distOver={distOver}
-            onConfirm={confirmarDistribucion}
+            onConfirm={() => setUbicacionesWizardOpen(true)}
             onClose={cerrarDistribuirTab}
           />
           {distDepPanelOpen && (
@@ -312,6 +325,21 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
               selectedId={distDepId}
               onSelect={selectDistDep}
               onClose={() => setDistDepPanelOpen(false)}
+            />
+          )}
+          {ubicacionesWizardOpen && distDep && (
+            <DistribuirUbicacionesWizard
+              art={art}
+              dep={distDep}
+              distStockBase={distStockBase}
+              distTotal={distTotal}
+              variantes={variantesAAsignar}
+              groupers={art.groupers}
+              onCancel={() => setUbicacionesWizardOpen(false)}
+              onConfirm={() => {
+                confirmarDistribucion()
+                setUbicacionesWizardOpen(false)
+              }}
             />
           )}
         </div>
