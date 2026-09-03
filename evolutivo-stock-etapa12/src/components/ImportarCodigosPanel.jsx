@@ -29,23 +29,6 @@ const MOCK_FILAS_IMPORTACION = [
   { sku: 'ART-001', codigo: '10779123499999', tipo: 'GTIN-14', cantidad: '' },
 ]
 
-export const MOCK_FILAS_IMPORTACION_FORMULAS = [
-  { sku: 'FOR-1002', codigo: '7791234509003', tipo: 'GTIN-13', cantidad: '1' },
-  { sku: 'FOR-1004', codigo: 'INT-555000', tipo: 'CODE-128', cantidad: '24' },
-  { sku: 'SKU-999', codigo: '1234567890128', tipo: 'GTIN-13', cantidad: '1' },
-  { sku: 'FOR-1002', codigo: '7791234501001', tipo: 'GTIN-13', cantidad: '1' },
-  { sku: 'FOR-1003', codigo: '', tipo: 'GTIN-13', cantidad: '1' },
-  { sku: 'FOR-1003', codigo: '00177912345679999', tipo: 'GS1-128', cantidad: '1' },
-  { sku: 'FOR-1004', codigo: '999', tipo: 'GTIN-14', cantidad: '10' },
-  { sku: 'FOR-1002', codigo: '10779123400099', tipo: 'GTIN-14', cantidad: '' },
-]
-
-export const EJEMPLO_LINEAS_FORMULAS = [
-  'FOR-1001;7791234501001;GTIN-13;1',
-  'FOR-1004;10779123400505;GTIN-14;50',
-  'FOR-1002;INT-777888;CODE-128;24',
-]
-
 function capitalizar(texto) {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }

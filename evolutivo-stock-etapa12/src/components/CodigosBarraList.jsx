@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react'
 import { IconSearch, IconDotsVertical, IconEye, IconPencil, IconPlus, IconSettings, IconFilter } from '@tabler/icons-react'
-import { ARTICULOS_INICIALES, FORMULAS_INICIALES, TIPOS_CODIGO_SIN_GTIN8, MOCK_EXCEL_FORMULAS } from '../data/codigosBarra'
+import { ARTICULOS_INICIALES, FORMULAS_INICIALES, CATEGORIAS_FORMULA } from '../data/codigosBarra'
 import TipoCodigoBadge from './TipoCodigoBadge'
 import CodigoBarraPanel from './CodigoBarraPanel'
 import FiltrosCodigosBarraPanel, { filtrosVacios, hayFiltrosActivos } from './FiltrosCodigosBarraPanel'
 import GeneracionMasivaPanel from './GeneracionMasivaPanel'
-import ImportarCodigosPanel, { MOCK_FILAS_IMPORTACION_FORMULAS, EJEMPLO_LINEAS_FORMULAS } from './ImportarCodigosPanel'
+import ImportarCodigosPanel from './ImportarCodigosPanel'
 import styles from './CodigosBarraList.module.css'
-
-const TIPOS_MASIVA_FORMULAS = TIPOS_CODIGO_SIN_GTIN8.filter((t) => t.value !== 'GS1-128')
 
 function tiposAsignados(articulo) {
   const counts = new Map()
@@ -58,7 +56,7 @@ const ENTIDADES = {
 export default function CodigosBarraList() {
   const [entidadTipo, setEntidadTipo] = useState('articulo')
   const [articulos, setArticulos] = useState(ARTICULOS_INICIALES)
-  const [formulas, setFormulas] = useState(FORMULAS_INICIALES)
+  const formulas = FORMULAS_INICIALES
   const [searchTerm, setSearchTerm] = useState('')
   const [filtros, setFiltros] = useState(filtrosVacios)
   const [showFiltros, setShowFiltros] = useState(false)
@@ -66,8 +64,10 @@ export default function CodigosBarraList() {
   const [panelState, setPanelState] = useState(null)
   const [showGeneracionMasiva, setShowGeneracionMasiva] = useState(false)
   const [showImportarCodigos, setShowImportarCodigos] = useState(false)
+  const [categoriaFormula, setCategoriaFormula] = useState(CATEGORIAS_FORMULA[0].value)
 
   const esFormula = entidadTipo === 'formula'
+  const esAutomotor = categoriaFormula === 'automotor'
   const items = esFormula ? formulas : articulos
   const entidad = ENTIDADES[entidadTipo]
 
@@ -76,13 +76,15 @@ export default function CodigosBarraList() {
     setSearchTerm('')
     setFiltros(filtrosVacios())
     setOpenMenuId(null)
+    setCategoriaFormula(CATEGORIAS_FORMULA[0].value)
   }
 
   const filtrados = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
     return items.filter((a) => {
-      if (term && !`${a.codigo} ${a.descripcion}`.toLowerCase().includes(term)) return false
-      if (esFormula) return true
+      const searchable = esFormula ? `${a.formula} ${a.base || ''} ${a.descripcion}` : `${a.codigo} ${a.descripcion}`
+      if (term && !searchable.toLowerCase().includes(term)) return false
+      if (esFormula) return a.categoria === categoriaFormula
       if (filtros.sucursal && a.sucursal !== filtros.sucursal) return false
       if (filtros.familia && a.familia !== filtros.familia) return false
       if (filtros.proveedor && a.proveedor !== filtros.proveedor) return false
@@ -93,34 +95,31 @@ export default function CodigosBarraList() {
       if (filtros.soloSinCodigo && a.codigos.length > 0) return false
       return true
     })
-  }, [items, searchTerm, filtros, esFormula])
+  }, [items, searchTerm, filtros, esFormula, categoriaFormula])
 
-  const abrirVisualizar = (item) => setPanelState({ entidadTipo, itemId: item.id, layer: 'detalle', soloLectura: true })
-  const abrirEditar = (item) => setPanelState({ entidadTipo, itemId: item.id, layer: 'detalle', soloLectura: false })
-  const abrirAgregar = (item) => setPanelState({ entidadTipo, itemId: item.id, layer: 'agregar', soloLectura: false })
+  // Las fórmulas ya no tienen panel de asignación: su código de barra se
+  // calcula solo (fórmula + base), así que este estado es exclusivo de artículos.
+  const abrirVisualizar = (item) => setPanelState({ itemId: item.id, layer: 'detalle', soloLectura: true })
+  const abrirEditar = (item) => setPanelState({ itemId: item.id, layer: 'detalle', soloLectura: false })
+  const abrirAgregar = (item) => setPanelState({ itemId: item.id, layer: 'agregar', soloLectura: false })
   const cerrarPanel = () => setPanelState(null)
 
-  const setterPara = (tipo) => (tipo === 'formula' ? setFormulas : setArticulos)
-
   const agregarCodigo = (itemId, codigo) => {
-    setterPara(panelState.entidadTipo)((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
+    setArticulos((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: [...a.codigos, codigo] } : a)))
   }
 
   const eliminarCodigo = (itemId, codigoId) => {
-    setterPara(panelState.entidadTipo)((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
+    setArticulos((prev) => prev.map((a) => (a.id === itemId ? { ...a, codigos: a.codigos.filter((c) => c.id !== codigoId) } : a)))
   }
 
   const agregarCodigosMasivo = (resultados) => {
-    const setter = esFormula ? setFormulas : setArticulos
-    setter((prev) => prev.map((a) => {
+    setArticulos((prev) => prev.map((a) => {
       const nuevos = resultados.filter((r) => r.articuloId === a.id).map((r) => r.codigo)
       return nuevos.length ? { ...a, codigos: [...a.codigos, ...nuevos] } : a
     }))
   }
 
-  const itemPanel = panelState
-    ? (panelState.entidadTipo === 'formula' ? formulas : articulos).find((a) => a.id === panelState.itemId)
-    : null
+  const itemPanel = panelState ? articulos.find((a) => a.id === panelState.itemId) : null
 
   return (
     <div className={styles.wrapper}>
@@ -143,6 +142,21 @@ export default function CodigosBarraList() {
           </button>
         ))}
       </div>
+
+      {esFormula && (
+        <div className={styles.subSegmented}>
+          {CATEGORIAS_FORMULA.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              className={`${styles.subSegmentedBtn} ${categoriaFormula === cat.value ? styles.subSegmentedBtnActive : ''}`}
+              onClick={() => setCategoriaFormula(cat.value)}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={styles.toolbar}>
         <label className={styles.searchField}>
@@ -170,32 +184,74 @@ export default function CodigosBarraList() {
           </button>
         )}
 
-        <div className={styles.toolbarActions}>
-          <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
-            Importar Códigos
-          </button>
+        {!esFormula && (
+          <div className={styles.toolbarActions}>
+            <button type="button" className={styles.secondaryBtn} onClick={() => setShowImportarCodigos(true)}>
+              Importar Códigos
+            </button>
 
-          <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
-            Generación masiva
-          </button>
-        </div>
+            <button type="button" className={styles.secondaryBtn} onClick={() => setShowGeneracionMasiva(true)}>
+              Generación masiva
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
-            <tr>
-              <th>Código</th>
-              <th>Descripción</th>
-              <th>Tipos de código asignados</th>
-              <th className={styles.menuHeaderCell}><IconSettings size={16} /></th>
-            </tr>
+            {esFormula ? (
+              esAutomotor ? (
+                <tr>
+                  <th>Código Fórmula</th>
+                  <th>Descripción Fórmula</th>
+                  <th>Código de barra</th>
+                </tr>
+              ) : (
+                <tr>
+                  <th>Fórmula</th>
+                  <th>Base</th>
+                  <th>Descripción Fórmula</th>
+                  <th>Código de barra</th>
+                </tr>
+              )
+            ) : (
+              <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Tipos de código asignados</th>
+                <th className={styles.menuHeaderCell}><IconSettings size={16} /></th>
+              </tr>
+            )}
           </thead>
           <tbody>
             {filtrados.length === 0 ? (
               <tr>
-                <td colSpan={4} className={styles.empty}>No se encontraron {entidad.labelPlural}</td>
+                <td colSpan={esFormula && esAutomotor ? 3 : 4} className={styles.empty}>No se encontraron {entidad.labelPlural}</td>
               </tr>
+            ) : esFormula ? (
+              esAutomotor ? (
+                filtrados.map((item) => (
+                  <tr key={item.id}>
+                    <td className={styles.codigoCell}>{item.formula}</td>
+                    <td>{item.descripcion}</td>
+                    <td>
+                      <span className={styles.codigoValor}>{item.formula}</span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                filtrados.map((item) => (
+                  <tr key={item.id}>
+                    <td className={styles.codigoCell}>{item.formula}</td>
+                    <td className={styles.codigoCell}>{item.base}</td>
+                    <td>{item.descripcion}</td>
+                    <td>
+                      <span className={styles.codigoValor}>{item.formula}{item.base}</span>
+                    </td>
+                  </tr>
+                ))
+              )
             ) : (
               filtrados.map((item) => (
                 <tr key={item.id} className={styles.clickableRow} onClick={() => abrirEditar(item)}>
@@ -232,12 +288,9 @@ export default function CodigosBarraList() {
       {itemPanel && (
         <CodigoBarraPanel
           articulo={itemPanel}
-          articulos={[...articulos, ...formulas]}
+          articulos={articulos}
           initialLayer={panelState.layer}
           soloLectura={panelState.soloLectura}
-          unidadUnica={panelState.entidadTipo === 'formula'}
-          entidadLabel={ENTIDADES[panelState.entidadTipo].label}
-          entidadFemenino={ENTIDADES[panelState.entidadTipo].femenino}
           onClose={cerrarPanel}
           onAddCodigo={agregarCodigo}
           onDeleteCodigo={eliminarCodigo}
@@ -252,29 +305,23 @@ export default function CodigosBarraList() {
         />
       )}
 
-      {showGeneracionMasiva && (
+      {showGeneracionMasiva && !esFormula && (
         <GeneracionMasivaPanel
           articulos={items}
           onGenerar={agregarCodigosMasivo}
           onClose={() => setShowGeneracionMasiva(false)}
-          tiposDisponibles={esFormula ? TIPOS_MASIVA_FORMULAS : undefined}
-          mockSkusArchivo={esFormula ? MOCK_EXCEL_FORMULAS : undefined}
-          mostrarFiltrosCategoricos={!esFormula}
           entidadLabelPlural={entidad.labelPlural}
           entidadFemenino={entidad.femenino}
         />
       )}
 
-      {showImportarCodigos && (
+      {showImportarCodigos && !esFormula && (
         <ImportarCodigosPanel
           articulos={items}
           onImportar={agregarCodigosMasivo}
           onClose={() => setShowImportarCodigos(false)}
-          mockFilas={esFormula ? MOCK_FILAS_IMPORTACION_FORMULAS : undefined}
           entidadLabel={entidad.label}
           entidadFemenino={entidad.femenino}
-          columnaIdLabel={esFormula ? 'Código de fórmula' : undefined}
-          ejemploLineas={esFormula ? EJEMPLO_LINEAS_FORMULAS : undefined}
         />
       )}
     </div>

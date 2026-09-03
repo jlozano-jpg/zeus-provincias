@@ -36,40 +36,86 @@ export const DESCRIPCION_TIPO = {
   MANUAL: 'Código interno generado por Zeus; no sigue un estándar GS1.',
 }
 
+export const CATEGORIAS_FORMULA = [
+  { value: 'hogar-obra', label: 'Fórmulas Hogar y Obra' },
+  { value: 'automotor', label: 'Fórmulas Automotor' },
+]
+
+// Cada fila es una combinación fórmula + base (una fórmula puede tener varias
+// bases/presentaciones). El código de barra no se asigna a mano: es siempre
+// la concatenación de `formula` + `base`.
 export const FORMULAS_INICIALES = [
   {
-    id: 'FOR-1001',
-    codigo: 'FOR-1001',
-    descripcion: 'Blanco Nieve Satinado',
-    codigos: [
-      { id: 'f1', tipo: 'GTIN-13', codigo: '7791234501001', cantidad: 1 },
-    ],
+    id: 'FRM-0001',
+    formula: 'SOLAN-0002',
+    base: 'AFRVTXNM30',
+    descripcion: 'Italflex RAL 9023 x 30',
+    categoria: 'hogar-obra',
   },
   {
-    id: 'FOR-1002',
-    codigo: 'FOR-1002',
-    descripcion: 'Azul Marino Mate',
-    codigos: [],
+    id: 'FRM-0002',
+    formula: 'CI0479',
+    base: 'SIC3E1BB01',
+    descripcion: 'CI 0479 - CB Multiaccion 3en1 Brillante B 0,9LT',
+    categoria: 'hogar-obra',
   },
   {
-    id: 'FOR-1003',
-    codigo: 'FOR-1003',
-    descripcion: 'Gris Perla Semimate',
-    codigos: [
-      { id: 'f2', tipo: 'MANUAL', codigo: 'INT-00789', cantidad: 1 },
-    ],
+    id: 'FRM-0003',
+    formula: 'CI0479',
+    base: 'SIC3E1BB04',
+    descripcion: 'CI 0479 - CB Multiaccion 3en1 Brillante B 3,6LT',
+    categoria: 'hogar-obra',
   },
   {
-    id: 'FOR-1004',
-    codigo: 'FOR-1004',
-    descripcion: 'Verde Bosque Brillante',
-    codigos: [],
+    id: 'FRM-0004',
+    formula: 'CI0479',
+    base: 'SIC3E1SBB01',
+    descripcion: 'CI 0479 - CB Multiaccion 3en1 Sat B 0,9LT',
+    categoria: 'hogar-obra',
+  },
+  {
+    id: 'FRM-0005',
+    formula: 'CI0479',
+    base: 'SIC3E1SBB04',
+    descripcion: 'CI 0479 - CB Multiaccion 3en1 Sat B 3,6LT',
+    categoria: 'hogar-obra',
+  },
+  {
+    id: 'FRM-0006',
+    formula: 'CI0479',
+    base: 'SICCFPBB01',
+    descripcion: 'CI 0479 - Casaseca Frentes Poliur. Base B 1,18 KGS',
+    categoria: 'hogar-obra',
+  },
+  {
+    id: 'FRM-0007',
+    formula: 'CI0479',
+    base: 'SICPFHRBB01',
+    descripcion: 'CI 0479 - CB Performance Hidrorepelente B 0,9LT',
+    categoria: 'hogar-obra',
+  },
+  // Las fórmulas Automotor no tienen base: cada una es una única fila.
+  {
+    id: 'FRM-0101',
+    formula: 'AUT-3050',
+    descripcion: 'Repintado Automotor Negro Brillante',
+    categoria: 'automotor',
+  },
+  {
+    id: 'FRM-0102',
+    formula: 'AUT-3112',
+    descripcion: 'Repintado Automotor Blanco Mate',
+    categoria: 'automotor',
+  },
+  {
+    id: 'FRM-0103',
+    formula: 'AUT-4201',
+    descripcion: 'Repintado Automotor Gris Metalizado',
+    categoria: 'automotor',
   },
 ]
 
 export const MOCK_EXCEL_SKUS = ['ART-001', 'ART-030', 'SKU-999']
-
-export const MOCK_EXCEL_FORMULAS = ['FOR-1002', 'FOR-1004', 'SKU-999']
 
 export const ARTICULOS_INICIALES = [
   {
