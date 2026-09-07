@@ -40,7 +40,14 @@ function splitPorDeposito(rnd, total) {
 // tanto el generador de catálogo de variantes como el wizard de "Agregar
 // agrupadores", que necesita previsualizar las combinaciones antes de
 // generarlas.
-export function buildGroupersYCombos(seleccion, agrupadores) {
+//
+// Por defecto solo cruza los valores tildados (`valuesSelected`) — es lo que
+// necesita la previsualización del wizard. `incluirTodosLosValores` arma en
+// cambio el universo completo del agrupador (incluidos los valores que el
+// usuario destildó, como un color que no quiso generar en esa tanda), para
+// que esas combinaciones sigan disponibles como "no generadas" en la
+// pantalla principal y se puedan incorporar después desde Generar variantes.
+export function buildGroupersYCombos(seleccion, agrupadores, { incluirTodosLosValores = false } = {}) {
   const groupers = (seleccion || [])
     .map((s) => {
       const master = agrupadores.find((a) => a.id === s.agrupadorId)
@@ -48,7 +55,7 @@ export function buildGroupersYCombos(seleccion, agrupadores) {
       return {
         id: s.agrupadorId,
         nombre: master.name,
-        valores: master.values.filter((v) => s.valuesSelected.includes(v.code)),
+        valores: incluirTodosLosValores ? master.values : master.values.filter((v) => s.valuesSelected.includes(v.code)),
       }
     })
     .filter((g) => g && g.valores.length > 0)
@@ -70,8 +77,6 @@ export function buildVariantesArticulo(producto, agrupadores) {
   const seed = hashCode(producto.codigo)
   const rnd = mulberry32(seed)
 
-  const { groupers, combos } = buildGroupersYCombos(producto.variantes?.seleccion, agrupadores)
-
   // Los productos configurados desde el wizard "Agregar agrupadores" traen
   // una lista explícita de combinaciones excluidas por el usuario; el resto
   // arranca generado con stock 0 (recién configurado, sin distribuir). Los
@@ -81,13 +86,30 @@ export function buildVariantesArticulo(producto, agrupadores) {
   const usaExclusionExplicita = Array.isArray(excluidas)
   const excluidasSet = usaExclusionExplicita ? new Set(excluidas) : null
 
+  const { groupers, combos } = buildGroupersYCombos(producto.variantes?.seleccion, agrupadores, {
+    incluirTodosLosValores: usaExclusionExplicita,
+  })
+
+  // Valores tildados por agrupador al momento de generar: una combinación
+  // que use un valor destildado (ej. un color que no se quiso generar en esa
+  // tanda) también arranca "no generada", pero sigue existiendo en la lista
+  // de variantes para poder incorporarla después desde Generar variantes.
+  const valoresSeleccionados = new Map(
+    (producto.variantes?.seleccion || []).map((s) => [s.agrupadorId, new Set(s.valuesSelected)])
+  )
+  function tieneValorNoSeleccionado(vals) {
+    return groupers.some((g) => !valoresSeleccionados.get(g.id)?.has(vals[g.id].code))
+  }
+
   const priceMode = producto.variantes?.priceMode ?? 'base'
   const adicionalesCfg = producto.variantes?.adicionales ?? {}
   const precioBase = 3000 + Math.floor(rnd() * 34) * 500
 
   const variants = combos.map(({ key, vals }) => {
     const codigo = `${producto.codigo}-${groupers.map((g) => vals[g.id].code).join('-')}`
-    const noGenerada = usaExclusionExplicita ? excluidasSet.has(key) : rnd() < 0.15
+    const noGenerada = usaExclusionExplicita
+      ? (excluidasSet.has(key) || tieneValorNoSeleccionado(vals))
+      : rnd() < 0.15
     const stock = noGenerada ? 0 : (usaExclusionExplicita ? 0 : Math.floor(rnd() * 40))
     let precioAdic = 0
     if (priceMode === 'adicional') {
