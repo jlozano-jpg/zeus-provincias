@@ -213,6 +213,11 @@
   outline: none;
 }
 .vg-stepper-input:focus { border-color: var(--va-violet-500); }
+.vg-stepper-input.is-negative { color: var(--va-warn-700); border-color: var(--va-warn-500); }
+
+/* Fila con devolución de stock a la variante hacia el artículo base */
+table.va-grid tbody tr.is-return { background: var(--va-warn-50); }
+table.va-grid tbody tr.is-return td { border-bottom-color: var(--va-warn-100, var(--va-warn-50)); }
 
 .vg-alert {
   display: flex; align-items: center; gap: 8px;

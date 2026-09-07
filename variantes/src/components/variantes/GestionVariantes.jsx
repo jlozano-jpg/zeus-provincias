@@ -66,6 +66,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const [distAsig, setDistAsig] = useState({})
   const [distDepId, setDistDepId] = useState(DEPOSITOS_REALES[0]?.id ?? 'todos')
   const [distDepPanelOpen, setDistDepPanelOpen] = useState(false)
+  const [distFiltroPanelOpen, setDistFiltroPanelOpen] = useState(false)
   const [ubicacionesWizardOpen, setUbicacionesWizardOpen] = useState(false)
   const [agregarAgrupadoresOpen, setAgregarAgrupadoresOpen] = useState(false)
   const [filtroAgrupadorOpen, setFiltroAgrupadorOpen] = useState(false)
@@ -98,6 +99,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setUbicacionesWizardOpen(false)
     setAgregarAgrupadoresOpen(false)
     setFiltroAgrupadorOpen(false)
+    setDistFiltroPanelOpen(false)
   }
 
   if (!art) {
@@ -151,6 +153,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setDistAsig({})
     setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
     setUbicacionesWizardOpen(false)
+    setDistFiltroPanelOpen(false)
   }
 
   function toggleDistFiltro(agrupadorId, code) {
@@ -175,6 +178,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const distTotal = distRows.reduce((s, v) => s + Number(distAsig[v.id] || 0), 0)
   const distRestante = distStockBase - distTotal
   const distOver = distRestante < 0
+  const distHasChanges = distRows.some((v) => Number(distAsig[v.id] || 0) !== 0)
   const variantesAAsignar = distRows
     .filter((v) => Number(distAsig[v.id] || 0) > 0)
     .map((v) => ({
@@ -190,18 +194,22 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   }
 
   function setAsig(v, n) {
-    const val = Math.max(0, Math.round(Number(n) || 0))
+    const stockActual = distDepStock(v)
+    const raw = Math.round(Number(n) || 0)
+    // Un valor negativo devuelve stock de la variante al artículo base; no
+    // se puede devolver más de lo que la variante tiene en este depósito.
+    const val = Math.max(-stockActual, raw)
     setDistAsig((prev) => ({ ...prev, [v.id]: val }))
   }
 
   function confirmarDistribucion() {
-    if (!distDep || distTotal <= 0 || distOver) return
+    if (!distDep || !distHasChanges || distOver) return
     setOverrides((prev) => {
       const cur = prev[art.id] ?? {}
       const variants = { ...(cur.variants || {}) }
       Object.entries(distAsig).forEach(([id, n]) => {
         const num = Number(n || 0)
-        if (num <= 0) return
+        if (num === 0) return
         const current = art.variants.find((v) => v.id === id)
         const curDepStock = current?.stockPorDeposito?.[distDep.id] ?? 0
         const prevPorDeposito = variants[id]?.stockPorDeposito || {}
@@ -221,7 +229,18 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
       }
     })
     setDistAsig({})
-    setFlash(`Se distribuyeron ${fmt(distTotal)} unidades en ${distDep.nombre} entre las variantes seleccionadas.`)
+    if (distTotal > 0) {
+      setFlash(`Se distribuyeron ${fmt(distTotal)} unidades en ${distDep.nombre} entre las variantes seleccionadas.`)
+    } else if (distTotal < 0) {
+      setFlash(`Se devolvieron ${fmt(Math.abs(distTotal))} unidades al artículo base en ${distDep.nombre}.`)
+    } else {
+      setFlash(`Se movieron unidades entre variantes en ${distDep.nombre} sin afectar el stock base.`)
+    }
+  }
+
+  function confirmarOAsignarUbicaciones() {
+    if (distTotal > 0) setUbicacionesWizardOpen(true)
+    else confirmarDistribucion()
   }
 
   const hasFiltros = Object.values(filtros).some((v) => v.length > 0)
@@ -329,10 +348,9 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
             dep={distDep}
             depositos={DEPOSITOS_REALES}
             onOpenDepPanel={() => setDistDepPanelOpen(true)}
+            onOpenFiltroPanel={() => setDistFiltroPanelOpen(true)}
             depStock={distDepStock}
             distFiltros={distFiltros}
-            toggleDistFiltro={toggleDistFiltro}
-            clearDistFiltros={() => setDistFiltros({})}
             distRows={distRows}
             distAsig={distAsig}
             setAsig={setAsig}
@@ -340,7 +358,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
             distTotal={distTotal}
             distRestante={distRestante}
             distOver={distOver}
-            onConfirm={() => setUbicacionesWizardOpen(true)}
+            distHasChanges={distHasChanges}
+            onConfirm={confirmarOAsignarUbicaciones}
             onClose={cerrarDistribuirTab}
           />
           {distDepPanelOpen && (
@@ -349,6 +368,15 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
               selectedId={distDepId}
               onSelect={selectDistDep}
               onClose={() => setDistDepPanelOpen(false)}
+            />
+          )}
+          {distFiltroPanelOpen && (
+            <FiltroAgrupadorPanel
+              groupers={art.groupers}
+              filtros={distFiltros}
+              toggleFiltro={toggleDistFiltro}
+              onClear={() => setDistFiltros({})}
+              onClose={() => setDistFiltroPanelOpen(false)}
             />
           )}
           {ubicacionesWizardOpen && distDep && (
