@@ -5,6 +5,18 @@
 
 .vg-mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11.5px; }
 
+.vg-codigo-input-wrap {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--va-ink-200); border-radius: var(--va-r-sm);
+  background: var(--va-white);
+}
+.vg-codigo-input-wrap:focus-within { border-color: var(--va-violet-500); }
+.vg-codigo-input {
+  width: 132px; height: 28px; border: none; background: transparent;
+  font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700;
+  color: var(--va-ink-900); padding: 0 8px; outline: none;
+}
+
 .st-filter-btn.is-active { border-color: var(--va-violet-500); background: var(--va-violet-50); color: var(--va-violet-700); }
 .st-filter-dot {
   width: 7px; height: 7px; border-radius: 50%;

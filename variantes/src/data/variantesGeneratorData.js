@@ -24,6 +24,18 @@ function pad(n, len) {
   return String(n).padStart(len, '0')
 }
 
+// Una misma variante puede tener más de un código de barra asignado (ej. un
+// reemplazo, un proveedor distinto). La mayoría tiene uno solo; algunas 2 o,
+// más raramente, 3.
+function generarCodigosBarra(rnd) {
+  const n = rnd() < 0.55 ? 1 : (rnd() < 0.8 ? 2 : 3)
+  const codigos = []
+  for (let i = 0; i < n; i++) {
+    codigos.push(`779${pad(1000000 + Math.floor(rnd() * 8999999), 7)}`)
+  }
+  return codigos
+}
+
 const DEPOSITO_IDS = [1, 2]
 
 // Reparte un total entre los depósitos con una proporción variable (30%-70%)
@@ -121,7 +133,7 @@ export function buildVariantesArticulo(producto, agrupadores) {
     }
     // Las variantes generadas desde el wizard "Agregar agrupadores" nacen sin
     // código de barra asignado (se carga después, no se inventa uno solo).
-    const codBarras = (noGenerada || usaExclusionExplicita) ? [] : [`779${pad(1000000 + Math.floor(rnd() * 8999999), 7)}`]
+    const codBarras = (noGenerada || usaExclusionExplicita) ? [] : generarCodigosBarra(rnd)
     const stockPorDeposito = noGenerada
       ? { [DEPOSITO_IDS[0]]: 0, [DEPOSITO_IDS[1]]: 0 }
       : splitPorDeposito(rnd, stock)

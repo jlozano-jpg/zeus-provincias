@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   IconX, IconBox, IconSearch, IconTrash, IconChevronDown, IconBuildingWarehouse,
-  IconArrowRight, IconSparkles, IconCheck, IconVersions, IconUpload, IconPlus, IconFilter,
+  IconArrowRight, IconSparkles, IconCheck, IconVersions, IconUpload, IconPlus, IconFilter, IconEye,
 } from '@tabler/icons-react'
 import { buildVariantesArticulo } from '../../data/variantesGeneratorData'
 import { fmt, money } from './format'
@@ -268,6 +268,15 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     })
   }
 
+  function setCodigoVariante(v, value) {
+    setOverrides((prev) => {
+      const cur = prev[art.id] ?? {}
+      const variants = { ...(cur.variants || {}) }
+      variants[v.id] = { ...(variants[v.id] || {}), codigo: value }
+      return { ...prev, [art.id]: { ...cur, variants } }
+    })
+  }
+
   function eliminarVariante(v) {
     setOverrides((prev) => {
       const cur = prev[art.id] ?? {}
@@ -494,7 +503,17 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
                       onClick={() => setSelVarId(v.id)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <td className="pr-cell-strong vg-mono">{v.codigo}</td>
+                      <td>
+                        <div className="vg-codigo-input-wrap">
+                          <input
+                            type="text"
+                            className="vg-codigo-input"
+                            value={v.codigo}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setCodigoVariante(v, e.target.value)}
+                          />
+                        </div>
+                      </td>
                       <td><VariantChips groupers={art.groupers} vals={v.vals} /></td>
                       <td className="st-num" style={{ textAlign: 'right' }}>
                         <span className={s === 0 ? 'st-egreso' : 'pr-cell-strong'}>{fmt(s)}</span>
@@ -511,7 +530,21 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
                           />
                         </div>
                       </td>
-                      <td className="pr-cell-muted vg-mono">{v.codBarras[0] || '—'}</td>
+                      <td className="pr-cell-muted vg-mono">
+                        {v.codBarras.length === 0 ? '—' : v.codBarras.length === 1 ? (
+                          v.codBarras[0]
+                        ) : (
+                          <button
+                            type="button"
+                            className="va-btn-icon"
+                            onClick={(e) => { e.stopPropagation(); setSelVarId(v.id) }}
+                            title={`Ver los ${v.codBarras.length} códigos de barra`}
+                            aria-label={`Ver los ${v.codBarras.length} códigos de barra`}
+                          >
+                            <IconEye size={16} stroke={1.6} />
+                          </button>
+                        )}
+                      </td>
                       <td style={{ textAlign: 'right' }}>
                         <button
                           type="button"
