@@ -1,18 +1,16 @@
 import { useState } from 'react'
 import {
-  IconPackage, IconSettings, IconX, IconId, IconPhoto, IconTruck, IconVersions,
+  IconPackage, IconSettings, IconX, IconId, IconPhoto, IconTruck,
   IconBriefcase, IconFileDescription, IconTag, IconStack2, IconFileImport,
   IconBox, IconNote, IconBuildingStore, IconShoppingCart, IconPlus, IconTrash,
   IconTool,
 } from '@tabler/icons-react'
-import VariantesTab from './VariantesTab'
 import { TIPOS_IVA } from '../../data/productosSeed'
 
 const NAV = [
   { id: 'principal', label: 'Principal', icon: IconId },
   { id: 'imagenes', label: 'Imágenes', icon: IconPhoto },
   { id: 'proveedores', label: 'Proveedores', icon: IconTruck },
-  { id: 'variantes', label: 'Variantes', icon: IconVersions, badge: 'Nuevo' },
   { id: 'comercial', label: 'Comercial', icon: IconBriefcase },
   { id: 'especificaciones', label: 'Especificaciones', icon: IconFileDescription },
   { id: 'precios', label: 'Precios', icon: IconTag },
@@ -30,7 +28,7 @@ const PRODUCTO_VACIO = {
   variantes: { seleccion: [], priceMode: 'base', adicionales: {} },
 }
 
-export default function ProductoPanel({ mode, initial, agrupadores, onClose, onSubmit }) {
+export default function ProductoPanel({ mode, initial, onClose, onSubmit }) {
   const isEdit = mode === 'edit'
   const base = initial ?? PRODUCTO_VACIO
 
@@ -43,14 +41,8 @@ export default function ProductoPanel({ mode, initial, agrupadores, onClose, onS
   const [codigosBarra, setCodigosBarra] = useState(base.codigosBarra)
   const [paisOrigen, setPaisOrigen] = useState(base.paisOrigen)
   const [familia, setFamilia] = useState(base.familia)
-  const [variantes, setVariantes] = useState(base.variantes)
 
-  const hasVariantErrors = variantes.seleccion.some((s) => s.valuesSelected.length === 0)
-  const variantesOk = variantes.seleccion.length === 0 || !hasVariantErrors
-  const totalCombos = variantes.seleccion.length > 0 && !hasVariantErrors
-    ? variantes.seleccion.reduce((acc, s) => acc * s.valuesSelected.length, 1)
-    : 0
-  const isValid = !!(codigo.trim() && tipoIva.trim() && variantesOk)
+  const isValid = !!(codigo.trim() && tipoIva.trim())
 
   function addBarcode() { setCodigosBarra((bs) => [...bs, '']) }
   function updateBarcode(idx, value) { setCodigosBarra((bs) => bs.map((b, i) => (i === idx ? value : b))) }
@@ -67,7 +59,7 @@ export default function ProductoPanel({ mode, initial, agrupadores, onClose, onS
       codigosBarra: codigosBarra.filter((b) => b.trim()),
       paisOrigen,
       familia,
-      variantes,
+      variantes: base.variantes,
     })
   }
 
@@ -76,11 +68,6 @@ export default function ProductoPanel({ mode, initial, agrupadores, onClose, onS
   if (!codigo.trim() || !tipoIva.trim()) {
     footStatus = 'Completá código de producto y tipo de IVA'
     footIsWarn = true
-  } else if (!variantesOk) {
-    footStatus = 'Hay agrupadores sin valores seleccionados en Variantes'
-    footIsWarn = true
-  } else if (totalCombos > 0) {
-    footStatus = <>Se generarán <b>{totalCombos}</b> variantes al guardar</>
   } else {
     footStatus = 'Listo para guardar'
   }
@@ -128,10 +115,7 @@ export default function ProductoPanel({ mode, initial, agrupadores, onClose, onS
               familia={familia} setFamilia={setFamilia}
             />
           )}
-          {activeTab === 'variantes' && (
-            <VariantesTab agrupadores={agrupadores} variantes={variantes} setVariantes={setVariantes} />
-          )}
-          {!['principal', 'variantes'].includes(activeTab) && (
+          {activeTab !== 'principal' && (
             <PlaceholderTab label={NAV.find((n) => n.id === activeTab)?.label} />
           )}
         </div>

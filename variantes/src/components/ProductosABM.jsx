@@ -5,7 +5,7 @@ import ProductoPanel from './productos/ProductoPanel'
 import './agrupadores/agrupadores.css'
 import './productos/productos.css'
 
-export default function ProductosABM({ onNavigateHome, agrupadores, productos, setProductos }) {
+export default function ProductosABM({ onNavigateHome, productos, setProductos }) {
   const [query, setQuery] = useState('')
   const [selectedCodigo, setSelectedCodigo] = useState(null)
   const [panelMode, setPanelMode] = useState(null)
@@ -72,7 +72,6 @@ export default function ProductosABM({ onNavigateHome, agrupadores, productos, s
             key={panelMode === 'edit' ? selectedCodigo : 'create'}
             mode={panelMode}
             initial={activeProducto}
-            agrupadores={agrupadores}
             onClose={closePanel}
             onSubmit={handleSubmit}
           />
