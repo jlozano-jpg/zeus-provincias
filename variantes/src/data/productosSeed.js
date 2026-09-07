@@ -15,14 +15,7 @@ export const PRODUCTOS_SEED = [
     codigosBarra: ['7791234560011'],
     paisOrigen: 'Argentina',
     familia: 'Indumentaria',
-    variantes: {
-      seleccion: [
-        { agrupadorId: 'COL-001', valuesSelected: ['NEG', 'BLA', 'GRI'] },
-        { agrupadorId: 'TAL-001', valuesSelected: ['XS', 'S', 'M'] },
-      ],
-      priceMode: 'base',
-      adicionales: {},
-    },
+    variantes: { seleccion: [], priceMode: 'base', adicionales: {} },
   },
   {
     codigo: 'ZAP-001',

@@ -35,11 +35,13 @@ function splitPorDeposito(rnd, total) {
   return { [DEPOSITO_IDS[0]]: d1, [DEPOSITO_IDS[1]]: d2 }
 }
 
-export function buildVariantesArticulo(producto, agrupadores) {
-  const seed = hashCode(producto.codigo)
-  const rnd = mulberry32(seed)
-
-  const groupers = (producto.variantes?.seleccion || [])
+// Cruza los agrupadores seleccionados (id + valores habilitados) con el
+// maestro de agrupadores y arma todas las combinaciones posibles. Lo usan
+// tanto el generador de catálogo de variantes como el wizard de "Agregar
+// agrupadores", que necesita previsualizar las combinaciones antes de
+// generarlas.
+export function buildGroupersYCombos(seleccion, agrupadores) {
+  const groupers = (seleccion || [])
     .map((s) => {
       const master = agrupadores.find((a) => a.id === s.agrupadorId)
       if (!master) return null
@@ -58,15 +60,35 @@ export function buildVariantesArticulo(producto, agrupadores) {
     return next
   }, [])
 
+  return {
+    groupers,
+    combos: combos.map((vals) => ({ key: groupers.map((g) => vals[g.id].code).join('/'), vals })),
+  }
+}
+
+export function buildVariantesArticulo(producto, agrupadores) {
+  const seed = hashCode(producto.codigo)
+  const rnd = mulberry32(seed)
+
+  const { groupers, combos } = buildGroupersYCombos(producto.variantes?.seleccion, agrupadores)
+
+  // Los productos configurados desde el wizard "Agregar agrupadores" traen
+  // una lista explícita de combinaciones excluidas por el usuario; el resto
+  // arranca generado con stock 0 (recién configurado, sin distribuir). Los
+  // productos de demo "de fábrica" (sin este campo) siguen con el esquema
+  // aleatorio de siempre, para no cambiarles el aspecto.
+  const excluidas = producto.variantes?.excluidas
+  const usaExclusionExplicita = Array.isArray(excluidas)
+  const excluidasSet = usaExclusionExplicita ? new Set(excluidas) : null
+
   const priceMode = producto.variantes?.priceMode ?? 'base'
   const adicionalesCfg = producto.variantes?.adicionales ?? {}
   const precioBase = 3000 + Math.floor(rnd() * 34) * 500
 
-  const variants = combos.map((vals) => {
-    const key = groupers.map((g) => vals[g.id].code).join('/')
+  const variants = combos.map(({ key, vals }) => {
     const codigo = `${producto.codigo}-${groupers.map((g) => vals[g.id].code).join('-')}`
-    const noGenerada = rnd() < 0.15
-    const stock = noGenerada ? 0 : Math.floor(rnd() * 40)
+    const noGenerada = usaExclusionExplicita ? excluidasSet.has(key) : rnd() < 0.15
+    const stock = noGenerada ? 0 : (usaExclusionExplicita ? 0 : Math.floor(rnd() * 40))
     let precioAdic = 0
     if (priceMode === 'adicional') {
       groupers.forEach((g) => {
@@ -75,7 +97,9 @@ export function buildVariantesArticulo(producto, agrupadores) {
         if (cfg && cfg[val.code] != null) precioAdic += Number(cfg[val.code]) || 0
       })
     }
-    const codBarras = noGenerada ? [] : [`779${pad(1000000 + Math.floor(rnd() * 8999999), 7)}`]
+    // Las variantes generadas desde el wizard "Agregar agrupadores" nacen sin
+    // código de barra asignado (se carga después, no se inventa uno solo).
+    const codBarras = (noGenerada || usaExclusionExplicita) ? [] : [`779${pad(1000000 + Math.floor(rnd() * 8999999), 7)}`]
     const stockPorDeposito = noGenerada
       ? { [DEPOSITO_IDS[0]]: 0, [DEPOSITO_IDS[1]]: 0 }
       : splitPorDeposito(rnd, stock)

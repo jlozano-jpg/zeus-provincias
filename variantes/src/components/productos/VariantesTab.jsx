@@ -9,7 +9,7 @@ function getAgrupador(agrupadores, id) {
   return agrupadores.find((a) => a.id === id)
 }
 
-export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
+export default function VariantesTab({ agrupadores, variantes, setVariantes, mostrarCriterioPrecio = true }) {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [selectorOpen, setSelectorOpen] = useState(false)
 
@@ -115,7 +115,7 @@ export default function VariantesTab({ agrupadores, variantes, setVariantes }) {
         )}
       </div>
 
-      {seleccion.length > 0 && (
+      {seleccion.length > 0 && mostrarCriterioPrecio && (
         <>
           <div className="pr-divider" />
           <div className="pr-var-head" style={{ marginBottom: 12 }}>

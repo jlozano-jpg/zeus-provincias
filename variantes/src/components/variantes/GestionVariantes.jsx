@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   IconX, IconBox, IconSearch, IconTrash, IconChevronDown, IconBuildingWarehouse,
-  IconArrowRight, IconSparkles, IconCheck, IconVersions, IconUpload, IconPlus,
+  IconArrowRight, IconSparkles, IconCheck, IconVersions, IconUpload, IconPlus, IconFilter,
 } from '@tabler/icons-react'
 import { buildVariantesArticulo } from '../../data/variantesGeneratorData'
 import { fmt, money } from './format'
@@ -10,6 +10,8 @@ import DepositoPanel from './DepositoPanel'
 import GenerarVariantesPanel from './GenerarVariantesPanel'
 import DistribuirStockPanel from './DistribuirStockPanel'
 import DistribuirUbicacionesWizard from './DistribuirUbicacionesWizard'
+import AgregarAgrupadoresWizard from './AgregarAgrupadoresWizard'
+import FiltroAgrupadorPanel from './FiltroAgrupadorPanel'
 import '../agrupadores/agrupadores.css'
 import '../productos/productos.css'
 import '../stock/stock.css'
@@ -44,11 +46,8 @@ function applyOverrides(base, ov) {
   return { ...base, stockBase, stockBasePorDeposito, variants }
 }
 
-export default function GestionVariantes({ onNavigateHome, agrupadores, productos }) {
-  const articulos = useMemo(
-    () => productos.filter((p) => (p.variantes?.seleccion?.length ?? 0) > 0),
-    [productos]
-  )
+export default function GestionVariantes({ onNavigateHome, agrupadores, productos, setProductos }) {
+  const articulos = productos
 
   const [articuloId, setArticuloId] = useState(articulos[0]?.codigo ?? '')
   const [overrides, setOverrides] = useState({})
@@ -68,6 +67,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
   const [distDepId, setDistDepId] = useState(DEPOSITOS_REALES[0]?.id ?? 'todos')
   const [distDepPanelOpen, setDistDepPanelOpen] = useState(false)
   const [ubicacionesWizardOpen, setUbicacionesWizardOpen] = useState(false)
+  const [agregarAgrupadoresOpen, setAgregarAgrupadoresOpen] = useState(false)
+  const [filtroAgrupadorOpen, setFiltroAgrupadorOpen] = useState(false)
 
   useEffect(() => {
     if (!flash) return undefined
@@ -95,6 +96,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setDistAsig({})
     setDistDepId(DEPOSITOS_REALES[0]?.id ?? 'todos')
     setUbicacionesWizardOpen(false)
+    setAgregarAgrupadoresOpen(false)
+    setFiltroAgrupadorOpen(false)
   }
 
   if (!art) {
@@ -111,8 +114,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
         <div className="va-main">
           <div className="va-values-empty" style={{ padding: '48px 24px' }}>
             <div className="va-glyph"><IconVersions size={20} stroke={1.6} /></div>
-            <div className="va-ttl">Ningún producto tiene variantes configuradas</div>
-            <div className="va-sub">Agregá agrupadores a un producto desde Ventas &gt; Gestión de Productos &gt; solapa Variantes.</div>
+            <div className="va-ttl">No hay productos cargados</div>
+            <div className="va-sub">Creá un producto desde Productos &gt; Gestión de Productos para poder configurarle variantes acá.</div>
           </div>
         </div>
       </div>
@@ -278,6 +281,21 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
     setGenerarOpen(false)
   }
 
+  function confirmarAgregarAgrupadores(nuevaVariantesCfg) {
+    setProductos((prev) => prev.map((p) => (p.codigo === producto.codigo ? { ...p, variantes: nuevaVariantesCfg } : p)))
+    // La combinación de agrupadores cambió: los overrides guardados (stock,
+    // precio adicional, etc.) quedaban indexados por variante anterior y ya
+    // no corresponden a las nuevas combinaciones generadas.
+    setOverrides((prev) => {
+      const next = { ...prev }
+      delete next[producto.codigo]
+      return next
+    })
+    setAgregarAgrupadoresOpen(false)
+    setFiltros({})
+    setFlash(`Se actualizaron los agrupadores de ${producto.codigo} y se generaron sus combinaciones.`)
+  }
+
   return (
     <div className="va-app">
       <div className="va-tabbar">
@@ -380,46 +398,34 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
               <b className="vg-accent">{fmt(art.stockBase)} u.</b>
             </div>
           </div>
-          <button type="button" className="va-btn va-btn-secondary" onClick={abrirDistribuirTab}>
-            <IconArrowRight size={15} stroke={1.8} /> Distribuir stock
+          <button type="button" className="va-btn va-btn-primary" onClick={() => setAgregarAgrupadoresOpen(true)}>
+            <IconPlus size={15} stroke={1.8} /> Agregar agrupadores
           </button>
+          {art.groupers.length > 0 && (
+            <button type="button" className="va-btn va-btn-secondary" onClick={abrirDistribuirTab}>
+              <IconArrowRight size={15} stroke={1.8} /> Distribuir stock
+            </button>
+          )}
         </div>
 
-        {art.groupers.length > 0 && (
-          <div className="st-variant-filter">
-            <div className="st-variant-filter-head">
-              <span className="st-vf-icon">V</span>
-              Filtrar por agrupador
-              {hasFiltros && (
-                <button type="button" className="vg-clear-link" onClick={() => setFiltros({})}>Limpiar filtros</button>
-              )}
-            </div>
-            {art.groupers.map((g) => (
-              <div className="st-vf-row" key={g.id}>
-                <span className="st-vf-label">{g.nombre}</span>
-                <div className="st-vf-chips">
-                  {g.valores.map((v) => (
-                    <button
-                      type="button"
-                      key={v.code}
-                      className={`st-vf-chip ${(filtros[g.id] || []).includes(v.code) ? 'is-active' : ''}`}
-                      onClick={() => toggleFiltro(g.id, v.code)}
-                    >
-                      {v.swatch ? <span className="st-vf-sw" style={{ background: v.swatch }} /> : null}
-                      {v.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+        {art.groupers.length === 0 ? (
+          <div className="va-values-empty" style={{ padding: '48px 24px' }}>
+            <div className="va-glyph"><IconVersions size={20} stroke={1.6} /></div>
+            <div className="va-ttl">Este producto todavía no tiene agrupadores</div>
+            <div className="va-sub">Presioná "Agregar agrupadores" para elegir talles, colores u otros agrupadores y generar las combinaciones de variantes.</div>
           </div>
-        )}
-
+        ) : (
+        <>
         <div className="st-filter-row">
           <div className="va-search" style={{ width: 260 }}>
             <IconSearch size={15} stroke={1.6} className="va-ico" />
             <input placeholder="Buscar por talle, color, código…" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
+          <button type="button" className={`st-filter-btn ${hasFiltros ? 'is-active' : ''}`} onClick={() => setFiltroAgrupadorOpen(true)}>
+            <IconFilter size={14} stroke={1.6} /> Filtrar por agrupador
+            {hasFiltros && <span className="st-filter-dot" />}
+            <IconChevronDown size={12} stroke={1.8} />
+          </button>
           <button type="button" className="st-filter-btn" onClick={() => setDepPanelOpen(true)}>
             <IconBuildingWarehouse size={14} stroke={1.6} /> {dep.nombre} <IconChevronDown size={12} stroke={1.8} />
           </button>
@@ -429,7 +435,7 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
           <button type="button" className="va-btn va-btn-secondary">
             <IconUpload size={15} stroke={1.8} /> Carga masiva
           </button>
-          <button type="button" className="va-btn va-btn-primary" onClick={() => setGenerarOpen(true)}>
+          <button type="button" className="va-btn va-btn-secondary" onClick={() => setGenerarOpen(true)}>
             <IconPlus size={15} stroke={1.8} /> Generar variantes
           </button>
         </div>
@@ -498,6 +504,8 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
             </table>
           </div>
         </div>
+        </>
+        )}
       </div>
       )}
 
@@ -615,6 +623,25 @@ export default function GestionVariantes({ onNavigateHome, agrupadores, producto
           selectedId={depId}
           onSelect={setDepId}
           onClose={() => setDepPanelOpen(false)}
+        />
+      )}
+
+      {filtroAgrupadorOpen && (
+        <FiltroAgrupadorPanel
+          groupers={art.groupers}
+          filtros={filtros}
+          toggleFiltro={toggleFiltro}
+          onClear={() => setFiltros({})}
+          onClose={() => setFiltroAgrupadorOpen(false)}
+        />
+      )}
+
+      {agregarAgrupadoresOpen && (
+        <AgregarAgrupadoresWizard
+          producto={producto}
+          agrupadores={agrupadores}
+          onClose={() => setAgregarAgrupadoresOpen(false)}
+          onGenerar={confirmarAgregarAgrupadores}
         />
       )}
 
