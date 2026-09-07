@@ -40,7 +40,6 @@
   box-shadow: var(--va-sh-xs);
 }
 .st-toggle-copy { flex: 1; min-width: 0; }
-.st-toggle-title { font-size: 13px; font-weight: 700; color: var(--va-ink-900); }
 .st-toggle-sub { font-size: 12px; color: var(--va-ink-500); margin-top: 1px; }
 .st-toggle-value { font-size: 12.5px; color: var(--va-ink-600); white-space: nowrap; }
 .st-toggle-value b { color: var(--va-ink-900); }
@@ -124,6 +123,8 @@
   display: inline-flex; align-items: center; gap: 6px;
 }
 .st-filter-btn:hover { background: var(--va-ink-50); }
+.st-filter-btn.is-active { border-color: var(--va-violet-500); background: var(--va-violet-50); color: var(--va-violet-700); }
+.st-filter-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--va-violet-600); }
 .st-filter-spacer { flex: 1; }
 .st-filter-link { font-size: 12.5px; color: var(--va-ink-600); font-weight: 600; }
 

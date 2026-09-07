@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   IconX, IconBox, IconChevronsLeft, IconCalendar, IconBuildingWarehouse,
-  IconMapPin, IconReceipt2, IconRefresh, IconChevronDown, IconSearch,
+  IconMapPin, IconReceipt2, IconRefresh, IconChevronDown, IconSearch, IconFilter,
 } from '@tabler/icons-react'
 import { buildStockLedger } from '../../data/stockSeed'
 import FiltroSelectorPanel from './FiltroSelectorPanel'
+import FiltroAgrupadorPanel from '../variantes/FiltroAgrupadorPanel'
 import '../agrupadores/agrupadores.css'
+import '../productos/productos.css'
+import '../variantes/gestionVariantes.css'
 import './stock.css'
 
 const DEPOSITOS = [
@@ -63,18 +66,23 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
   const [sucursalPanelOpen, setSucursalPanelOpen] = useState(false)
   const [selectedTipos, setSelectedTipos] = useState([])
   const [tipoPanelOpen, setTipoPanelOpen] = useState(false)
+  const [varFiltroPanelOpen, setVarFiltroPanelOpen] = useState(false)
 
   const producto = productos.find((p) => p.codigo === selectedCodigo) ?? productos[0]
   const ledger = useMemo(() => buildStockLedger(producto, agrupadores), [producto, agrupadores])
   const productDims = useMemo(() => dims(producto, agrupadores), [producto, agrupadores])
 
   const usingVariantes = ledger.esBase && showVariantes
+  const hasVarFiltros = Object.values(filtros).some((v) => v.length > 0)
   const data = usingVariantes ? ledger.variante : ledger.base
   const rows = useMemo(() => {
     let list = data.movimientos
     if (usingVariantes) {
       list = list.filter((m) =>
-        productDims.every((d, i) => !filtros[d.master.id] || m.variante[i]?.code === filtros[d.master.id])
+        productDims.every((d, i) => {
+          const sel = filtros[d.master.id] || []
+          return sel.length === 0 || sel.includes(m.variante[i]?.code)
+        })
       )
     }
     if (selectedDepositos.length) list = list.filter((m) => selectedDepositos.includes(m.deposito))
@@ -94,8 +102,23 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
     return list
   }, [data, usingVariantes, filtros, productDims, selectedDepositos, selectedSucursales, selectedTipos, desde, incluirSaldoAnterior])
 
-  function setFiltro(agrupadorId, code) {
-    setFiltros((f) => ({ ...f, [agrupadorId]: code }))
+  function toggleFiltro(agrupadorId, code) {
+    setFiltros((f) => {
+      const cur = f[agrupadorId] || []
+      const next = cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code]
+      return { ...f, [agrupadorId]: next }
+    })
+  }
+
+  function abrirFiltroVariante() {
+    setShowVariantes(true)
+    setVarFiltroPanelOpen(true)
+  }
+
+  function limpiarFiltroVariante() {
+    setFiltros({})
+    setShowVariantes(false)
+    setVarFiltroPanelOpen(false)
   }
 
   function selectArticle(codigo) {
@@ -103,6 +126,7 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
     setShowVariantes(false)
     setFiltros({})
     setActiveTab('movimientos')
+    setVarFiltroPanelOpen(false)
   }
 
   useEffect(() => {
@@ -211,61 +235,38 @@ export default function FichaStockGeneral({ onNavigateHome, agrupadores, product
           </button>
         </div>
 
-        {ledger.esBase && (
+        {ledger.esBase && productDims.length > 0 && (
           <div className="st-toggle-row">
-            <label className="va-toggle" style={{ marginRight: 0 }}>
-              <input
-                type="checkbox"
-                checked={showVariantes}
-                onChange={(e) => { setShowVariantes(e.target.checked); setFiltros({}) }}
-              />
-              <span className="va-track" />
-            </label>
+            <button
+              type="button"
+              className={`st-filter-btn ${usingVariantes ? 'is-active' : ''}`}
+              onClick={() => (usingVariantes ? setVarFiltroPanelOpen(true) : abrirFiltroVariante())}
+            >
+              <IconFilter size={14} stroke={1.6} /> Filtrar por variante
+              {usingVariantes && hasVarFiltros && <span className="st-filter-dot" />}
+              <IconChevronDown size={12} stroke={1.8} />
+            </button>
             <div className="st-toggle-copy">
-              <div className="st-toggle-title">Stock por variantes</div>
               <div className="st-toggle-sub">
-                {showVariantes ? 'Elegí color y talle para filtrar los movimientos' : 'Estás viendo el stock del producto base'}
+                {usingVariantes
+                  ? 'Viendo el stock de las variantes · el stock propio del base queda fuera del cálculo'
+                  : 'Estás viendo el stock del producto base'}
               </div>
             </div>
             <div className="st-toggle-value">
-              {showVariantes ? <>Variantes: <b>{fmt(ledger.variante.stockTotal)} UN</b></> : <>Base: <b>{fmt(ledger.base.stockTotal)} UN</b></>}
+              {usingVariantes ? <>Variantes: <b>{fmt(ledger.variante.stockTotal)} UN</b></> : <>Base: <b>{fmt(ledger.base.stockTotal)} UN</b></>}
             </div>
           </div>
         )}
 
-        {usingVariantes && productDims.length > 0 && (
-          <div className="st-variant-filter">
-            <div className="st-variant-filter-head">
-              <span className="st-vf-icon">V</span>
-              Filtrar por variante
-              <span className="muted">· {productDims.map((d) => d.master.name).join(' / ')} · el stock propio del base queda fuera del cálculo</span>
-            </div>
-            {productDims.map((d) => (
-              <div className="st-vf-row" key={d.master.id}>
-                <span className="st-vf-label">{d.master.name}</span>
-                <div className="st-vf-chips">
-                  <button
-                    type="button"
-                    className={`st-vf-chip ${!filtros[d.master.id] ? 'is-active' : ''}`}
-                    onClick={() => setFiltro(d.master.id, null)}
-                  >
-                    Todos
-                  </button>
-                  {d.values.map((v) => (
-                    <button
-                      type="button"
-                      key={v.code}
-                      className={`st-vf-chip ${filtros[d.master.id] === v.code ? 'is-active' : ''}`}
-                      onClick={() => setFiltro(d.master.id, v.code)}
-                    >
-                      {v.swatch ? <span className="st-vf-sw" style={{ background: v.swatch }} /> : null}
-                      {v.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+        {varFiltroPanelOpen && (
+          <FiltroAgrupadorPanel
+            groupers={productDims.map((d) => ({ id: d.master.id, nombre: d.master.name, valores: d.values }))}
+            filtros={filtros}
+            toggleFiltro={toggleFiltro}
+            onClear={limpiarFiltroVariante}
+            onClose={() => setVarFiltroPanelOpen(false)}
+          />
         )}
 
         <div className="st-kpi-row">
